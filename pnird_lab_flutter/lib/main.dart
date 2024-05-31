@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
-void main() {
+void main() async {
+  //Ensure all bindings are initialized before running the app
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  // Keep splash screen while loading resources
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  //Run the app
   runApp(const MyApp());
+  // After initialization is complete, remove the splash screen
+  FlutterNativeSplash.remove();
 }
 
 class MyApp extends StatelessWidget {
