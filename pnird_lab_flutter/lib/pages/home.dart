@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:pnird_lab_flutter/widgets/post_card.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);
@@ -12,10 +13,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Center(
-            child: Text(
-      "HomePage",
-      style: TextStyle(fontSize: 60, color: Colors.amber),
-    )));
+      body: PostCard(),
+    );
   }
 }
