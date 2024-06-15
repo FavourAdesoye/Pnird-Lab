@@ -60,7 +60,7 @@ class _MainScreenPageState extends State<MainScreenPage> {
         actions: [
           IconButton(
               icon: const Icon(
-                Icons.message,
+                Icons.email,
                 color: Color.fromARGB(255, 237, 230, 230),
                 size: 36.0,
               ),

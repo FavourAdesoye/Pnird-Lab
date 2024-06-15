@@ -22,8 +22,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: "Pnird Lab",
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-          primarySwatch: Colors.blue, scaffoldBackgroundColor: Colors.black),
+      theme: ThemeData.dark()
+          .copyWith(scaffoldBackgroundColor: Color.fromRGBO(0, 0, 0, 1)),
       home: MainScreenPage(),
     );
   }
