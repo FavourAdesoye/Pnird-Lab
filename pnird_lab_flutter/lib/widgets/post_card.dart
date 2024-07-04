@@ -2,14 +2,24 @@
 
 import 'dart:ffi';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:pnird_lab_flutter/widgets/heart_animation_widget.dart';
 
-class PostCard extends StatelessWidget {
-  const PostCard({Key? key}) : super(key: key);
+class PostCard extends StatefulWidget {
+  @override
+  _PostCardState createState() => _PostCardState();
+}
 
+class _PostCardState extends State<PostCard> {
+  // const PostCard({Key? key}) : super(key: key);
+  bool isLiked = false;
+  bool isHeartAnimating = false;
   @override
   Widget build(BuildContext context) {
+    final icon = isLiked ? Icons.favorite : Icons.favorite_outline;
+    final color = isLiked ? Colors.red : Colors.white;
     return Container(
       color: Color.fromRGBO(0, 0, 0, 1),
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -44,22 +54,52 @@ class PostCard extends StatelessWidget {
                 ],
               )),
           //Image section
-          SizedBox(
-              height: MediaQuery.of(context).size.height * 0.35,
-              width: double.infinity,
-              child: Image.asset(
-                "assets/images/pnird_group_photo.jpg",
-                fit: BoxFit.cover,
-              )),
+          GestureDetector(
+            child: Stack(alignment: Alignment.center, children: [
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.35,
+                width: double.infinity,
+                child: Image.asset(
+                  "assets/images/pnird_group_photo.jpg",
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Opacity(
+                opacity: isHeartAnimating ? 1 : 0,
+                child: HeartAnimationWidget(
+                  isAnimating: isHeartAnimating,
+                  duration: Duration(milliseconds: 700),
+                  child: Icon(
+                    Icons.favorite,
+                    color: Colors.white,
+                    size: 70,
+                  ),
+                  onEnd: () => setState(() => isHeartAnimating = false),
+                ),
+              ),
+            ]),
+            onDoubleTap: () {
+              setState(() {
+                isHeartAnimating = true;
+                isLiked = true;
+              });
+            },
+          ),
 
           //Like comment section
           Row(
             children: [
-              IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.favorite,
-                  )),
+              HeartAnimationWidget(
+                alwaysAnimate: true,
+                isAnimating: isLiked,
+                child: IconButton(
+                  icon: Icon(
+                    icon,
+                    color: color,
+                  ),
+                  onPressed: () => setState(() => isLiked = !isLiked),
+                ),
+              ),
               IconButton(
                   onPressed: () {},
                   icon: const Icon(

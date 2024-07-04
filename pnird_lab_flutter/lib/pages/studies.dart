@@ -13,9 +13,9 @@ class _StudiesPageState extends State<StudiesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: Center(
-            child: Text(
-      "studies",
-      style: TextStyle(fontSize: 60, color: Colors.amber),
+            child: ElevatedButton(
+      onPressed: () {},
+      child: Text("Create post"),
     )));
   }
 }

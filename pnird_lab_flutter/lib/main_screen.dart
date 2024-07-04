@@ -6,6 +6,7 @@ import 'package:pnird_lab_flutter/pages/about_us.dart';
 import 'package:pnird_lab_flutter/pages/games.dart';
 import 'package:pnird_lab_flutter/pages/home.dart';
 import 'package:pnird_lab_flutter/pages/studies.dart';
+import 'package:pnird_lab_flutter/pages/chats_page.dart';
 
 class MainScreenPage extends StatefulWidget {
   MainScreenPage({Key? key}) : super(key: key);
@@ -65,7 +66,10 @@ class _MainScreenPageState extends State<MainScreenPage> {
                 size: 36.0,
               ),
               onPressed: () {
-                //Define on pressed functiom
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChatsPage()),
+                );
               }),
         ],
       ),
