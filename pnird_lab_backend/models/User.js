@@ -25,7 +25,11 @@ const UserSchema = new mongoose.Schema({
    isAdmin: {
     type: Boolean,
     default: false,
-   }
+   },
+
+   cloudinary_id:{
+    type: String
+   } 
 },
 {timestamps:true}
 );

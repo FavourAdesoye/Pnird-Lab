@@ -6,10 +6,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:pnird_lab_flutter/widgets/heart_animation_widget.dart';
+import '../model/post_model.dart';
+import 'package:intl/intl.dart';
 
 class PostCard extends StatefulWidget {
+  final Post post;
+  PostCard({required this.post});
   @override
   _PostCardState createState() => _PostCardState();
+}
+
+String formattedDateTime(DateTime dateTime) {
+  return DateFormat('yyyy-MM-dd HH:mm a').format(dateTime);
 }
 
 class _PostCardState extends State<PostCard> {
@@ -45,7 +53,8 @@ class _PostCardState extends State<PostCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Dr. Larry Keen', //replace with username of someone
+                          widget.post.user
+                              .username, //replace with username of someone
                           style: TextStyle(fontWeight: FontWeight.bold),
                         )
                       ],
@@ -59,8 +68,8 @@ class _PostCardState extends State<PostCard> {
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.35,
                 width: double.infinity,
-                child: Image.asset(
-                  "assets/images/pnird_group_photo.jpg",
+                child: Image.network(
+                  widget.post.img ?? '', //Hande potential null
                   fit: BoxFit.cover,
                 ),
               ),
@@ -121,7 +130,7 @@ class _PostCardState extends State<PostCard> {
                           fontWeight: FontWeight.w800,
                         ),
                     child: Text(
-                      '80 likes',
+                      '${widget.post.likes?.isEmpty ?? true ? 0 : widget.post.likes![0]} likes',
                       style: Theme.of(context).textTheme.bodyLarge,
                     )),
                 Container(
@@ -135,14 +144,13 @@ class _PostCardState extends State<PostCard> {
                               color: Color.fromARGB(255, 250, 228, 33)),
                           children: [
                         TextSpan(
-                          text: 'Dr. Larry-Keen',
+                          text: widget.post.user.username,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         TextSpan(
-                          text:
-                              '   We had a great time at the national psychology conference',
+                          text: '   ${widget.post.description ?? ''}',
                         ),
                       ])),
                 ),
@@ -157,7 +165,7 @@ class _PostCardState extends State<PostCard> {
                 ),
                 Container(
                     child: Text(
-                  "2 days ago",
+                  formattedDateTime(widget.post.createdAt),
                 )),
               ],
             ),

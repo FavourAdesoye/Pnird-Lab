@@ -8,6 +8,7 @@ const morgan = require("morgan");
 const userRoute = require("./routes/users")
 const postRoute = require("./routes/posts");
 const authRoute = require("./routes/auth");
+const cors = require('cors');
 dotenv.config();
 
 const Port = process.env.PORT|| 3000;
@@ -18,7 +19,8 @@ connect(process.env.MONGO_URL
 ).then(()=>console.log("DB Connection Successful!")).catch((error) =>{
     console.log(error);
 })
-
+// Enable all CORS requests
+app.use(cors());
 //Middleware
 app.use(express.json());
 app.use(express.urlencoded({
@@ -31,8 +33,9 @@ app.use("/api/posts", postRoute);
 app.use("/api/users", userRoute)
 app.use("/api/auth", authRoute);
 
+
 app.get("/", (req,res)=>{
-    res.send("welcome")
+    res.send("welcome to pnirdlab")
 });
 app.listen(Port, ()=>{
     console.log(`Backend server is runninnng on port ${Port}!`);

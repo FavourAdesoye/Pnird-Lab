@@ -7,7 +7,7 @@ class Api {
   static createPost(Map pdata) async {
     var url = Uri.parse(baseUrl + "createpost");
     try {
-      final res = await http.post(Uri.parse("uri"), body: pdata);
+      final res = await http.post(url, body: pdata);
 
       if (res.statusCode == 200) {
       } else {}

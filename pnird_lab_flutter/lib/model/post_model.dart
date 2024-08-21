@@ -1,29 +1,33 @@
+import 'package:pnird_lab_flutter/model/user_model.dart';
+
 class Post {
   final String id;
-  final String userId;
-  final String description;
-  final String img;
-  final List<String> likes;
+  final User user;
+  String? description;
+  String? img;
+  List<int>? likes;
   final DateTime createdAt;
   final DateTime updatedAt;
 
   Post({
     required this.id,
-    required this.userId,
-    required this.description,
-    required this.img,
-    required this.likes,
+    required this.user,
+    this.description,
+    this.img,
+    List<int>? likes,
     required this.createdAt,
     required this.updatedAt,
-  });
+  }) : likes = likes ?? []; //Initialize likes with an empty list if null
 
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
       id: json['_id'],
-      userId: json['userId'],
-      description: json['description'] ?? '',
-      img: json['img'] ?? '',
-      likes: List<String>.from(json['likes']),
+      user: User.fromJson(json['userId']),
+      description: json['description'] ?? '', // Handle null case
+      img: json['img'] ?? '', // Handle null case
+      likes: json['likes'] != null
+          ? List<int>.from(json['likes'])
+          : [], // Handle null case
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
     );

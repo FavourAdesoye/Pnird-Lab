@@ -1,14 +1,29 @@
-const express=require("express")
 const router = require("express").Router();
-const Post = require("../models/Post")
-//create a post
+const Post = require("../models/Post");
+const cloudinary = require("../utils/cloudinary");
+const upload = require("../utils/multer");
 
-router.post("/", async (req,res)=>{
-    const newPost  = new Post(req.body)
-    try{
-        const savedPost = await newPost.save();
-        res.status(200).json(savedPost);
-    }catch(err){
+//create a post with an image upload
+
+router.post('/upload', upload.single('image'), async (req, res) => {
+    try {
+      // Upload image to Cloudinary
+      const result = await cloudinary.uploader.upload(req.file.path);
+  
+      // Create new post
+      let post = new Post({
+        userId: req.body.userId,
+        description: req.body.description,
+        img: result.secure_url, // Store the URL of the uploaded image
+        cloudinary_id: result.public_id, // Store the Cloudinary public ID for later use
+        likes: req.body.likes || [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      await post.save();
+      res.json(post);
+    }  
+      catch(err){
         res.status(500).json(err)
     }
 });
@@ -41,7 +56,7 @@ router.get("/:id", async(req,res)=> {
 // Get all posts
 router.get("/", async (req, res) => {
     try {
-      const posts = await Post.find().sort({ createdAt: -1 }); // Sort by creation date, newest first
+      const posts = await Post.find().populate('userId', 'username email profilePicture'); // Sort by creation date, newest first
       res.status(200).json(posts);
     } catch (err) {
       res.status(500).json(err);
