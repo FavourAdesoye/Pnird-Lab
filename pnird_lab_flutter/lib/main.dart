@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:pnird_lab_flutter/main_screen.dart';
 import 'pages/dms.dart';
+import 'package:flutternativesplash/components/button_controller.dart'; 
+import 'package:flutternativesplash/screens/games/gamehome.dart';
+import 'package:get/get.dart';
+
+
 
 void main() async {
   //Ensure all bindings are initialized before running the app
@@ -14,12 +19,11 @@ void main() async {
   FlutterNativeSplash.remove();
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatelessWidget { 
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp(  
       title: "Pnird Lab",
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
@@ -31,4 +35,4 @@ class MyApp extends StatelessWidget {
       home: MainScreenPage(),
     );
   }
-}
+} 
