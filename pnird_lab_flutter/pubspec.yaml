@@ -31,11 +31,14 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter:
     sdk: flutter
+  flutter_secure_storage: ^9.2.2
   flutter_stateless_chessboard: ^1.1.2
   get: ^4.6.6
   http: ^1.2.1
   image: 3.3.0
   image_picker: ^1.1.1
+  json_annotation: ^4.9.0
+  logger: ^2.4.0
   path: ^1.9.0
   permission_handler: ^11.3.1
   photofilters: ^3.0.1
@@ -57,7 +60,7 @@ flutter:
   uses-material-design: true
   # To add assets to your application, add an assets section, like this:
   assets:
-    - images/brain.png
+    - assets/images/flappybrain
   #   - images/a_dot_ham.jpeg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

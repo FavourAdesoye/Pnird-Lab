@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutternativesplash/components/button_controller.dart'; 
-import 'package:flutternativesplash/screens/allowaccess.dart';
+import 'package:flutternativesplash/screens/games/gamehome.dart';
 import 'package:get/get.dart';
 void main() { 
   Get.put(ButtonController());
-  runApp( const Allowaccess());
+  runApp( const Gamehome());
 } 
 
 
