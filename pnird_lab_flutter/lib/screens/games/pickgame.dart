@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutternativesplash/screens/games/chess/chess1.dart';  
 import 'package:flutternativesplash/screens/games/gamehome.dart';
-
+import "package:flutternativesplash/screens/games/flappybrain/flappyhome.dart";
 
 class Pickgame extends StatelessWidget {
   const Pickgame({super.key});
@@ -133,7 +133,7 @@ class CardExample extends StatelessWidget {
         clipBehavior: Clip.hardEdge,
         child: InkWell(
           onTap: () {
-            Navigator.pop(context);
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const Flappyhome()) );
           },
           child: const SizedBox( 
            
