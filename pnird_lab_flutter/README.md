@@ -1,4 +1,4 @@
-# pnird_lab_flutter
+# flutternativesplash
 
 A new Flutter project.
 
