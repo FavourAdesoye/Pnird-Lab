@@ -9,9 +9,10 @@ const userRoute = require("./routes/users")
 const postRoute = require("./routes/posts");
 const authRoute = require("./routes/auth");
 const cors = require('cors');
+const bodyParser = require("body-parser"); 
+const eventRouter = require('./routers/event.route'); 
 dotenv.config();
 
-const Port = process.env.PORT|| 3000;
 
 mongoose.
 connect(process.env.MONGO_URL
@@ -40,3 +41,21 @@ app.get("/", (req,res)=>{
 app.listen(Port, ()=>{
     console.log(`Backend server is runninnng on port ${Port}!`);
 });
+
+const Port = process.env.PORT || 5000; 
+
+//parsing the json  
+app.use(bodyParser.urlencoded({extended: false})); 
+app.use(bodyParser.json()); 
+app.use('/uploads', express.static('uploads')) 
+app.use(express.json()); 
+
+//handling events posts
+app.use('/eventregistration', eventRouter) 
+
+//
+app.listen(Port, () => {  
+    console.log(`Server Listening on Port http://localhost:${Port}`)
+}); 
+
+ 
