@@ -1,4 +1,4 @@
-import 'package:pnird_lab_flutter/model/user_model.dart';
+import 'package:flutternativesplash/model/user_model.dart';
 
 class Post {
   final String id;

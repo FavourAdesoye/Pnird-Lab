@@ -2,10 +2,8 @@
 
 import 'dart:ffi';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:pnird_lab_flutter/widgets/heart_animation_widget.dart';
+import 'package:flutternativesplash/widgets/heart_animation_widget.dart';
 import '../model/post_model.dart';
 import 'package:intl/intl.dart';
 

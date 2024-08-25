@@ -1,41 +1,11 @@
-<<<<<<< HEAD
-import 'package:flutter/material.dart';  
-
-class Homehome extends StatelessWidget {
-
-  const Homehome({super.key});
- 
-  @override
-  Widget build(context) {
-    return const MaterialApp( 
-      home: Home()
-    );
-  }
-}
-
-
-
-
-
-class Home extends StatelessWidget {
-  const Home({super.key});
-
-  
-@override
-Widget build(BuildContext context){
-  return const Scaffold( 
-        backgroundColor: Colors.black, 
-  ); 
-}
-}
-=======
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import '../model/post_model.dart';
 import '../services/post_service.dart';
-import 'package:pnird_lab_flutter/widgets/post_card.dart';
+import 'package:flutternativesplash/widgets/post_card.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   // HomePage({Key? key}) : super(key: key);
 
   @override
@@ -76,4 +46,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
->>>>>>> main
