@@ -3,13 +3,29 @@
 import 'dart:ffi';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutternativesplash/widgets/heart_animation_widget.dart';
+import '../model/post_model.dart';
+import 'package:intl/intl.dart';
 
-class PostCard extends StatelessWidget {
-  const PostCard({Key? key}) : super(key: key);
+class PostCard extends StatefulWidget {
+  final Post post;
+  PostCard({required this.post});
+  @override
+  _PostCardState createState() => _PostCardState();
+}
 
+String formattedDateTime(DateTime dateTime) {
+  return DateFormat('yyyy-MM-dd HH:mm a').format(dateTime);
+}
+
+class _PostCardState extends State<PostCard> {
+  // const PostCard({Key? key}) : super(key: key);
+  bool isLiked = false;
+  bool isHeartAnimating = false;
   @override
   Widget build(BuildContext context) {
+    final icon = isLiked ? Icons.favorite : Icons.favorite_outline;
+    final color = isLiked ? Colors.red : Colors.white;
     return Container(
       color: Color.fromRGBO(0, 0, 0, 1),
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -35,7 +51,8 @@ class PostCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Dr. Larry Keen', //replace with username of someone
+                          widget.post.user
+                              .username, //replace with username of someone
                           style: TextStyle(fontWeight: FontWeight.bold),
                         )
                       ],
@@ -44,22 +61,52 @@ class PostCard extends StatelessWidget {
                 ],
               )),
           //Image section
-          SizedBox(
-              height: MediaQuery.of(context).size.height * 0.35,
-              width: double.infinity,
-              child: Image.asset(
-                "assets/images/pnird_group_photo.jpg",
-                fit: BoxFit.cover,
-              )),
+          GestureDetector(
+            child: Stack(alignment: Alignment.center, children: [
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.35,
+                width: double.infinity,
+                child: Image.network(
+                  widget.post.img ?? '', //Hande potential null
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Opacity(
+                opacity: isHeartAnimating ? 1 : 0,
+                child: HeartAnimationWidget(
+                  isAnimating: isHeartAnimating,
+                  duration: Duration(milliseconds: 700),
+                  child: Icon(
+                    Icons.favorite,
+                    color: Colors.white,
+                    size: 70,
+                  ),
+                  onEnd: () => setState(() => isHeartAnimating = false),
+                ),
+              ),
+            ]),
+            onDoubleTap: () {
+              setState(() {
+                isHeartAnimating = true;
+                isLiked = true;
+              });
+            },
+          ),
 
           //Like comment section
           Row(
             children: [
-              IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.favorite,
-                  )),
+              HeartAnimationWidget(
+                alwaysAnimate: true,
+                isAnimating: isLiked,
+                child: IconButton(
+                  icon: Icon(
+                    icon,
+                    color: color,
+                  ),
+                  onPressed: () => setState(() => isLiked = !isLiked),
+                ),
+              ),
               IconButton(
                   onPressed: () {},
                   icon: const Icon(
@@ -81,7 +128,7 @@ class PostCard extends StatelessWidget {
                           fontWeight: FontWeight.w800,
                         ),
                     child: Text(
-                      '80 likes',
+                      '${widget.post.likes?.isEmpty ?? true ? 0 : widget.post.likes![0]} likes',
                       style: Theme.of(context).textTheme.bodyLarge,
                     )),
                 Container(
@@ -95,14 +142,13 @@ class PostCard extends StatelessWidget {
                               color: Color.fromARGB(255, 250, 228, 33)),
                           children: [
                         TextSpan(
-                          text: 'Dr. Larry-Keen',
+                          text: widget.post.user.username,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         TextSpan(
-                          text:
-                              '   We had a great time at the national psychology conference',
+                          text: '   ${widget.post.description ?? ''}',
                         ),
                       ])),
                 ),
@@ -117,7 +163,7 @@ class PostCard extends StatelessWidget {
                 ),
                 Container(
                     child: Text(
-                  "2 days ago",
+                  formattedDateTime(widget.post.createdAt),
                 )),
               ],
             ),

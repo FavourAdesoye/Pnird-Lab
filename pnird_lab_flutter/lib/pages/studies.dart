@@ -1,34 +1,4 @@
-<<<<<<< HEAD
-import 'package:flutter/material.dart';  
-
-class Studieshome extends StatelessWidget {
-
-  const Studieshome({super.key});
- 
-  @override
-  Widget build(context) {
-    return const MaterialApp( 
-      home: Studies()
-    );
-  }
-}
-
-
-
-class Studies extends StatelessWidget {
-  const Studies({super.key});
-
-  
-@override
-Widget build(BuildContext context){
-  return const Scaffold( 
-    backgroundColor: Colors.black, 
-  ); 
-}
-}
-=======
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class StudiesPage extends StatefulWidget {
   StudiesPage({Key? key}) : super(key: key);
@@ -42,10 +12,9 @@ class _StudiesPageState extends State<StudiesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: Center(
-            child: Text(
-      "studies",
-      style: TextStyle(fontSize: 60, color: Colors.amber),
+            child: ElevatedButton(
+      onPressed: () {},
+      child: Text("Create post"),
     )));
   }
 }
->>>>>>> main
