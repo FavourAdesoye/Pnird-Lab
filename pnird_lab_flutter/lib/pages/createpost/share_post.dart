@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:flutternativesplash/components/button_controller.dart';
+import 'package:pnirdlab/components/button_controller.dart';
 import 'package:http/http.dart' as http;
 import "config.dart";
 

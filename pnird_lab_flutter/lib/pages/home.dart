@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import '../model/post_model.dart';
-import '../services/post_service.dart';
-import 'package:flutternativesplash/widgets/post_card.dart';
+import 'package:flutter/widgets.dart';
+import 'package:pnirdlab/model/post_model.dart';
+import 'package:pnirdlab/services/post_service.dart';
+import 'package:pnirdlab/widgets/post_card.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
   // HomePage({Key? key}) : super(key: key);
 
   @override

@@ -2,8 +2,8 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutternativesplash/components/allowbutton.dart';
-import 'package:flutternativesplash/pages/createpost/share_post.dart';
+import 'package:pnirdlab/components/allowbutton.dart';
+import 'package:pnirdlab/pages/createpost/share_post.dart';
 
 //class ViewImage extends StatefulWidget {
 //  const ViewImage({super.key});
@@ -76,7 +76,7 @@ class ViewImagePage extends StatelessWidget {
                       //      ElevatedButton(
                       //        onPressed: () { Navigator.pop(context);},
                       //        child: Image.asset(
-                      //           'flutternativesplash/assets/Close.png'),
+                      //           'pnirdlab/assets/Close.png'),
                       //      ),
                       //    ],
                       //  ),

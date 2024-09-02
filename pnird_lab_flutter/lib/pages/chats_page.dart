@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:pnird_lab_flutter/widgets/user_avatar.dart';
+import 'package:pnirdlab/widgets/user_avatar.dart';
 
 class ChatsPage extends StatelessWidget {
   ChatsPage({super.key});
