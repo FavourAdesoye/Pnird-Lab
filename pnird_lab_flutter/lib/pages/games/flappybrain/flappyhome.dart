@@ -1,7 +1,8 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutternativesplash/pages/games/flappybrain/bird.dart';
-import 'package:flutternativesplash/pages/games/flappybrain/barries.dart';
+import 'package:pnirdlab/pages/games/flappybrain/bird.dart';
+import 'package:pnirdlab/pages/games/flappybrain/barries.dart';
 
 class Flappyhome extends StatelessWidget {
   const Flappyhome({super.key});

@@ -1,12 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutternativesplash/pages/events.dart';
-import 'package:flutternativesplash/pages/about_us.dart';
-import 'package:flutternativesplash/pages/games.dart';
-import 'package:flutternativesplash/pages/home.dart';
-import 'package:flutternativesplash/pages/studies.dart';
-import 'package:flutternativesplash/pages/chats_page.dart';
+// import 'package:pnirdlab/pages/events/events.dart';
+import 'package:pnirdlab/pages/about_us.dart';
+// import 'package:pnirdlab/pages/games/gamehome.dart';
+import 'package:pnirdlab/pages/home.dart';
+import 'package:pnirdlab/pages/studies.dart';
+import 'package:pnirdlab/pages/dms.dart';
 
 class MainScreenPage extends StatefulWidget {
   MainScreenPage({Key? key}) : super(key: key);
@@ -20,9 +20,9 @@ class _MainScreenPageState extends State<MainScreenPage> {
   final _screens = [
     HomePage(),
     StudiesPage(),
-    EventsPage(),
+    // EventsHome(),
     AboutUsPage(),
-    GamesPage(),
+    // Gamehome(),
   ];
   @override
   Widget build(BuildContext context) {
@@ -68,7 +68,7 @@ class _MainScreenPageState extends State<MainScreenPage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ChatsPage()),
+                  MaterialPageRoute(builder: (context) => DmsPage()),
                 );
               }),
         ],

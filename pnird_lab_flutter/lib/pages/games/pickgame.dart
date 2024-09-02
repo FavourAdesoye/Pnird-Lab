@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutternativesplash/pages/games/chess/chess1.dart';
-import 'package:flutternativesplash/pages/games/gamehome.dart';
-import "package:flutternativesplash/pages/games/flappybrain/flappyhome.dart";
+import 'package:pnirdlab/pages/games/chess/chess1.dart';
+import 'package:pnirdlab/pages/games/gamehome.dart';
+import "package:pnirdlab/pages/games/flappybrain/flappyhome.dart";
 
 class Pickgame extends StatelessWidget {
   const Pickgame({super.key});

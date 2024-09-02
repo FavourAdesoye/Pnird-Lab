@@ -2,9 +2,9 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutternativesplash/components/allowbutton.dart';
-import 'package:flutternativesplash/pages/games/pickgame.dart';
-import 'package:flutternativesplash/pages/studies.dart';
+import 'package:pnirdlab/components/allowbutton.dart';
+import 'package:pnirdlab/pages/games/pickgame.dart';
+import 'package:pnirdlab/pages/studies.dart';
 
 class Gamehome extends StatelessWidget {
   final File? image;

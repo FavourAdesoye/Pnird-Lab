@@ -1,9 +1,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
-import 'package:flutternativesplash/widgets/heart_animation_widget.dart';
+import 'package:pnirdlab/widgets/heart_animation_widget.dart';
 import '../model/post_model.dart';
 import 'package:intl/intl.dart';
 

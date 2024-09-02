@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutternativesplash/pages/events/NetworkHandler.dart';
-import 'package:flutternativesplash/pages/events/events1.dart';
-import 'package:flutternativesplash/pages/games/gamehome.dart';
-import 'package:flutternativesplash/pages/studies.dart';
+import 'package:pnirdlab/pages/events/NetworkHandler.dart';
+import 'package:pnirdlab/pages/events/events1.dart';
+import 'package:pnirdlab/pages/games/gamehome.dart';
+import 'package:pnirdlab/pages/studies.dart';
 
 class EventsHome extends StatelessWidget {
   const EventsHome({super.key});
