@@ -61,9 +61,9 @@ class _PostCardState extends State<PostCard> {
           //Image section
           GestureDetector(
             child: Stack(alignment: Alignment.center, children: [
-              SizedBox(
-                height: MediaQuery.of(context).size.height * 0.35,
-                width: double.infinity,
+              Expanded(
+                // height: MediaQuery.of(context).size.height * 0.35,
+                // width: double.infinity,
                 child: Image.network(
                   widget.post.img ?? '', //Hande potential null
                   fit: BoxFit.cover,
