@@ -91,6 +91,6 @@ flutter:
   # see https://flutter.dev/custom-fonts/#from-packages
 flutter_native_splash:
   background_image: assets/images/splash_background.png
-  image: /assets/logos/logophoto_large.png
+  image: assets/logos/logophoto_large.png
   android: true
   ios: true

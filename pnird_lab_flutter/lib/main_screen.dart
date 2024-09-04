@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-// import 'package:pnirdlab/pages/events/events.dart';
+import 'package:pnirdlab/pages/events/events.dart';
 import 'package:pnirdlab/pages/about_us.dart';
-// import 'package:pnirdlab/pages/games/gamehome.dart';
+import 'package:pnirdlab/pages/games/gamehome.dart';
 import 'package:pnirdlab/pages/home.dart';
 import 'package:pnirdlab/pages/studies.dart';
 import 'package:pnirdlab/pages/dms.dart';
@@ -20,9 +20,9 @@ class _MainScreenPageState extends State<MainScreenPage> {
   final _screens = [
     HomePage(),
     StudiesPage(),
-    // EventsHome(),
+    EventsHome(),
     AboutUsPage(),
-    // Gamehome(),
+    const Gamehome(),
   ];
   @override
   Widget build(BuildContext context) {

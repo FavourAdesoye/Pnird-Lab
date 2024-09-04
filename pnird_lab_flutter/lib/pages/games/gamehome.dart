@@ -88,41 +88,6 @@ class GameHomePage extends State<_GamePage> {
                   )
                 ],
               ))),
-
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: currentIndex,
-        onTap: (index) => setState(() => currentIndex = index),
-        backgroundColor: Colors.black,
-        selectedItemColor: Colors.yellow,
-        unselectedItemColor: Colors.white,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.home,
-            ),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.library_books,
-            ),
-            label: 'Studies',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month),
-            label: 'Events',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.edit),
-            label: 'About Us',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.psychology),
-            label: 'Game',
-          ),
-        ],
-      ),
     );
 
     //  );
