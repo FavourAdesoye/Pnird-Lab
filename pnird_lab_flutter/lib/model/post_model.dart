@@ -5,7 +5,7 @@ class Post {
   final User user;
   String? description;
   String? img;
-  List<int>? likes;
+  List<String>? likes;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -14,7 +14,7 @@ class Post {
     required this.user,
     this.description,
     this.img,
-    List<int>? likes,
+    List<String>? likes,
     required this.createdAt,
     required this.updatedAt,
   }) : likes = likes ?? []; //Initialize likes with an empty list if null
@@ -26,7 +26,7 @@ class Post {
       description: json['description'] ?? '', // Handle null case
       img: json['img'] ?? '', // Handle null case
       likes: json['likes'] != null
-          ? List<int>.from(json['likes'])
+          ? List<String>.from(json['likes'])
           : [], // Handle null case
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:pnirdlab/widgets/heart_animation_widget.dart';
 import '../model/post_model.dart';
 import 'package:intl/intl.dart';
+import '../services/like_service.dart';
 
 class PostCard extends StatefulWidget {
   final Post post;
@@ -62,8 +63,6 @@ class _PostCardState extends State<PostCard> {
           GestureDetector(
             child: Stack(alignment: Alignment.center, children: [
               Expanded(
-                // height: MediaQuery.of(context).size.height * 0.35,
-                // width: double.infinity,
                 child: Image.network(
                   widget.post.img ?? '', //Hande potential null
                   fit: BoxFit.cover,
@@ -83,11 +82,12 @@ class _PostCardState extends State<PostCard> {
                 ),
               ),
             ]),
-            onDoubleTap: () {
+            onDoubleTap: () async {
               setState(() {
                 isHeartAnimating = true;
-                isLiked = true;
+                isLiked = !isLiked; // Toggle like status
               });
+              await likePost(widget.post.id, widget.post.user.id);
             },
           ),
 
@@ -102,7 +102,18 @@ class _PostCardState extends State<PostCard> {
                     icon,
                     color: color,
                   ),
-                  onPressed: () => setState(() => isLiked = !isLiked),
+                  onPressed: () async {
+                    setState(() {
+                      isLiked = !isLiked;
+                    });
+                    try {
+                      await likePost(widget.post.id, widget.post.user.id);
+                    } catch (e) {
+                      setState(() {
+                        isLiked = !isLiked; // Revert on failure
+                      });
+                    }
+                  },
                 ),
               ),
               IconButton(
@@ -126,7 +137,7 @@ class _PostCardState extends State<PostCard> {
                           fontWeight: FontWeight.w800,
                         ),
                     child: Text(
-                      '${widget.post.likes?.isEmpty ?? true ? 0 : widget.post.likes![0]} likes',
+                      '${widget.post.likes?.length ?? 0} likes',
                       style: Theme.of(context).textTheme.bodyLarge,
                     )),
                 Container(
