@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
+import 'package:pnirdlab/pages/comments_screen.dart';
 import 'package:pnirdlab/widgets/heart_animation_widget.dart';
 import '../model/post_model.dart';
 import 'package:intl/intl.dart';
@@ -117,7 +118,11 @@ class _PostCardState extends State<PostCard> {
                 ),
               ),
               IconButton(
-                  onPressed: () {},
+                  onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => CommentsScreen(),
+                        ),
+                      ),
                   icon: const Icon(
                     Icons.comment_outlined,
                   )),
@@ -162,7 +167,11 @@ class _PostCardState extends State<PostCard> {
                       ])),
                 ),
                 InkWell(
-                  onTap: () {},
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => CommentsScreen(),
+                    ),
+                  ),
                   child: Text(
                     "view all comments",
                     style: TextStyle(
