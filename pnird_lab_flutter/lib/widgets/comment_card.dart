@@ -1,16 +1,19 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
+import 'package:pnirdlab/model/comment_model.dart';
 import 'package:pnirdlab/widgets/user_avatar.dart';
+import 'package:intl/intl.dart';
 
-class CommentCard extends StatefulWidget {
-  const CommentCard({super.key});
+class CommentCard extends StatelessWidget {
+  final Comment comment;
 
-  @override
-  State<CommentCard> createState() => _CommentCardState();
-}
+  const CommentCard({Key? key, required this.comment}) : super(key: key);
 
-class _CommentCardState extends State<CommentCard> {
+  String formattedDateTime(DateTime dateTime) {
+    return DateFormat('yyyy-MM-dd HH:mm a').format(dateTime);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -23,32 +26,25 @@ class _CommentCardState extends State<CommentCard> {
               padding: const EdgeInsets.only(left: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'username',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xffFFC700)),
-                        ),
-                        TextSpan(
-                          text: 'some description to insert',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color:
-                                  Color(0xffFFC700) // Ensure you set the color
-                              ),
-                        ),
-                      ],
-                    ),
+                  Text(
+                    comment.username,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 255, 255, 255)),
+                  ),
+                  const SizedBox(
+                      height: 4), // Optional space between username and comment
+                  Text(
+                    comment.comment,
+                    style: const TextStyle(
+                        color: Color.fromARGB(
+                            255, 255, 255, 255)), // Keep it simple
                   ),
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      'date',
+                      formattedDateTime(comment.createdAt),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w400,
@@ -59,11 +55,14 @@ class _CommentCardState extends State<CommentCard> {
               ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(8),
-            child: const Icon(
-              Icons.favorite,
-              size: 16,
+          InkWell(
+            onTap: () => {},
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+              child: const Text(
+                'Reply',
+                style: TextStyle(color: Color(0xffFFC700)),
+              ),
             ),
           )
         ],

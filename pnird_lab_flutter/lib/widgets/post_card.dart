@@ -120,7 +120,8 @@ class _PostCardState extends State<PostCard> {
               IconButton(
                   onPressed: () => Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => CommentsScreen(),
+                          builder: (context) =>
+                              CommentsScreen(postId: widget.post.id),
                         ),
                       ),
                   icon: const Icon(
@@ -169,7 +170,8 @@ class _PostCardState extends State<PostCard> {
                 InkWell(
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => CommentsScreen(),
+                      builder: (context) =>
+                          CommentsScreen(postId: widget.post.id),
                     ),
                   ),
                   child: Text(
