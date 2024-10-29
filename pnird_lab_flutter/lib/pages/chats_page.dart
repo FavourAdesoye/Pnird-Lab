@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:pnirdlab/widgets/user_avatar.dart';
 
 class ChatsPage extends StatelessWidget {
-  ChatsPage({super.key});
+  const ChatsPage({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,40 +49,40 @@ class ChatsPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TextButton(
-                          child: Text(
-                            "Messages",
-                            style: TextStyle(fontSize: 18),
-                          ),
                           style: ButtonStyle(
                               backgroundColor:
-                                  MaterialStateProperty.all(Colors.amber),
-                              padding: MaterialStateProperty.all(
+                                  WidgetStateProperty.all(Colors.amber),
+                              padding: WidgetStateProperty.all(
                                   EdgeInsets.only(right: 20, left: 20)),
                               foregroundColor:
-                                  MaterialStateProperty.all(Colors.white),
-                              shape: MaterialStateProperty.all(
+                                  WidgetStateProperty.all(Colors.white),
+                              shape: WidgetStateProperty.all(
                                   RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(50.0),
                                       side: BorderSide(color: Colors.red)))),
                           onPressed: () {},
-                        ),
-                        TextButton(
                           child: Text(
-                            "Notifications",
+                            "Messages",
                             style: TextStyle(fontSize: 18),
                           ),
+                        ),
+                        TextButton(
                           style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all(
+                              backgroundColor: WidgetStateProperty.all(
                                   Color.fromARGB(255, 52, 52, 52)),
-                              padding: MaterialStateProperty.all(
+                              padding: WidgetStateProperty.all(
                                   EdgeInsets.only(right: 20, left: 20)),
                               foregroundColor:
-                                  MaterialStateProperty.all(Colors.amber),
-                              shape: MaterialStateProperty.all(
+                                  WidgetStateProperty.all(Colors.amber),
+                              shape: WidgetStateProperty.all(
                                   RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(50.0),
                               ))),
                           onPressed: () {},
+                          child: Text(
+                            "Notifications",
+                            style: TextStyle(fontSize: 18),
+                          ),
                         )
                       ]),
                   Expanded(

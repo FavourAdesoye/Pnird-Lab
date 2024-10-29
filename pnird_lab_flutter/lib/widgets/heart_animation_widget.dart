@@ -50,7 +50,7 @@ class _HeartAnimationWidgetState extends State<HeartAnimationWidget>
     if (widget.isAnimating || widget.alwaysAnimate) {
       await controller.forward();
       await controller.reverse();
-      await Future.delayed(Duration(milliseconds: 150));
+      await Future.delayed(const Duration(milliseconds: 150));
 
       if (widget.onEnd != null) {
         widget.onEnd!();

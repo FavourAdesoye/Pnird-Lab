@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class StudiesPage extends StatefulWidget {
-  StudiesPage({Key? key}) : super(key: key);
+  const StudiesPage({super.key});
 
   @override
   _StudiesPageState createState() => _StudiesPageState();
@@ -14,7 +14,7 @@ class _StudiesPageState extends State<StudiesPage> {
         body: Center(
             child: ElevatedButton(
       onPressed: () {},
-      child: Text("Create post"),
+      child: const Text("Create post"),
     )));
   }
 }
