@@ -5,7 +5,7 @@ class Api {
   static const baseUrl = "http://10.0.0.32/api/";
 
   static createPost(Map pdata) async {
-    var url = Uri.parse(baseUrl + "createpost");
+    var url = Uri.parse("${baseUrl}createpost");
     try {
       final res = await http.post(url, body: pdata);
 

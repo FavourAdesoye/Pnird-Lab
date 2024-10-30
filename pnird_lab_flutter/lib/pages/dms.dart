@@ -15,7 +15,7 @@ class DmsPage extends StatelessWidget {
           Container(
             
             height: 30,
-            margin: EdgeInsets.only(top: 20, left: 20, right: 20),
+            margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
             decoration: BoxDecoration(
               boxShadow: [
                 BoxShadow(
@@ -29,7 +29,7 @@ class DmsPage extends StatelessWidget {
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.white,
-                contentPadding: EdgeInsets.all(5),
+                contentPadding: const EdgeInsets.all(5),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(30))
               ),
             ),
@@ -40,10 +40,10 @@ class DmsPage extends StatelessWidget {
             height: 30,
             width: 115,
 
-            margin: EdgeInsets.only(top:20, left: 20, right: 250),
+            margin: const EdgeInsets.only(top:20, left: 20, right: 250),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(30),
-                boxShadow: [
+                boxShadow: const [
                 BoxShadow(
                   color: Color(0xffFFC700),
                   blurRadius: 0,
@@ -68,8 +68,8 @@ class DmsPage extends StatelessWidget {
 
           Container(
             height: 75,
-            margin: EdgeInsets.only(top: 20, left: 25, right:25),
-            decoration: BoxDecoration(
+            margin: const EdgeInsets.only(top: 20, left: 25, right:25),
+            decoration: const BoxDecoration(
               // border: Border.all(width: 5, color: Color.fromARGB(255, 101, 101, 101)),
               boxShadow: [
                 BoxShadow(
@@ -95,8 +95,8 @@ class DmsPage extends StatelessWidget {
           ),
           Container(
             height: 75,
-            margin: EdgeInsets.only(top: 30, left: 25, right:25),
-            decoration: BoxDecoration(
+            margin: const EdgeInsets.only(top: 30, left: 25, right:25),
+            decoration: const BoxDecoration(
               // border: Border.all(width: 5, color: Color.fromARGB(255, 101, 101, 101)),
               boxShadow: [
                 BoxShadow(
@@ -122,8 +122,8 @@ class DmsPage extends StatelessWidget {
           ),
           Container(
             height: 75,
-            margin: EdgeInsets.only(top: 30, left: 25, right:25),
-            decoration: BoxDecoration(
+            margin: const EdgeInsets.only(top: 30, left: 25, right:25),
+            decoration: const BoxDecoration(
               // border: Border.all(width: 5, color: Color.fromARGB(255, 101, 101, 101)),
               boxShadow: [
                 BoxShadow(
@@ -163,12 +163,12 @@ class DmsPage extends StatelessWidget {
       )
       ),
       centerTitle: true,
-      backgroundColor:  Color(0xffFFC700),
+      backgroundColor:  const Color(0xffFFC700),
       leading: Container(
-        margin: EdgeInsets.all(10),
+        margin: const EdgeInsets.all(10),
 
         decoration: BoxDecoration(
-          color: Color.fromARGB(255, 0, 0, 0),
+          color: const Color.fromARGB(255, 0, 0, 0),
           borderRadius: BorderRadius.circular(10)
         ),
       ),

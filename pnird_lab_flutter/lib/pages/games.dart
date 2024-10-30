@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 class GamesPage extends StatefulWidget {
-  GamesPage({Key? key}) : super(key: key);
+  const GamesPage({super.key});
 
   @override
   _GamesPageState createState() => _GamesPageState();
@@ -11,7 +11,7 @@ class GamesPage extends StatefulWidget {
 class _GamesPageState extends State<GamesPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
         body: Center(
             child: Text(
       "gamespage",

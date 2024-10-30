@@ -5,6 +5,8 @@ import 'package:pnirdlab/services/post_service.dart';
 import 'package:pnirdlab/widgets/post_card.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   // HomePage({Key? key}) : super(key: key);
 
   @override
@@ -26,7 +28,7 @@ class _HomePageState extends State<HomePage> {
         future: futurePosts,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (snapshot.hasData) {
@@ -38,7 +40,7 @@ class _HomePageState extends State<HomePage> {
               },
             );
           } else {
-            return Center(child: Text('No posts available'));
+            return const Center(child: Text('No posts available'));
           }
         },
       ),
