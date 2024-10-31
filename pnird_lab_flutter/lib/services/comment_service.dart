@@ -39,4 +39,21 @@ class CommentService {
       throw Exception('Failed to post comment');
     }
   }
+
+  //replies
+  Future<void> createReply(
+      String commentId, String username, String reply) async {
+    final response = await http.post(
+      Uri.parse('$apiUrl/$commentId/replies'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'username': username,
+        'reply': reply,
+      }),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception('Failed to post reply');
+    }
+  }
 }
