@@ -54,15 +54,17 @@ const addReply = async (req, res) => {
     const { username, reply } = req.body;
 
     try {
+        // Find the comment by ID
         const comment = await Comment.findById(commentId);
         if (comment) {
+            // Push the reply to the replies array
             comment.replies.push({
                 username,
-                reply,
-                commentId: mongoose.Types.ObjectId(commentId),
+                comment: reply,  // This should match the schema's 'comment' field
+                createdAt: new Date(),  // Include createdAt timestamp
             });
-            await comment.save();
-            res.status(201).json(comment);
+            await comment.save();  // Save the updated comment
+            res.status(201).json(comment);  // Return the updated comment
         } else {
             res.status(404).json({ message: "Comment not found" });
         }
@@ -70,6 +72,7 @@ const addReply = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 
 module.exports = {
