@@ -13,7 +13,7 @@ class Gamehome extends StatelessWidget {
 
   @override
   Widget build(context) {
-    return MaterialApp(home: _GamePage());
+    return _GamePage();
   }
 }
 
@@ -38,7 +38,6 @@ class GameHomePage extends State<_GamePage> {
 
   @override
   Widget build(BuildContext context) {
-    // return MaterialApp(
     return Scaffold(
       //  home: Scaffold(
       backgroundColor: Colors.black,
