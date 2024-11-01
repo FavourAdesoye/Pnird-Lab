@@ -1,6 +1,5 @@
 // TODO Implement this library.
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class UserAvatar extends StatelessWidget {
   final String filename;
