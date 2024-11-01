@@ -2,7 +2,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../model/post_model.dart';
-import '../model/user_model.dart';
 
 Future<List<Post>> getPosts() async {
   List<Post> posts = [];

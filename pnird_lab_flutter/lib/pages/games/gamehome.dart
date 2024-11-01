@@ -13,7 +13,7 @@ class Gamehome extends StatelessWidget {
 
   @override
   Widget build(context) {
-    return MaterialApp(home: _GamePage());
+    return _GamePage();
   }
 }
 
@@ -30,7 +30,7 @@ class GameHomePage extends State<_GamePage> {
   int currentIndex = 3; // Set to 3 to default to the GamePage
   final List<Widget> _screens = [
     //const Homehome(),
-    StudiesPage(),
+    const StudiesPage(),
 //const EventsHome(),
     //const Abouthome(),
     const Gamehome(),
@@ -38,7 +38,6 @@ class GameHomePage extends State<_GamePage> {
 
   @override
   Widget build(BuildContext context) {
-    // return MaterialApp(
     return Scaffold(
       //  home: Scaffold(
       backgroundColor: Colors.black,
@@ -51,7 +50,7 @@ class GameHomePage extends State<_GamePage> {
               Navigator.pop(context);
             }),
       ),
-      body: Center(
+      body: SingleChildScrollView(
           child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(

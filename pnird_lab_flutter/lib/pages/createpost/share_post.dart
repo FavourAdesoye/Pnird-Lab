@@ -13,10 +13,8 @@ class SharePost extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: SharepostPage(
-        image: image,
-      ),
+    return SharepostPage(
+      image: image,
     );
   }
 }

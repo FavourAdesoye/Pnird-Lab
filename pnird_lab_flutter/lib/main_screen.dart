@@ -9,7 +9,7 @@ import 'package:pnirdlab/pages/studies.dart';
 import 'package:pnirdlab/pages/dms.dart';
 
 class MainScreenPage extends StatefulWidget {
-  MainScreenPage({Key? key}) : super(key: key);
+  const MainScreenPage({super.key});
 
   @override
   _MainScreenPageState createState() => _MainScreenPageState();
@@ -20,7 +20,7 @@ class _MainScreenPageState extends State<MainScreenPage> {
   final _screens = [
     HomePage(),
     StudiesPage(),
-    EventsHome(),
+    const EventsHome(),
     AboutUsPage(),
     const Gamehome(),
   ];
@@ -68,7 +68,7 @@ class _MainScreenPageState extends State<MainScreenPage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => DmsPage()),
+                  MaterialPageRoute(builder: (context) => const DmsPage()),
                 );
               }),
         ],
@@ -85,7 +85,7 @@ class _MainScreenPageState extends State<MainScreenPage> {
         backgroundColor: Colors.black,
         selectedItemColor: Colors.yellow,
         unselectedItemColor: Colors.white,
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(
               Icons.home,

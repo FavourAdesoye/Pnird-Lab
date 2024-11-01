@@ -9,7 +9,7 @@ class EventsHome extends StatelessWidget {
 
   @override
   Widget build(context) {
-    return MaterialApp(home: _EventsPage());
+    return _EventsPage();
   }
 }
 

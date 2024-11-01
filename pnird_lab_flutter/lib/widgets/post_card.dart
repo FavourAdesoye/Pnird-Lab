@@ -9,7 +9,7 @@ import '../services/like_service.dart';
 
 class PostCard extends StatefulWidget {
   final Post post;
-  PostCard({required this.post});
+  const PostCard({super.key, required this.post});
   @override
   _PostCardState createState() => _PostCardState();
 }

@@ -9,10 +9,7 @@ class Flappyhome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      // debugShowCheckedModeBanner: false,
-      home: Homepage(),
-    );
+    return const Homepage();
   }
 }
 
@@ -78,7 +75,8 @@ class _HomepageState extends State<Homepage> {
     @override
     Widget build(BuildContext context) {
       return Scaffold(
-          body: Column(
+          body: SingleChildScrollView(
+              child: Column(
         children: [
           Expanded(
             flex: 2,
@@ -184,7 +182,7 @@ class _HomepageState extends State<Homepage> {
                         )
                       ])))
         ],
-      ));
+      )));
     }
   }
 
