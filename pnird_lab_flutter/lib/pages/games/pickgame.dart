@@ -7,7 +7,7 @@ class Pickgame extends StatelessWidget {
 
   @override
   Widget build(context) {
-    return MaterialApp(home: _Pickgame());
+    return _Pickgame();
   }
 }
 

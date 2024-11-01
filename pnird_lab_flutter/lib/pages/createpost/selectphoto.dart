@@ -5,20 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:pnirdlab/components/allowbutton.dart';
 import 'package:pnirdlab/pages/createpost/share_post.dart';
 
-//class ViewImage extends StatefulWidget {
-//  const ViewImage({super.key});
-
-//  @override
-//  ViewImage1 createState() => ViewImage1();
-
-//  Widget build(BuildContext){
-//    return MaterialApp(
-//     home: ViewImage1()
-//   );
-//  }
-
-//}
-
 class ViewImage extends StatelessWidget {
   final File? image;
 
@@ -26,7 +12,7 @@ class ViewImage extends StatelessWidget {
 
   @override
   Widget build(context) {
-    return const MaterialApp(home: ViewImagePage());
+    return const ViewImagePage();
   }
 }
 
@@ -38,7 +24,6 @@ class ViewImagePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // return MaterialApp(
     return Scaffold(
         //  home: Scaffold(
         backgroundColor: Colors.black,

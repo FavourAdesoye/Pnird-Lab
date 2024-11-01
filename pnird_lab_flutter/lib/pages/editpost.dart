@@ -2,10 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as pathlib;
 import 'package:photofilters/photofilters.dart';
-import 'package:image/image.dart' as imagelib; 
-
-
-
+import 'package:image/image.dart' as imagelib;
 
 class EditPost extends StatefulWidget {
   final File? image;
@@ -24,17 +21,14 @@ class EditPost1 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: EditPost(image: image), // Correctly pass the image to EditPost
-    );
+    return EditPost(image: image); // Correctly pass the image to EditPost;
   }
 }
 
 class _EditPostState extends State<EditPost> {
   late String fileName;
   File? image;
-  dynamic imageFile; 
-  
+  dynamic imageFile;
 
   @override
   void initState() {
@@ -49,34 +43,32 @@ class _EditPostState extends State<EditPost> {
 
   Future<void> getImage(BuildContext context) async {
     if (imageFile == null) return;
-   // if (decodedImage != null) { 
-      fileName = pathlib.basename(imageFile!.path);
-      var decodedImage = imagelib.decodeImage(imageFile!.readAsBytesSync());
-      //decodedImage = imagelib.copyResize(decodedImage!, width: 600);
-      Map imagefile = await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PhotoFilterSelector(
-            title: const Text("Photo Filter Example"),
-            image: decodedImage ?? imagelib.Image(50, 50) , 
-            filters: presetFiltersList,
-            filename: fileName,
-            loader: const Center(child: CircularProgressIndicator()),
-            fit: BoxFit.contain,
-          ),
+    // if (decodedImage != null) {
+    fileName = pathlib.basename(imageFile!.path);
+    var decodedImage = imagelib.decodeImage(imageFile!.readAsBytesSync());
+    //decodedImage = imagelib.copyResize(decodedImage!, width: 600);
+    Map imagefile = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PhotoFilterSelector(
+          title: const Text("Photo Filter Example"),
+          image: decodedImage ?? imagelib.Image(50, 50),
+          filters: presetFiltersList,
+          filename: fileName,
+          loader: const Center(child: CircularProgressIndicator()),
+          fit: BoxFit.contain,
         ),
-      );
-      if (imagefile.containsKey('image_filtered')) {
-        setState(() {
-          imageFile = imagefile['image_filtered'];
-        });
-        print(imageFile.path); 
-      } else { 
-        print("Error decoding the image");
-      }
-      }
-      
-       
+      ),
+    );
+    if (imagefile.containsKey('image_filtered')) {
+      setState(() {
+        imageFile = imagefile['image_filtered'];
+      });
+      print(imageFile.path);
+    } else {
+      print("Error decoding the image");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,5 +91,5 @@ class _EditPostState extends State<EditPost> {
         child: const Icon(Icons.add_a_photo),
       ),
     );
-  } 
+  }
 }
