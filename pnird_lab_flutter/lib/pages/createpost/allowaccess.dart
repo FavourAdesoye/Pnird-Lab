@@ -4,21 +4,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:pnirdlab/components/allowbutton.dart';
 import 'package:pnirdlab/pages/createpost/selectphoto.dart';
-//import 'package:pnirdlab/components/nextbutton.dart';
 
-//void main() {
-// runApp(const MaterialApp(
-//  home: Allowaccess(),
-// ));
-//}
 class Allowaccess extends StatelessWidget {
   const Allowaccess({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Allowaccess1(),
-    );
+    return const Allowaccess1();
   }
 }
 
@@ -64,8 +56,6 @@ class _Allowaccess extends State<Allowaccess1> {
 
   @override
   Widget build(BuildContext context) {
-//return MaterialApp(
-    //home: Scaffold(
     return Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
