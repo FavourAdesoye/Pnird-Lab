@@ -12,6 +12,7 @@ const authRoute = require("./routes/auth");
 const cors = require('cors');
 const bodyParser = require("body-parser"); 
 const eventRouter = require('./routers/event.route'); 
+const admin = require("./firebase")
 dotenv.config();
 
 const Port = process.env.PORT || 3000; 

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class StudentLoginPage extends StatefulWidget {
   const StudentLoginPage({super.key});
@@ -13,11 +16,61 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
+  Future<void> loginUser(String email, String password) async {
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
+
+      // Get Firebase UID
+      String uid = userCredential.user!.uid;
+
+      // Send UID to backend to get role
+      var response = await http.post(
+        Uri.parse("http://localhost:3000/api/users/getUserRole"),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"uid": uid}),
+      );
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        String role = data['role'];
+
+        // Redirect based on user role
+        if (role == "student") {
+          Navigator.pushNamed(context, '/home');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(
+                    'You are registered not registered as a student in our database')),
+          );
+
+          // Navigate to the student login page
+          Navigator.pushNamed(context, '/staff_login');
+        }
+      } else {
+        print("Error fetching role: ${response.body}");
+      }
+    } catch (e) {
+      print("Error logging in: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       // Ensures the UI avoids areas like the notch on iOS devices
+      appBar: AppBar(
+        backgroundColor: Colors.grey[900],
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context); // Navigates back to the previous screen
+          },
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           // Makes the content scrollable to prevent overflow
@@ -176,25 +229,12 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
                         child: ElevatedButton(
                           onPressed: () {
                             if (_studentLoginformKey.currentState!.validate()) {
-                              // Handle login logic here
-                              String email = _emailController.text;
-                              String password = _passwordController.text;
+                              // Get values from controllers
+                              String email = _emailController.text.trim();
+                              String password = _passwordController.text.trim();
 
-                              // Example: Perform authentication (you can replace this with your actual auth logic)
-                              bool isLoginSuccessful =
-                                  performLogin(email, password);
-
-                              if (isLoginSuccessful) {
-                                // Navigate to the next screen if login is successful
-                                Navigator.pushNamed(context, '/home');
-                              } else {
-                                // Show an error message if login fails
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text(
-                                          'Login failed. Please check your credentials.')),
-                                );
-                              }
+                              // Call login function with the variables
+                              loginUser(email, password);
                             }
                           },
                           style: ElevatedButton.styleFrom(

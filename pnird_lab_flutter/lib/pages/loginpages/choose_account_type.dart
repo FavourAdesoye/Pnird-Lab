@@ -52,6 +52,13 @@ class _ChooseAccountTypePageState extends State<ChooseAccountTypePage> {
     }
   }
 
+  void handleAccountTypeSelection(String accountType) {
+    setState(() {
+      selectedAccountType = accountType;
+    });
+    navigateToSignUp(); // Navigate after setting the account type
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -118,14 +125,14 @@ class _ChooseAccountTypePageState extends State<ChooseAccountTypePage> {
                   AccountTypeButton(
                     label: 'Student',
                     onPressed: () {
-                      Navigator.pushNamed(context, '/student_login');
+                      handleAccountTypeSelection('Student');
                     },
                   ),
                   const SizedBox(height: 40),
                   AccountTypeButton(
                     label: 'Staff',
                     onPressed: () {
-                      Navigator.pushNamed(context, '/staff_login');
+                      handleAccountTypeSelection('Staff');
                     },
                   ),
                   const SizedBox(height: 20),
