@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1060625556937",
+    "project_id": "pnird-lab",
+    "storage_bucket": "pnird-lab.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060625556937:android:5782737d830d611badf418",
+        "android_client_info": {
+          "package_name": "com.example.flutternativesplash"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_LTjNbDhQwXGHAkXYrXqeVO0jSDUpvQU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

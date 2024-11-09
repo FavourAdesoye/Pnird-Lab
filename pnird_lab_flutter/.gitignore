@@ -41,3 +41,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+lib/firebase_options.dart
+firebase.json
+../pnird_lab_backend/pnird-lab-firebase-adminsdk-avod6-157fc3b4bb.json
+../pnird_lab_backend/firebase.js 
