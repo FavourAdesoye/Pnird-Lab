@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class StaffLoginPage extends StatefulWidget {
   const StaffLoginPage({super.key});
@@ -13,10 +16,61 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false; // Add loading indicator
+
+  Future<void> loginUser(String email, String password) async {
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
+
+      // Get Firebase UID
+      String uid = userCredential.user!.uid;
+
+      // Send UID to backend to get role
+      var response = await http.post(
+        Uri.parse("http://localhost:3000/api/users/getUserRole"),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"uid": uid}),
+      );
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        String role = data['role'];
+
+        // Redirect based on user role
+        if (role == "staff") {
+          Navigator.pushNamed(context, '/home');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(
+                    'You are registered not registered as a staff in our database')),
+          );
+
+          // Navigate to the student login page
+          Navigator.pushNamed(context, '/student_login');
+        }
+      } else {
+        print("Error fetching role: ${response.body}");
+      }
+    } catch (e) {
+      print("Error logging in: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.grey[900],
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context); // Navigates back to the previous screen
+          },
+        ),
+      ),
       backgroundColor: Colors.black,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -148,7 +202,14 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
                       Center(
                         child: GestureDetector(
                           onTap: () {
-                            // Handle forgot password logic here
+                            if (_staffLoginformKey.currentState!.validate()) {
+                              // Get values from controllers
+                              String email = _emailController.text.trim();
+                              String password = _passwordController.text.trim();
+
+                              // Call login function with the variables
+                              loginUser(email, password);
+                            }
                           },
                           child: const Text(
                             'Forgot Password?',
@@ -165,7 +226,10 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
                         child: ElevatedButton(
                           onPressed: () {
                             if (_staffLoginformKey.currentState!.validate()) {
-                              // Handle login logic here
+                              String email = _emailController.text;
+                              String password = _passwordController.text;
+
+                              loginUser(email, password);
                             }
                           },
                           style: ElevatedButton.styleFrom(

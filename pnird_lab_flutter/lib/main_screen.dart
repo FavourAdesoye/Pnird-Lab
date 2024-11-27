@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:pnirdlab/pages/chats_page.dart';
 import 'package:pnirdlab/pages/events/events.dart';
 import 'package:pnirdlab/pages/about_us.dart';
 import 'package:pnirdlab/pages/games/gamehome.dart';
@@ -68,7 +69,7 @@ class _MainScreenPageState extends State<MainScreenPage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const DmsPage()),
+                  MaterialPageRoute(builder: (context) => const ChatsPage()),
                 );
               }),
         ],

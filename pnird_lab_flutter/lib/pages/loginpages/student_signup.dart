@@ -1,4 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class StudentSignUpPage extends StatefulWidget {
   const StudentSignUpPage({super.key});
@@ -15,12 +18,58 @@ class _StudentSignUpPageState extends State<StudentSignUpPage> {
   final _mobileNumberController = TextEditingController();
   bool _obscurePassword = true;
 
+  Future<void> registerUser(String email, String password, String fullName,
+      String mobileNumber, String role) async {
+    try {
+      // Register user with Firebase Authentication
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+
+      // Firebase UID for the registered user
+      String firebaseUID = userCredential.user!.uid;
+
+      // Send UID, email, and role to backend for storing in MongoDB
+      var response = await http.post(
+        Uri.parse("http://localhost:3000/api/users/register"),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "username": fullName,
+          "firebaseUID": firebaseUID,
+          "email": email,
+          "role": role, // either "student" or "staff"
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Registration Successful')));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content:
+                Text('Failed to register user on backend: ${response.body}')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       // Sets the background color of the screen
       backgroundColor: Colors.black,
       // Ensures the UI avoids areas like the notch on iOS devices
+      appBar: AppBar(
+        backgroundColor: Colors.grey[900],
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context); // Navigates back to the previous screen
+          },
+        ),
+      ),
       body: SafeArea(
         child: Padding(
           // Adds padding around the content
@@ -212,7 +261,12 @@ class _StudentSignUpPageState extends State<StudentSignUpPage> {
                         child: ElevatedButton(
                           onPressed: () {
                             if (_signUpFormKey.currentState!.validate()) {
-                              // Handle sign-up logic here
+                              registerUser(
+                                  _emailController.text,
+                                  _passwordController.text,
+                                  _fullNameController.text,
+                                  _mobileNumberController.text,
+                                  "student");
                             }
                           },
                           style: ElevatedButton.styleFrom(

@@ -20,7 +20,9 @@ class ChatsPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
                             icon: const Icon(
                               Icons.arrow_back_ios,
                               color: Colors.white,
@@ -32,7 +34,7 @@ class ChatsPage extends StatelessWidget {
             ],
           ),
           Positioned(
-              top: 190,
+              top: 110,
               left: 0,
               right: 0,
               bottom: 0,

@@ -11,10 +11,10 @@ const UserSchema = new mongoose.Schema({
     email:{
         type: String,
         required:true,
+        unique: true,
     },
     password:{
         type: String,
-        required: true,
         min:8,
     }, 
     profilePicture:{
@@ -22,14 +22,17 @@ const UserSchema = new mongoose.Schema({
         default: ""
     },
 
-   isAdmin: {
-    type: Boolean,
-    default: false,
+   role: {
+    type: String,
+    enum: ["staff", "student"]
    },
 
    cloudinary_id:{
     type: String
-   } 
+   },
+   firebaseUID: {
+    type: String,
+   }
 },
 {timestamps:true}
 );
