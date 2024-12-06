@@ -12,6 +12,7 @@ const authRoute = require("./routes/auth");
 const cors = require('cors');
 const bodyParser = require("body-parser"); 
 const eventRouter = require('./routers/event.route'); 
+const studyRoute = require("./routes/studies")
 const admin = require("./firebase")
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use("/api/posts", postRoute);
 app.use("/api/users", userRoute)
 app.use("/api/auth", authRoute);
 app.use("/api/comments", commentRoute);
+app.use("/api/studies", studyRoute);
 
 
 app.get("/", (req,res)=>{

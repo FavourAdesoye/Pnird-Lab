@@ -28,7 +28,7 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
 
       // Send UID to backend to get role
       var response = await http.post(
-        Uri.parse("http://localhost:3000/api/users/getUserRole"),
+        Uri.parse("http://10.0.2.2:3000/api/users/getUserRole"),
         headers: {"Content-Type": "application/json"},
         body: json.encode({"uid": uid}),
       );

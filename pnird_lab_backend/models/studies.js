@@ -1,31 +1,14 @@
 const mongoose = require("mongoose");  
-const index = require('../index')
 
-const {Schema } = mongoose; 
-
-const StudiesSchema = new Schema({ 
-    post_id :{ 
-        type : String ,
-        required: true,  
-        unique: true,
-    },  
-
-    user_id : { 
-        type: String ,
-        required: true
-    }, 
-
-    date_time : { 
-        type: String, 
-        required: true
-    },
-
+const StudiesSchema = new mongoose.Schema({ 
     image_url : { 
         type : String, 
         required: true
     } ,
-
-    caption : { 
+    cloudinary_id:{
+        type: String
+    },
+    description : { 
         type: String, 
         required: false
     } ,
@@ -33,10 +16,24 @@ const StudiesSchema = new Schema({
     titlepost : { 
         type: String, 
         required: true
-    }
+    },
+    allowScheduling: {
+        type: Boolean,
+        default: false, // Default to not allowing scheduling
+    },
+    allowComments: {
+        type: Boolean,
+        default: false, // Default to not allowing comments
+    },
+    comments: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Comment", // Reference to the Comment model
+     }],
 
-}) 
+},
 
-const StudiesModel = mongoose.model('studies', StudiesSchema) 
+{timestamps: true}
+);
 
-module.exports = SudiesModel;
+
+module.exports = mongoose.model("StudiesModel", StudiesSchema);
