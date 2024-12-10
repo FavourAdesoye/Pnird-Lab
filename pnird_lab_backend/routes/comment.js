@@ -1,12 +1,12 @@
 const express = require("express");
-const { createComment, getCommentsByPost, addReply } = require("../controllers/comment.controller");
+const { createComment, getCommentsByEntity, addReply } = require("../controllers/comment.controller");
 const router = express.Router();
 
 
-router.post('/:postId/createComment', createComment);
+router.post('/:entityType/:entityId', createComment);
 
-router.get('/:postId/getComments', getCommentsByPost);
+router.get('/:entityType/:entityId', getCommentsByEntity);
 
-router.post('/:commentId/replies', addReply);
+router.post('/:entityType/:commentId/reply', addReply);
 
 module.exports = router;

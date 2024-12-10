@@ -8,9 +8,11 @@ import 'package:pnirdlab/pages/loginpages/student_login.dart';
 import 'package:pnirdlab/pages/loginpages/student_signup.dart';
 import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 
 void main() async {
+  await dotenv.load(fileName: ".env");
   //Ensure all bindings are initialized before running the app
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   // Keep splash screen while loading resources

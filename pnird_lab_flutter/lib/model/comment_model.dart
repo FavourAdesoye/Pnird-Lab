@@ -17,7 +17,8 @@ class Reply {
 
 class Comment {
   final String id;
-  final String postId;
+  final String entityId;
+  final String entityType;
   final String username;
   final String comment;
   final DateTime createdAt;
@@ -25,7 +26,8 @@ class Comment {
 
   Comment(
       {required this.id,
-      required this.postId,
+      required this.entityId,
+      required this.entityType,
       required this.username,
       required this.comment,
       required this.createdAt,
@@ -38,7 +40,8 @@ class Comment {
 
     return Comment(
       id: json['_id'],
-      postId: json['postId'],
+      entityId: json['entityId'],
+      entityType: json['entityType'],
       username: json['username'],
       comment: json['comment'],
       createdAt: DateTime.parse(json['createdAt']),

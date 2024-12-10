@@ -1,53 +1,76 @@
 const mongoose = require('mongoose');
 const Comment = require("../models/comment.js")
 const Post = require("../models/Post");
+const Study = require("../models/studies.js");
 
-const createComment = async (req,res) => {
-    const postId = req.params.postId;
-    const { comment, username} = req.body;
+const createComment = async (req, res) => {
+    const { entityId, entityType } = req.params;
+    const { comment, username } = req.body;
 
-    try{
-        const post = await Post.findById(postId);
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
+    try {
+        let entity;
+        if (entityType === "post") {
+            entity = await Post.findById(entityId);
+        } else if (entityType === "study") {
+            entity = await Study.findById(entityId);
+        } else {
+            return res.status(400).json({ message: "Invalid entity type" });
+        }
 
-    // Create the comment
-    const createdComment = await Comment.create({
-      postId,
-      comment,
-      username,
-    });
+        if (!entity) {
+            return res.status(404).json({ message: `${entityType} not found` });
+        }
 
-    // Add the comment's ObjectId to the post's comments array
-    post.comments.push(createdComment._id);
-    await post.save(); // Save the updated post
+        // Create the comment
+        const createdComment = await Comment.create({
+            entityId,
+            entityType,
+            comment,
+            username,
+        });
 
-    res.status(201).json(createdComment);
-    }catch(error){
-        res.status(404).json({message:error})
+        // Add the comment's ObjectId to the corresponding entity's comments array
+        if (entityType === "post") {
+            entity.comments.push(createdComment._id);
+            await entity.save();
+        } else if (entityType === "study") {
+            entity.comments.push(createdComment._id);
+            await entity.save();
+        }
+
+        res.status(201).json(createdComment);
+    } catch (error) {
+        res.status(404).json({ message: error.message });
     }
 };
 
-const getCommentsByPost = async (req, res) => {
-    const postId = req.params.postId;
+const getCommentsByEntity = async (req, res) => {
+    const { entityId, entityType } = req.params;
     try {
-        // Fetch the post to get the comments array
-        const post = await Post.findById(postId).sort({ createdAt: 'desc'});
-        
-        if (!post) {
-            return res.status(404).json({ message: 'Post not found' });
+        let comments;
+        if (entityType === "post") {
+            const post = await Post.findById(entityId);
+            if (!post) {
+                return res.status(404).json({ message: 'Post not found' });
+            }
+            comments = await Comment.find({ entityId: post._id, entityType: "post" }).sort({ createdAt: -1 });
+        } else if (entityType === "study") {
+            const study = await Study.findById(entityId);
+            if (!study) {
+                return res.status(404).json({ message: 'Study not found' });
+            }
+            comments = await Comment.find({ entityId: study._id, entityType: "study" }).sort({ createdAt: -1 });
+        } else {
+            return res.status(400).json({ message: "Invalid entity type" });
         }
 
-        // Now fetch comments based on the comment IDs in post.comments array
-        const comments = await Comment.find({ _id: { $in: post.comments } }).sort({ createdAt: -1 });
-        
         res.status(200).json(comments);
     } catch (error) {
-        console.error("Error in getCommentsByPost:", error);
+        console.error("Error in getCommentsByEntity:", error);
         res.status(500).json({ message: error.message });
     }
 };
+
 
 const addReply = async (req, res) => {
     const { commentId } = req.params;
@@ -77,6 +100,6 @@ const addReply = async (req, res) => {
 
 module.exports = {
     createComment,
-    getCommentsByPost,
+    getCommentsByEntity,
     addReply,
 };

@@ -7,8 +7,10 @@ import 'package:pnirdlab/services/comment_service.dart';
 import 'package:pnirdlab/model/comment_model.dart';
 
 class CommentsScreen extends StatefulWidget {
-  final String postId; // Pass the postId to fetch related comments
-  const CommentsScreen({super.key, required this.postId});
+  final String entityId;
+  final String entityType;
+  const CommentsScreen(
+      {super.key, required this.entityId, required this.entityType});
 
   @override
   State<CommentsScreen> createState() => _CommentsScreenState();
@@ -30,7 +32,8 @@ class _CommentsScreenState extends State<CommentsScreen> {
 
   void fetchComments() async {
     try {
-      comments = await _commentService.getCommentsByPost(widget.postId);
+      comments =
+          await _commentService.getComments(widget.entityType, widget.entityId);
       setState(() {});
     } catch (e) {
       // Handle error appropriately
@@ -42,8 +45,8 @@ class _CommentsScreenState extends State<CommentsScreen> {
     final commentText = _commentController.text.trim();
     if (commentText.isNotEmpty) {
       try {
-        await _commentService.createComment(widget.postId, "username",
-            commentText); // Replace with actual user ID
+        await _commentService.createComment(widget.entityType, widget.entityId,
+            "username", commentText); // Replace with actual user ID
         _commentController.clear();
         fetchComments(); // Refresh comments after posting
       } catch (e) {
@@ -53,11 +56,12 @@ class _CommentsScreenState extends State<CommentsScreen> {
     }
   }
 
-  void postReply(String commentId) async {
+  void postReply(String entityType, String commentId) async {
     final replyText = _replyController.text.trim();
     if (replyText.isNotEmpty) {
       try {
-        await _commentService.createReply(commentId, username, replyText);
+        await _commentService.createReply(
+            entityType, commentId, username, replyText);
         _replyController.clear();
         replyingToCommentId = null; // Reset reply tracking
         fetchComments(); // Refresh comments after posting
@@ -114,7 +118,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
                   InkWell(
                     onTap: () {
                       if (replyingToCommentId != null) {
-                        postReply(replyingToCommentId!);
+                        postReply(widget.entityType, replyingToCommentId!);
                       }
                     },
                     child: Container(

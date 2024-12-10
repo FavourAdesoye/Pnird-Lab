@@ -7,11 +7,16 @@ const ReplySchema = new mongoose.Schema({
   });
 
 const commentSchema = new mongoose.Schema({
-    postId:{
+    entityId:{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Post',
+        refPath: 'entityType',
         required: true,
     },
+    entityType: {
+        type: String,
+        required: true,
+        enum: ['post', 'study'], // Add more types if needed
+      },
     username:{
         type: String,
         required: true,

@@ -30,7 +30,7 @@ class _StudentSignUpPageState extends State<StudentSignUpPage> {
 
       // Send UID, email, and role to backend for storing in MongoDB
       var response = await http.post(
-        Uri.parse("http://localhost:3000/api/users/register"),
+        Uri.parse("http://10.0.2.2:3000/api/users/register"),
         headers: {"Content-Type": "application/json"},
         body: json.encode({
           "username": fullName,
