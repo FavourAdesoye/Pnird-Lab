@@ -6,7 +6,7 @@ import '../model/post_model.dart';
 Future<List<Post>> getPosts() async {
   List<Post> posts = [];
 
-  var url = Uri.parse('http://localhost:3000/api/posts');
+  var url = Uri.parse('http://10.0.2.2:3000/api/posts');
 
   try {
     final res = await http.get(url);

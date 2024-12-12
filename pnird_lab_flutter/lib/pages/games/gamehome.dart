@@ -30,7 +30,7 @@ class GameHomePage extends State<_GamePage> {
   int currentIndex = 3; // Set to 3 to default to the GamePage
   final List<Widget> _screens = [
     //const Homehome(),
-    const StudiesPage(),
+    StudiesPage(),
 //const EventsHome(),
     //const Abouthome(),
     const Gamehome(),
