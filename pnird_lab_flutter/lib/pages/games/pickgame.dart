@@ -24,7 +24,7 @@ class _Pickgamepage extends State<_Pickgame> {
     const Placeholder(
       child: Center(child: Text('Home Page')), // Placeholder for Home
     ),
-     StudiesPage(),
+    StudiesPage(),
     const Placeholder(
       child: Center(child: Text('Events Page')), // Placeholder for Events
     ),
@@ -41,36 +41,6 @@ class _Pickgamepage extends State<_Pickgame> {
       body: IndexedStack(
         index: currentIndex,
         children: _screens,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: currentIndex,
-        onTap: (index) => setState(() => currentIndex = index),
-        backgroundColor: Colors.black,
-        selectedItemColor: Colors.yellow,
-        unselectedItemColor: Colors.white,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.library_books),
-            label: 'Studies',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month),
-            label: 'Events',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.edit),
-            label: 'About Us',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.psychology),
-            label: 'Game',
-          ),
-        ],
       ),
     );
   }
@@ -124,9 +94,9 @@ class CardExample extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
           Card(
             color: const Color.fromARGB(255, 245, 207, 40),
             clipBehavior: Clip.hardEdge,
@@ -168,11 +138,10 @@ class CardExample extends StatelessWidget {
                     'Flappy Brain',
                     style: TextStyle(color: Colors.white, fontSize: 20),
                   ),
-            ),
-            ),
                 ),
               ),
-            ]));
-       
+            ),
+          ),
+        ]));
   }
 }
