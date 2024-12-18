@@ -122,12 +122,12 @@ class _HomepageState extends State<Homepage> {
           Expanded(
             child: Container(
               color: Colors.brown,
-              child: Row(
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
+                    children: [
                       Text(
                         "SCORE",
                         style: TextStyle(color: Colors.white, fontSize: 20),
@@ -140,7 +140,7 @@ class _HomepageState extends State<Homepage> {
                   ),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
+                    children: [
                       Text(
                         "BEST",
                         style: TextStyle(color: Colors.white, fontSize: 20),

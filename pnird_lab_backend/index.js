@@ -11,7 +11,7 @@ const commentRoute = require("./routes/comment")
 const authRoute = require("./routes/auth");
 const cors = require('cors');
 const bodyParser = require("body-parser"); 
-const eventRouter = require('./routers/event.route'); 
+const eventRoute = require("./routes/events");
 const studyRoute = require("./routes/studies")
 const admin = require("./firebase")
 dotenv.config();
@@ -39,6 +39,7 @@ app.use("/api/users", userRoute)
 app.use("/api/auth", authRoute);
 app.use("/api/comments", commentRoute);
 app.use("/api/studies", studyRoute);
+app.use("/api/events", eventRoute);
 
 
 app.get("/", (req,res)=>{
@@ -55,7 +56,5 @@ app.use(bodyParser.json());
 app.use('/uploads', express.static('uploads')) 
 app.use(express.json()); 
 
-//handling events posts
-app.use('/eventregistration', eventRouter) 
 
 
