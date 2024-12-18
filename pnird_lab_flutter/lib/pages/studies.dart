@@ -6,6 +6,8 @@ import 'package:pnirdlab/pages/new_study_page.dart';
 import 'package:pnirdlab/widgets/studies_card.dart';
 
 class StudiesPage extends StatefulWidget {
+  const StudiesPage({super.key});
+
   @override
   _StudiesPageState createState() => _StudiesPageState();
 }

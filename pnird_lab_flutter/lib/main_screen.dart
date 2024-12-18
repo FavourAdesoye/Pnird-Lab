@@ -1,13 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:pnirdlab/pages/chats_page.dart';
-import 'package:pnirdlab/pages/events/events.dart';
+import 'package:pnirdlab/pages/events_page.dart';
 import 'package:pnirdlab/pages/about_us.dart';
 import 'package:pnirdlab/pages/games/gamehome.dart';
 import 'package:pnirdlab/pages/home.dart';
 import 'package:pnirdlab/pages/studies.dart';
-import 'package:pnirdlab/pages/dms.dart';
 
 class MainScreenPage extends StatefulWidget {
   const MainScreenPage({super.key});
@@ -19,10 +16,10 @@ class MainScreenPage extends StatefulWidget {
 class _MainScreenPageState extends State<MainScreenPage> {
   int currentIndex = 0;
   final _screens = [
-    HomePage(),
+    const HomePage(),
     StudiesPage(),
-    const EventsHome(),
-    AboutUsPage(),
+    const EventsPage(),
+    const AboutUsPage(),
     const Gamehome(),
   ];
   @override

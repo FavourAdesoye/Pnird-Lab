@@ -1,15 +1,12 @@
 const mongoose = require("mongoose");  
-const index = require('../index')
 
-const {Schema } = mongoose; 
-
-const eventsSchema = new Schema({ 
+const eventSchema = new mongoose.Schema({ 
     image_url : { 
         type : String, 
         required: true
     } ,
 
-    caption : { 
+    description : { 
         type: String, 
         required: true
     } ,
@@ -19,14 +16,27 @@ const eventsSchema = new Schema({
         required: true
     } ,
 
-    date_time: { 
+    dateofevent: { 
         type: Date, 
         required: true, 
-        default: Date.now
+    },
+    month:{
+        type: String,
+        required:true
+    },
+    timeofEvent:{
+        type: String,
+        default: "No time specified"
+    },
+    location:{
+        type: String,
+        required: true
     }
 
-}) 
+},
+{timestamps: true}
+) 
 
-const EventsModel = mongoose.model('events', eventsSchema) 
+const EventsModel = mongoose.model('Event', eventSchema) 
 
 module.exports = EventsModel;

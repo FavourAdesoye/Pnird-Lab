@@ -185,10 +185,9 @@ class _PostCardState extends State<PostCard> {
                         color: Color.fromARGB(255, 179, 179, 172)),
                   ),
                 ),
-                Container(
-                    child: Text(
+                Text(
                   formattedDateTime(widget.post.createdAt),
-                )),
+                ),
               ],
             ),
           ),

@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -9,7 +11,6 @@ import 'package:pnirdlab/pages/loginpages/student_signup.dart';
 import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'firebase_options.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
