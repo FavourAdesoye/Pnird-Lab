@@ -4,7 +4,8 @@ class AccountTypeButton extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
 
-  AccountTypeButton({required this.label, required this.onPressed});
+  const AccountTypeButton(
+      {super.key, required this.label, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +78,7 @@ class _ChooseAccountTypePageState extends State<ChooseAccountTypePage> {
                     color: Colors.black.withOpacity(0.5),
                     spreadRadius: 5,
                     blurRadius: 7,
-                    offset: Offset(0, 3),
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),

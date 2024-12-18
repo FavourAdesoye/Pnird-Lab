@@ -13,6 +13,8 @@ import '../services/file_utils.dart';
 import 'studies.dart';
 
 class NewStudyPage extends StatefulWidget {
+  const NewStudyPage({super.key});
+
   @override
   _NewStudyPageState createState() => _NewStudyPageState();
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:pnirdlab/model/post_model.dart';
 import 'package:pnirdlab/services/post_service.dart';
 import 'package:pnirdlab/widgets/post_card.dart';
