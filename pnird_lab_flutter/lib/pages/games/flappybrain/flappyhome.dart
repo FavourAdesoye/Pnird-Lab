@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:pnirdlab/pages/games/flappybrain/bird.dart';
 import 'package:pnirdlab/pages/games/flappybrain/barries.dart';
 
+import '../pickgame.dart';
+
 class Flappyhome extends StatelessWidget {
   const Flappyhome({super.key});
 
@@ -27,6 +29,21 @@ class _HomepageState extends State<Homepage> {
   bool gamehasStarted = false;
   static double barrierXone = 0;
   double barrierXtwo = barrierXone + 1.5;
+  int score = 0; // Track the current score
+
+  // Reset game state
+  void resetGame() {
+    setState(() {
+      birdYaxis = 0;
+      time = 0;
+      height = 0;
+      initialHeight = birdYaxis;
+      barrierXone = 0;
+      barrierXtwo = barrierXone + 1.5;
+      gamehasStarted = false;
+      score = 0;
+    });
+  }
 
   // Function for the brain to jump
   void jump() {
@@ -46,29 +63,79 @@ class _HomepageState extends State<Homepage> {
       setState(() {
         birdYaxis = initialHeight - height;
 
+        // Move barriers and update score
         if (barrierXone < -1.1) {
           barrierXone += 2;
+          score++; // Increase score when the bird passes the first barrier
         } else {
           barrierXone -= 0.05;
         }
 
         if (barrierXtwo < -1.1) {
           barrierXtwo += 2;
+          score++; // Increase score when the bird passes the second barrier
         } else {
           barrierXtwo -= 0.05;
         }
       });
 
+      // End the game if the bird hits the ground
       if (birdYaxis > 1) {
         timer.cancel();
         gamehasStarted = false;
+        showGameOverDialog(); // Show game over dialog
       }
     });
+  }
+
+  // Show game over dialog
+  void showGameOverDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Game Over"),
+          content: Text("Your Score: $score"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                resetGame(); // Reset the game
+              },
+              child: const Text("Play Again"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Go back to Pickgame
+              },
+              child: const Text("Exit"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Flappy Brain", style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // Navigate back to Pickgame
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const Pickgame()),
+            );
+          },
+        ),
+      ),
       body: Column(
         children: [
           Expanded(
@@ -127,27 +194,14 @@ class _HomepageState extends State<Homepage> {
                 children: [
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text(
+                    children: [
+                      const Text(
                         "SCORE",
                         style: TextStyle(color: Colors.white, fontSize: 20),
                       ),
                       Text(
-                        "0",
-                        style: TextStyle(color: Colors.white, fontSize: 35),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text(
-                        "BEST",
-                        style: TextStyle(color: Colors.white, fontSize: 20),
-                      ),
-                      Text(
-                        "10",
-                        style: TextStyle(color: Colors.white, fontSize: 35),
+                        "$score",
+                        style: const TextStyle(color: Colors.white, fontSize: 35),
                       ),
                     ],
                   ),
