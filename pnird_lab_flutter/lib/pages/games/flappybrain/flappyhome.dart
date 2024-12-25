@@ -125,7 +125,8 @@ class _HomepageState extends State<Homepage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Flappy Brain", style: TextStyle(color: Colors.white)),
+        title:
+            const Text("Flappy Brain", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
@@ -192,19 +193,32 @@ class _HomepageState extends State<Homepage> {
           Expanded(
             child: Container(
               color: Colors.brown,
-              child: Row(
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         "SCORE",
                         style: TextStyle(color: Colors.white, fontSize: 20),
                       ),
                       Text(
-                        "$score",
-                        style: const TextStyle(color: Colors.white, fontSize: 35),
+                        "0",
+                        style: TextStyle(color: Colors.white, fontSize: 35),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "BEST",
+                        style: TextStyle(color: Colors.white, fontSize: 20),
+                      ),
+                      Text(
+                        "10",
+                        style: TextStyle(color: Colors.white, fontSize: 35),
                       ),
                     ],
                   ),

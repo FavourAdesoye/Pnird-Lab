@@ -11,9 +11,7 @@ class Gamehome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const  MaterialApp( 
-      home: _GamePage()
-    );
+    return const MaterialApp(home: _GamePage());
   }
 }
 
@@ -33,7 +31,11 @@ class GameHomePage extends State<_GamePage> {
     const Placeholder(
       child: Center(child: Text('Home Page')), // Placeholder for Home
     ),
+<<<<<<< HEAD
      const StudiesPage(),
+=======
+    StudiesPage(),
+>>>>>>> 0061519a0e71557ae17eb490abeb3cf9b0bda06c
     const Placeholder(
       child: Center(child: Text('Events Page')), // Placeholder for Events
     ),
@@ -51,36 +53,6 @@ class GameHomePage extends State<_GamePage> {
         // Preserve widget state when navigating
         index: currentIndex,
         children: _screens,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: currentIndex,
-        onTap: (index) => setState(() => currentIndex = index),
-        backgroundColor: Colors.black,
-        selectedItemColor: Colors.yellow,
-        unselectedItemColor: Colors.white,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.library_books),
-            label: 'Studies',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month),
-            label: 'Events',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.edit),
-            label: 'About Us',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.psychology),
-            label: 'Game',
-          ),
-        ],
       ),
     );
   }

@@ -1,6 +1,8 @@
+// ignore_for_file: prefer_const_constructors
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pnirdlab/main_screen.dart';
-import 'package:pnirdlab/pages/games/gamehome.dart';
 import 'package:pnirdlab/pages/loginpages/staff_signup.dart';
 import 'package:pnirdlab/pages/loginpages/staff_login.dart';
 import 'package:pnirdlab/pages/loginpages/student_login.dart';
@@ -8,14 +10,13 @@ import 'package:pnirdlab/pages/loginpages/student_signup.dart';
 import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'firebase_options.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
   //Ensure all bindings are initialized before running the app
- // WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   // Keep splash screen while loading resources
- // FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   if (kIsWeb) {
     await Firebase.initializeApp(
         options: FirebaseOptions(
@@ -26,15 +27,15 @@ void main() async {
             messagingSenderId: "1060625556937",
             measurementId: "G-G5JGKLPG9B",
             projectId: "pnird-lab"));
-    } else {
+  } else {
     await Firebase.initializeApp();
   }
 
   // Simulating an authentication check
   bool isLoggedIn = await checkUserLoggedIn();
   //Run the app
-  runApp(MyApp(isLoggedIn: isLoggedIn)); 
- 
+  runApp(MyApp(isLoggedIn: isLoggedIn));
+
   // After initialization is complete, remove the splash screen
   FlutterNativeSplash.remove();
 }
@@ -44,10 +45,7 @@ Future<bool> checkUserLoggedIn() async {
   // For demonstration purposes, let's return false (not logged in)
   await Future.delayed(Duration(seconds: 1)); // Simulate loading
   return false; // Change this based on your actual login state
-} 
-
-
-
+}
 
 class MyApp extends StatelessWidget {
   final bool isLoggedIn;
