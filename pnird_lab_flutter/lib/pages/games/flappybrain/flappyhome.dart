@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:pnirdlab/pages/games/chess/gameboard.dart';
 import 'package:pnirdlab/pages/games/flappybrain/bird.dart';
 import 'package:pnirdlab/pages/games/flappybrain/barries.dart';
 
@@ -107,8 +108,10 @@ class _HomepageState extends State<Homepage> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Go back to Pickgame
+                Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const Gameboard()),
+            );
               },
               child: const Text("Exit"),
             ),

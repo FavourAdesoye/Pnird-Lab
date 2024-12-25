@@ -43,7 +43,7 @@ class _StaffSignUpPageState extends State<StaffSignUpPage> {
 
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Registration Successful')));
+            .showSnackBar(const SnackBar(content: Text('Registration Successful')));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content:
@@ -65,7 +65,7 @@ class _StaffSignUpPageState extends State<StaffSignUpPage> {
         backgroundColor: Colors.grey[900],
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context); // Navigates back to the previous screen
           },
@@ -92,7 +92,7 @@ class _StaffSignUpPageState extends State<StaffSignUpPage> {
                       color: Colors.black.withOpacity(0.5),
                       spreadRadius: 5,
                       blurRadius: 7,
-                      offset: Offset(0, 3),
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),

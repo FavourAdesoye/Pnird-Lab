@@ -19,10 +19,10 @@ class MainScreenPage extends StatefulWidget {
 class _MainScreenPageState extends State<MainScreenPage> {
   int currentIndex = 0;
   final _screens = [
-    HomePage(),
-    StudiesPage(),
+    const HomePage(),
+    const StudiesPage(),
     const EventsHome(),
-    AboutUsPage(),
+    const AboutUsPage(),
     const Gamehome(),
   ];
   @override

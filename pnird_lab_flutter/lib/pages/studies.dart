@@ -6,6 +6,8 @@ import 'package:pnirdlab/pages/new_study_page.dart';
 import 'package:pnirdlab/widgets/studies_card.dart';
 
 class StudiesPage extends StatefulWidget {
+  const StudiesPage({super.key});
+
   @override
   _StudiesPageState createState() => _StudiesPageState();
 }
@@ -40,7 +42,7 @@ class _StudiesPageState extends State<StudiesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Studies'),
+        title: const Text('Studies'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -49,13 +51,13 @@ class _StudiesPageState extends State<StudiesPage> {
         ),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : _errorMessage.isNotEmpty
               ? Center(child: Text('Error: $_errorMessage'))
               : _studies.isEmpty
-                  ? Center(child: Text('No studies available.'))
+                  ? const Center(child: Text('No studies available.'))
                   : GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 2,
                         mainAxisSpacing: 2,
@@ -83,7 +85,7 @@ class _StudiesPageState extends State<StudiesPage> {
         onPressed: () async {
           final newStudy = await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => NewStudyPage()),
+            MaterialPageRoute(builder: (context) => const NewStudyPage()),
           );
 
           if (newStudy != null) {
@@ -93,7 +95,7 @@ class _StudiesPageState extends State<StudiesPage> {
           }
         },
         tooltip: 'Create New Study',
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }

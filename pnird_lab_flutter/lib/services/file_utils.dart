@@ -1,4 +1,3 @@
-import 'dart:io';
 
 // This function checks if the file has a valid type (PNG or JPEG)
 void checkFileType(String filePath) {

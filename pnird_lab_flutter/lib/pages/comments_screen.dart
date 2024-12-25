@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:pnirdlab/widgets/user_avatar.dart';
 import 'package:pnirdlab/widgets/comment_card.dart';
 import 'package:pnirdlab/services/comment_service.dart';
@@ -75,7 +73,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xffFFC700),
+        backgroundColor: const Color(0xffFFC700),
         title: const Text("Comments"),
         centerTitle: false,
       ),
@@ -102,13 +100,13 @@ class _CommentsScreenState extends State<CommentsScreen> {
               padding: const EdgeInsets.only(left: 16, right: 8),
               child: Row(
                 children: [
-                  UserAvatar(filename: "drKeen.jpg"),
+                  const UserAvatar(filename: "drKeen.jpg"),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(left: 16, right: 8),
                       child: TextField(
                         controller: _replyController,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           hintText: "Write a reply",
                           border: InputBorder.none,
                         ),
@@ -137,13 +135,13 @@ class _CommentsScreenState extends State<CommentsScreen> {
             padding: const EdgeInsets.only(left: 16, right: 8),
             child: Row(
               children: [
-                UserAvatar(filename: "drKeen.jpg"),
+                const UserAvatar(filename: "drKeen.jpg"),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(left: 16, right: 8),
                     child: TextField(
                       controller: _commentController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: "Write a comment",
                         border: InputBorder.none,
                       ),

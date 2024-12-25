@@ -91,7 +91,7 @@ class _EventsPageState extends State<_EventsPage> {
   int currentIndex = 2; // Set to 2 to default to the EventsPage
   final List<Widget> _screens = [
     //const Homehome(),
-    StudiesPage(),
+    const StudiesPage(),
     _EventsPage(),
     //const Abouthome(),
     const Gamehome(),

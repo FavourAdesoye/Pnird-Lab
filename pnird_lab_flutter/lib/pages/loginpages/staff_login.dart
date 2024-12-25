@@ -16,7 +16,7 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isLoading = false; // Add loading indicator
+  final bool _isLoading = false; // Add loading indicator
 
   Future<void> loginUser(String email, String password) async {
     try {
@@ -42,7 +42,7 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
           Navigator.pushNamed(context, '/home');
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
                 content: Text(
                     'You are registered not registered as a staff in our database')),
           );
@@ -65,7 +65,7 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
         backgroundColor: Colors.grey[900],
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context); // Navigates back to the previous screen
           },
@@ -89,7 +89,7 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
                         color: Colors.black.withOpacity(0.5),
                         spreadRadius: 5,
                         blurRadius: 7,
-                        offset: Offset(0, 3),
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),

@@ -5,7 +5,7 @@ class StudyDetailsPage extends StatelessWidget {
   final Study study;
 
   // Constructor to accept the study object
-  const StudyDetailsPage({Key? key, required this.study}) : super(key: key);
+  const StudyDetailsPage({super.key, required this.study});
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +13,7 @@ class StudyDetailsPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(study.titlePost),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context); // Navigates back to the previous screen
           },
@@ -35,24 +35,24 @@ class StudyDetailsPage extends StatelessWidget {
                   fit: BoxFit.cover,
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
 
               // Title
               Text(
                 study.titlePost,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
 
               // Description
               Text(
                 study.description,
-                style: TextStyle(fontSize: 16),
+                style: const TextStyle(fontSize: 16),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
 
               // Post ID
 
@@ -64,7 +64,7 @@ class StudyDetailsPage extends StatelessWidget {
                   color: Colors.grey[600],
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
 
               // Updated At
               Text(
@@ -74,7 +74,7 @@ class StudyDetailsPage extends StatelessWidget {
                   color: Colors.grey[600],
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
             ],
           ),
         ),

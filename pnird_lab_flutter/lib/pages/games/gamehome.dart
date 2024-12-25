@@ -18,7 +18,7 @@ class Gamehome extends StatelessWidget {
 }
 
 class _GamePage extends StatefulWidget {
-  const _GamePage({super.key});
+  const _GamePage();
 
   @override
   GameHomePage createState() => GameHomePage();
@@ -33,7 +33,7 @@ class GameHomePage extends State<_GamePage> {
     const Placeholder(
       child: Center(child: Text('Home Page')), // Placeholder for Home
     ),
-     StudiesPage(),
+     const StudiesPage(),
     const Placeholder(
       child: Center(child: Text('Events Page')), // Placeholder for Events
     ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class StudiesCard extends StatelessWidget {
   final String imageUrl;
@@ -28,7 +27,7 @@ class StudiesCard extends StatelessWidget {
           children: [
             Expanded(
               child: ClipRRect(
-                borderRadius: BorderRadius.vertical(
+                borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(8.0),
                 ),
                 child: Image.network(
@@ -38,12 +37,12 @@ class StudiesCard extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             Text(
               titlePost,
-              style: TextStyle(
+              style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14, // Smaller text
                   color: Colors.black),
