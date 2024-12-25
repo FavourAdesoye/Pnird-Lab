@@ -151,7 +151,7 @@ class CardExample extends StatelessWidget {
                       SizedBox(width: 10), // Space between image and text
                       Expanded(
                         child: Text(
-                          "This is a spin off of the game flappy brain."
+                          "This is a spin off of the game flappy bird."
                           "The goal is to make the bird fly as far as possible." 
                           "You can make the bird jump by tapping on the screen. "
                           "The goal is to keep the bird in the air as long as possible."
