@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StaffLoginPage extends StatefulWidget {
   const StaffLoginPage({super.key});
@@ -20,21 +21,31 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
 
   Future<void> loginUser(String email, String password) async {
     try {
+      if(email.isEmpty || password.isEmpty){
+        throw Exception("Email and password cannot be empty");
+      }
       UserCredential userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
 
       // Get Firebase UID
       String uid = userCredential.user!.uid;
-
+      print('uid: $uid');
+   
       // Send UID to backend to get role
       var response = await http.post(
-        Uri.parse("http://10.0.2.2:3000/api/users/getUserRole"),
+        Uri.parse("http://localhost:3000/api/users/getUserRole"),
         headers: {"Content-Type": "application/json"},
         body: json.encode({"uid": uid}),
       );
-
+      print('response: ${response.body}');
       if (response.statusCode == 200) {
-        var data = json.decode(response.body);
+        final data = json.decode(response.body);
+        print('api response: $data');
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("firebaseId", uid);
+        await prefs.setString("userId", data['userId']);
+        await prefs.setString("username", data['username']);
+        await prefs.setString("profilePicture", data['profilePicture'] ?? "");
         String role = data['role'];
 
         // Redirect based on user role

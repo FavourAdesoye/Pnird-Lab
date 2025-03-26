@@ -4,7 +4,7 @@ import '../model/comment_model.dart';
 
 class CommentService {
   static const String apiUrl =
-      'http://10.0.2.2:3000/api/comments'; // Replace with your API URL
+      'http://localhost:3000/api/comments'; // Replace with your API URL
 
   // Helper method to generate the URL for fetching comments based on entity type and ID
   String _getCommentsUrl(String entityType, String entityId) {
@@ -28,9 +28,7 @@ class CommentService {
 
     if (response.statusCode == 200) {
       List<dynamic> jsonResponse = json.decode(response.body);
-      return jsonResponse
-          .map((commentJson) => Comment.fromJson(commentJson))
-          .toList();
+      return jsonResponse.map((commentJson) => Comment.fromJson(commentJson)).toList();
     } else {
       throw Exception('Failed to load comments');
     }

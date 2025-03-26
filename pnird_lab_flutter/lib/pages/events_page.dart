@@ -69,7 +69,7 @@ class _EventsPageState extends State<EventsPage> {
   }
 
   Future<void> fetchAllEvents() async {
-    final url = 'http://10.0.2.2:3000/api/events/events/';
+    final url = 'http://localhost:3000/api/events/events/';
     final data = await fetchEvents(url);
     setState(() {
       allEvents = data;
@@ -85,7 +85,7 @@ class _EventsPageState extends State<EventsPage> {
       });
     } else {
       // Fetch events for the specific month
-      final url = 'http://10.0.2.2:3000/api/events/event/$month';
+      final url = 'http://localhost:3000/api/events/event/$month';
       final data = await fetchEvents(url);
       setState(() {
         events = data;
