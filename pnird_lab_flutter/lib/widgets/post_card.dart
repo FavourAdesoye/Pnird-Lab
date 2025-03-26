@@ -68,7 +68,7 @@ class _PostCardState extends State<PostCard> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ProfilePage(),
+                        builder: (context) => ProfilePage(myuserId: clickedUserId), //regular id
                       ),
                     );
                    } 

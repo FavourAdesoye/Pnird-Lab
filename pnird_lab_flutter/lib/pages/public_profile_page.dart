@@ -4,7 +4,7 @@ import 'package:pnirdlab/model/post_model.dart';
 import 'package:pnirdlab/services/user_service.dart';
 import 'package:pnirdlab/services/post_service.dart';
 import 'package:pnirdlab/pages/post_detail_page.dart';
-
+import 'package:pnirdlab/pages/chats_page.dart';
 
 class PublicProfilePage extends StatefulWidget {
   final String userId;
@@ -77,12 +77,34 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                       style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                     ),
                   ),
-                  SizedBox(height: 10),
+    
                   Text(
                     postCount == 1 ? "$postCount Post" : "$postCount Posts",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+       onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ChatsPage()),
+                );
+              },
+      child: Text("Message"),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.amber,
+        textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        side: BorderSide(color: Colors.amber), // Optional: outline
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    ),
+                    ],
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: posts.isEmpty

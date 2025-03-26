@@ -6,8 +6,11 @@ import '../model/post_model.dart';
 import '../model/user_model.dart';
 import '../model/comment_model.dart';
 import 'package:pnirdlab/pages/post_detail_page.dart';
+import 'package:pnirdlab/pages/edit_profile_screen.dart';
 
 class ProfilePage extends StatefulWidget {
+  final String myuserId;
+  ProfilePage({required this.myuserId});
   @override
   _ProfilePageState createState() => _ProfilePageState();
 }
@@ -133,27 +136,76 @@ class _ProfilePageState extends State<ProfilePage> {
                   SizedBox(height: 10),
 
                   // Buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  Wrap(
+                    spacing: 8,
+  runSpacing: 8,
                     children: [
+                     ElevatedButton(
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) =>  ProfileEditScreen(userId: userId!)),
+    );
+  },
+  style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.white,
+    foregroundColor: Colors.amber,
+    side: BorderSide(color: Colors.amber),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+  ),
+  child: Text(
+    "Edit Profile",
+    style: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+),
+
                       ElevatedButton(
-                        onPressed: () {
-                          print("Edit Profile tapped!");
-                        },
-                        child: Text("Edit Profile"),
-                      ),
+  onPressed: () {
+    print("Edit Profile tapped!");
+  },
+  style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.white,
+    foregroundColor: Colors.amber,
+    side: BorderSide(color: Colors.amber),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+  ),
+  child: Text(
+    "Create Post",
+    style: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+),
+
                       ElevatedButton(
-                        onPressed: () {
-                          print("Create Post tapped!");
-                        },
-                        child: Text("Create Post"),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          print("Messages tapped!");
-                        },
-                        child: Text("Messages"),
-                      ),
+  onPressed: () {
+    print("Edit Profile tapped!");
+  },
+  style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.white,
+    foregroundColor: Colors.amber,
+    side: BorderSide(color: Colors.amber),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+  ),
+  child: Text(
+    "Message",
+    style: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+),
+
                     ],
                   ),
                   SizedBox(height: 20),
