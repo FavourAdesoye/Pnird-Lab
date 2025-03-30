@@ -28,10 +28,15 @@ class _PostCardState extends State<PostCard> {
   String? loggedInUserId; // Store the logged-in user ID
 
   @override
-  void initState() {
-    super.initState();
-    loadUserId(); // Fetch the logged-in user's ID when widget initializes
-  }
+void initState() {
+  super.initState();
+  loadUserId().then((_) {
+    setState(() {
+      isLiked = widget.post.likes?.contains(loggedInUserId) ?? false;
+    });
+  });
+}
+
 
   Future<String?> getLoggedInUserId() async {
     final prefs = await SharedPreferences.getInstance();
@@ -136,12 +141,27 @@ class _PostCardState extends State<PostCard> {
               ),
             ]),
             onDoubleTap: () async {
-              setState(() {
-                isHeartAnimating = true;
-                isLiked = !isLiked; // Toggle like status
-              });
-              await likePost(widget.post.id, widget.post.user.id);
-            },
+  if (loggedInUserId == null) return;
+
+  final alreadyLiked = widget.post.likes?.contains(loggedInUserId) ?? false;
+
+  setState(() {
+    isHeartAnimating = true;
+    isLiked = !alreadyLiked;
+    if (alreadyLiked) {
+      widget.post.likes?.remove(loggedInUserId);
+    } else {
+      widget.post.likes?.add(loggedInUserId!);
+    }
+  });
+
+  try {
+    await likePost(widget.post.id, loggedInUserId!);
+  } catch (e) {
+    print("Failed to like post on double tap: $e");
+  }
+}
+
           ),
 
           //Like comment section
@@ -156,17 +176,35 @@ class _PostCardState extends State<PostCard> {
                     color: color,
                   ),
                   onPressed: () async {
-                    setState(() {
-                      isLiked = !isLiked;
-                    });
-                    try {
-                      await likePost(widget.post.id, widget.post.user.id);
-                    } catch (e) {
-                      setState(() {
-                        isLiked = !isLiked; // Revert on failure
-                      });
-                    }
-                  },
+  if (loggedInUserId == null) return;
+
+  final alreadyLiked = widget.post.likes?.contains(loggedInUserId) ?? false;
+
+  setState(() {
+    isLiked = !alreadyLiked;
+    if (alreadyLiked) {
+      widget.post.likes?.remove(loggedInUserId);
+    } else {
+      widget.post.likes?.add(loggedInUserId!);
+    }
+  });
+
+  try {
+    await likePost(widget.post.id, loggedInUserId!);
+  } catch (e) {
+    print("Failed to like post: $e");
+    // Revert the like state on failure
+    setState(() {
+      if (alreadyLiked) {
+        widget.post.likes?.add(loggedInUserId!);
+      } else {
+        widget.post.likes?.remove(loggedInUserId);
+      }
+      isLiked = alreadyLiked;
+    });
+  }
+}
+
                 ),
               ),
               IconButton(

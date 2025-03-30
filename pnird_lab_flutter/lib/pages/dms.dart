@@ -7,7 +7,7 @@ class DmsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar(),
+      appBar:AppBar(title: Text("User Profile")),
     
       body: Column(
         
@@ -152,26 +152,26 @@ class DmsPage extends StatelessWidget {
     );
   }
 
-  AppBar appBar() {
-    return AppBar(
-      title: const Text(
+//   AppBar appBar() {
+//     return AppBar(
+//       title: const Text(
         
-        'Direct Messages',
-      style: TextStyle(
-        fontWeight: FontWeight.bold,
-        color: Colors.black
-      )
-      ),
-      centerTitle: true,
-      backgroundColor:  const Color(0xffFFC700),
-      leading: Container(
-        margin: const EdgeInsets.all(10),
+//         'Direct Messages',
+//       style: TextStyle(
+//         fontWeight: FontWeight.bold,
+//         color: Colors.black
+//       )
+//       ),
+//       centerTitle: true,
+//       backgroundColor:  const Color(0xffFFC700),
+//       leading: Container(
+//         margin: const EdgeInsets.all(10),
 
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 0, 0, 0),
-          borderRadius: BorderRadius.circular(10)
-        ),
-      ),
-    );
-  }
+//         decoration: BoxDecoration(
+//           color: const Color.fromARGB(255, 0, 0, 0),
+//           borderRadius: BorderRadius.circular(10)
+//         ),
+//       ),
+//     );
+//   }
 }

@@ -7,6 +7,8 @@ import '../model/user_model.dart';
 import '../model/comment_model.dart';
 import 'package:pnirdlab/pages/post_detail_page.dart';
 import 'package:pnirdlab/pages/edit_profile_screen.dart';
+import 'package:pnirdlab/pages/create_post_screen.dart';
+import 'package:pnirdlab/pages/dms.dart';
 
 class ProfilePage extends StatefulWidget {
   final String myuserId;
@@ -166,7 +168,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       ElevatedButton(
   onPressed: () {
-    print("Edit Profile tapped!");
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CreatePostScreen(userId: userId!,)),
+    );
   },
   style: ElevatedButton.styleFrom(
     backgroundColor: Colors.white,
@@ -187,7 +192,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       ElevatedButton(
   onPressed: () {
-    print("Edit Profile tapped!");
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => DmsPage()),
+    );
   },
   style: ElevatedButton.styleFrom(
     backgroundColor: Colors.white,
