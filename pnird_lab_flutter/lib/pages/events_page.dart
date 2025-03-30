@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:pnirdlab/pages/events_detail_page.dart';
-
+import 'package:pnirdlab/pages/create_events_page.dart';
 class EventsPage extends StatefulWidget {
   const EventsPage({super.key});
 
@@ -332,6 +332,17 @@ class _EventsPageState extends State<EventsPage> {
                             ),
             ],
           ),
-        ));
+        ),
+        floatingActionButton: FloatingActionButton(
+        heroTag: Text('btn3'),
+        onPressed: () async {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => CreateEventPage()),
+          );
+        },
+        tooltip: 'Create New Study',
+        child: Icon(Icons.add),
+      ),);
   }
 }
