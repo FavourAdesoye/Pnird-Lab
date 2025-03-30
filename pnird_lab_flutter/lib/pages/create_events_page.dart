@@ -106,7 +106,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
       if (response.statusCode == 201) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => EventsPage()), // <-- Navigate to events page
+          MaterialPageRoute(builder: (_) => const EventsPage()), // <-- Navigate to events page
         );
       } else {
         throw Exception('Server error ${response.statusCode}');
@@ -121,7 +121,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Create New Event')),
+      appBar: AppBar(title: const Text('Create New Event')),
       body: Stack(
         children: [
           Padding(
@@ -135,35 +135,35 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   child: ListView(
                     children: [
                       TextFormField(
-                        decoration: InputDecoration(labelText: 'Title'),
+                        decoration: const InputDecoration(labelText: 'Title'),
                         validator: (value) =>
                             value!.isEmpty ? 'Please enter title' : null,
                         onSaved: (value) => _title = value!,
                       ),
                       TextFormField(
-                        decoration: InputDecoration(labelText: 'Description'),
+                        decoration: const InputDecoration(labelText: 'Description'),
                         onSaved: (value) => _description = value!,
                       ),
-                      TextFormField(
-                        decoration: InputDecoration(labelText: 'Date (e.g. 2024-04-01)'),
+                      TextFormField( //Future improvement: Use a date picker
+                        decoration: const InputDecoration(labelText: 'Date (e.g. 2024-04-01)'),
                         onSaved: (value) => _dateOfEvent = value!,
                       ),
                       TextFormField(
-                        decoration: InputDecoration(labelText: 'Time (e.g. 4:00 PM)'),
+                        decoration: const InputDecoration(labelText: 'Time (e.g. 4:00 PM)'),
                         onSaved: (value) => _timeOfEvent = value!,
                       ),
                       TextFormField(
-                        decoration: InputDecoration(labelText: 'Month'),
+                        decoration: const InputDecoration(labelText: 'Month'),
                         onSaved: (value) => _month = value!,
                       ),
                       TextFormField(
-                        decoration: InputDecoration(labelText: 'Location'),
+                        decoration: const InputDecoration(labelText: 'Location'),
                         onSaved: (value) => _location = value!,
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: _pickImageAndUpload,
-                        child: Text('Upload Event Image'),
+                        child: const Text('Upload Event Image'),
                       ),
                       if (_uploadedImageUrl != null) ...[
                         const SizedBox(height: 10),
@@ -173,12 +173,12 @@ class _CreateEventPageState extends State<CreateEventPage> {
                         Padding(
                           padding: const EdgeInsets.only(top: 10),
                           child: Text(_errorMessage!,
-                              style: TextStyle(color: Colors.red)),
+                              style: const TextStyle(color: Colors.red)),
                         ),
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: _submitEvent,
-                        child: Text('Submit Event'),
+                        child: const Text('Submit Event'),
                       ),
                     ],
                   ),

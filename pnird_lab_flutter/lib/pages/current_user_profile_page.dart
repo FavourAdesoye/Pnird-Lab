@@ -8,8 +8,7 @@ import '../model/comment_model.dart';
 import 'package:pnirdlab/pages/post_detail_page.dart';
 import 'package:pnirdlab/pages/edit_profile_screen.dart';
 import 'package:pnirdlab/pages/create_post_screen.dart';
-import 'package:pnirdlab/pages/dms.dart';
-
+import 'package:pnirdlab/pages/chats_page.dart';
 class ProfilePage extends StatefulWidget {
   final String myuserId;
   ProfilePage({required this.myuserId});
@@ -194,7 +193,7 @@ class _ProfilePageState extends State<ProfilePage> {
   onPressed: () {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => DmsPage()),
+      MaterialPageRoute(builder: (context) => ChatsPage()),
     );
   },
   style: ElevatedButton.styleFrom(

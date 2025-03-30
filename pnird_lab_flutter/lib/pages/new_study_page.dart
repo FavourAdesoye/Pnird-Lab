@@ -133,7 +133,6 @@ class _NewStudyPageState extends State<NewStudyPage> {
             'titlepost': _title,
             'description': _description,
             'image_url': _uploadedImageUrl, // Cloudinary URL
-            'allowScheduling': _allowScheduling,
             'allowComments': _allowComments
           }),
         );
