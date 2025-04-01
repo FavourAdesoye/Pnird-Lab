@@ -127,13 +127,12 @@ class _NewStudyPageState extends State<NewStudyPage> {
         }
 
         final response = await http.post(
-          Uri.parse('http://10.0.2.2:3000/api/studies/createstudy'),
+          Uri.parse('http://localhost:3000/api/studies/createstudy'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             'titlepost': _title,
             'description': _description,
             'image_url': _uploadedImageUrl, // Cloudinary URL
-            'allowScheduling': _allowScheduling,
             'allowComments': _allowComments
           }),
         );

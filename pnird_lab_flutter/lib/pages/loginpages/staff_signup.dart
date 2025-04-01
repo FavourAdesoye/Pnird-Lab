@@ -31,7 +31,7 @@ class _StaffSignUpPageState extends State<StaffSignUpPage> {
 
       // Send UID, email, and role to backend for storing in MongoDB
       var response = await http.post(
-        Uri.parse("http://10.0.2.2:3000/api/users/register"),
+        Uri.parse("http://localhost:3000/api/users/register"),
         headers: {"Content-Type": "application/json"},
         body: json.encode({
           "username": fullName,

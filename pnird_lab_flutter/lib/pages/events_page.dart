@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:pnirdlab/pages/events_detail_page.dart';
-
+import 'package:pnirdlab/pages/create_events_page.dart';
 class EventsPage extends StatefulWidget {
   const EventsPage({super.key});
 
@@ -69,7 +69,7 @@ class _EventsPageState extends State<EventsPage> {
   }
 
   Future<void> fetchAllEvents() async {
-    final url = 'http://10.0.2.2:3000/api/events/events/';
+    final url = 'http://localhost:3000/api/events/events/';
     final data = await fetchEvents(url);
     setState(() {
       allEvents = data;
@@ -85,7 +85,7 @@ class _EventsPageState extends State<EventsPage> {
       });
     } else {
       // Fetch events for the specific month
-      final url = 'http://10.0.2.2:3000/api/events/event/$month';
+      final url = 'http://localhost:3000/api/events/event/$month';
       final data = await fetchEvents(url);
       setState(() {
         events = data;
@@ -332,6 +332,17 @@ class _EventsPageState extends State<EventsPage> {
                             ),
             ],
           ),
-        ));
+        ),
+        floatingActionButton: FloatingActionButton(
+        heroTag: Text('btn3'),
+        onPressed: () async {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => CreateEventPage()),
+          );
+        },
+        tooltip: 'Create New Study',
+        child: Icon(Icons.add),
+      ),);
   }
 }

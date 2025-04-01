@@ -4,7 +4,7 @@ import '../model/study_model.dart'; // Import your Study model
 
 class StudiesApi {
   static const String baseUrl =
-      "http://10.0.2.2:3000/api/studies"; // Replace with your backend URL
+      "http://localhost:3000/api/studies"; // Replace with your backend URL
 
   // Fetch all studies
   static Future<List<Study>> fetchStudies() async {
