@@ -1,4 +1,5 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
+const { type } = require("os");
 
 const UserSchema = new mongoose.Schema({
     username:{
@@ -21,7 +22,10 @@ const UserSchema = new mongoose.Schema({
         type:String,
         default: ""
     },
-
+    bio:{
+        type: String,
+        default: ""
+    },
    role: {
     type: String,
     enum: ["staff", "student"]

@@ -17,7 +17,7 @@ class _MainScreenPageState extends State<MainScreenPage> {
   int currentIndex = 0;
   final _screens = [
     const HomePage(),
-    StudiesPage(),
+    const StudiesPage(),
     const EventsPage(),
     const AboutUsPage(),
     const Gamehome(),

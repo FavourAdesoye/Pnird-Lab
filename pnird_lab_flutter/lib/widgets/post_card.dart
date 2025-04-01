@@ -6,6 +6,9 @@ import 'package:pnirdlab/widgets/heart_animation_widget.dart';
 import '../model/post_model.dart';
 import 'package:intl/intl.dart';
 import '../services/like_service.dart';
+import 'package:pnirdlab/pages/current_user_profile_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pnirdlab/pages/public_profile_page.dart';
 
 class PostCard extends StatefulWidget {
   final Post post;
@@ -22,6 +25,29 @@ class _PostCardState extends State<PostCard> {
   // const PostCard({Key? key}) : super(key: key);
   bool isLiked = false;
   bool isHeartAnimating = false;
+  String? loggedInUserId; // Store the logged-in user ID
+
+  @override
+void initState() {
+  super.initState();
+  loadUserId().then((_) {
+    setState(() {
+      isLiked = widget.post.likes?.contains(loggedInUserId) ?? false;
+    });
+  });
+}
+
+
+  Future<String?> getLoggedInUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userId'); // Get the stored user ID
+  }
+
+  Future<void> loadUserId() async {
+    loggedInUserId = await getLoggedInUserId();
+    setState(() {}); // Rebuild widget after fetching ID
+  }
+
   @override
   Widget build(BuildContext context) {
     final icon = isLiked ? Icons.favorite : Icons.favorite_outline;
@@ -34,31 +60,62 @@ class _PostCardState extends State<PostCard> {
         children: [
           Container(
               padding: const EdgeInsets.symmetric(
-                vertical: 4,
+                vertical: 9,
                 horizontal: 16,
               ).copyWith(right: 0),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundImage: AssetImage("assets/images/drKeen.jpg"),
-                  ),
-                  Expanded(
-                      child: Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.post.user
-                              .username, //replace with username of someone
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        )
-                      ],
+              child: GestureDetector(
+                onTap: () {
+                  String clickedUserId = widget.post.user.id; //getting the regular id. not firebase id
+                  print("clickedUserId: $clickedUserId");
+
+                  if (loggedInUserId != null && clickedUserId == loggedInUserId
+                   ) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfilePage(myuserId: clickedUserId), //regular id
+                      ),
+                    );
+                   } 
+                   else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            PublicProfilePage(userId: clickedUserId),
+                      ),
+                    );
+                  }
+                },
+             
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundImage: widget.post.user.profilePicture !=
+                                  null &&
+                              widget.post.user.profilePicture.isNotEmpty
+                          ? NetworkImage(widget.post.user.profilePicture)
+                          : AssetImage('assets/images/defaultprofilepic.png')
+                              as ImageProvider,
                     ),
-                  ))
-                ],
+                    Expanded(
+                        child: Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.post.user
+                                .username, //replace with username of someone
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          )
+                        ],
+                      ),
+                    ))
+                  ],
+                ),
               )),
           //Image section
           GestureDetector(
@@ -84,12 +141,27 @@ class _PostCardState extends State<PostCard> {
               ),
             ]),
             onDoubleTap: () async {
-              setState(() {
-                isHeartAnimating = true;
-                isLiked = !isLiked; // Toggle like status
-              });
-              await likePost(widget.post.id, widget.post.user.id);
-            },
+  if (loggedInUserId == null) return;
+
+  final alreadyLiked = widget.post.likes?.contains(loggedInUserId) ?? false;
+
+  setState(() {
+    isHeartAnimating = true;
+    isLiked = !alreadyLiked;
+    if (alreadyLiked) {
+      widget.post.likes?.remove(loggedInUserId);
+    } else {
+      widget.post.likes?.add(loggedInUserId!);
+    }
+  });
+
+  try {
+    await likePost(widget.post.id, loggedInUserId!);
+  } catch (e) {
+    print("Failed to like post on double tap: $e");
+  }
+}
+
           ),
 
           //Like comment section
@@ -104,17 +176,35 @@ class _PostCardState extends State<PostCard> {
                     color: color,
                   ),
                   onPressed: () async {
-                    setState(() {
-                      isLiked = !isLiked;
-                    });
-                    try {
-                      await likePost(widget.post.id, widget.post.user.id);
-                    } catch (e) {
-                      setState(() {
-                        isLiked = !isLiked; // Revert on failure
-                      });
-                    }
-                  },
+  if (loggedInUserId == null) return;
+
+  final alreadyLiked = widget.post.likes?.contains(loggedInUserId) ?? false;
+
+  setState(() {
+    isLiked = !alreadyLiked;
+    if (alreadyLiked) {
+      widget.post.likes?.remove(loggedInUserId);
+    } else {
+      widget.post.likes?.add(loggedInUserId!);
+    }
+  });
+
+  try {
+    await likePost(widget.post.id, loggedInUserId!);
+  } catch (e) {
+    print("Failed to like post: $e");
+    // Revert the like state on failure
+    setState(() {
+      if (alreadyLiked) {
+        widget.post.likes?.add(loggedInUserId!);
+      } else {
+        widget.post.likes?.remove(loggedInUserId);
+      }
+      isLiked = alreadyLiked;
+    });
+  }
+}
+
                 ),
               ),
               IconButton(
@@ -159,13 +249,7 @@ class _PostCardState extends State<PostCard> {
                               color: Color.fromARGB(255, 250, 228, 33)),
                           children: [
                         TextSpan(
-                          text: widget.post.user.username,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        TextSpan(
-                          text: '   ${widget.post.description ?? ''}',
+                          text: '${widget.post.description ?? ''}',
                         ),
                       ])),
                 ),

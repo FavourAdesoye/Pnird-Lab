@@ -5,6 +5,7 @@ const upload = require("../utils/multer");
 const admin = require('firebase-admin')
 const checkRole = require('../middleware/roleMiddleware');
 const firebaseAuthMiddleware = require("../middleware/firebaseAuthMiddleware");
+const { profile } = require("console");
 
 //UPDATE USER
 router.put("/:id", async(req,res) => {
@@ -36,6 +37,7 @@ router.post('/upload', upload.single('image'), async (req, res) => {
         email: req.body.email,
         password: req.body.password,
         profilePicture: result.secure_url, // Store the URL of the uploaded image
+        bio:req.body.bio,
         cloudinary_id: result.public_id, // Store the Cloudinary public ID for later use
         isAdmin: req.body.isAdmin || false
     });
@@ -86,13 +88,19 @@ router.post('/login', async (req, res) => {
     try {
       // Verify the ID token with Firebase Admin SDK
       const decodedToken = await firebaseAdmin.auth().verifyIdToken(idToken);
-      const userId = decodedToken.uid;
-      const userEmail = decodedToken.email;
+      const firebaseUID = decodedToken.uid;
   
+      //Find user by Firebase UID
+      let user = await User.findOne({ firebaseUID });
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
       // Example: Check if the user has a 'staff' role
+
       // (Assumes you store roles in Firebase custom claims or another database)
       if (decodedToken.role === 'staff') {
-        return res.status(200).json({ message: 'Login successful', userId, userEmail });
+        return res.status(200).json({ message: 'Login successful', firebaseUID: user.firebaseUID, userId:user._id, username:user.username, email: user.email });
       } else {
         return res.status(403).json({ message: 'Access denied: Not a staff member' });
       }
@@ -111,6 +119,7 @@ router.get('/:firebaseUID', async (req, res) => {
       res.status(500).send("Error fetching user data.");
     }
   });
+
 
 // Admin Route: Only accessible by users with admin role  
   router.get('/admin-data', firebaseAuthMiddleware, checkRole('admin'), (req, res) => {
@@ -135,10 +144,27 @@ router.post("/getUserRole", async (req, res) => {
     }
 
     // Return user's role
-    res.json({ role: user.role });
+    return res.status(200).json({ userId: user._id.toString(),
+      username: user.username,
+      profilePicture: user.profilePicture,
+      role: user.role });
   } catch (error) {
     console.error("Error fetching user role:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// GET user by regular MongoDB userId
+router.get("/id/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 module.exports = router

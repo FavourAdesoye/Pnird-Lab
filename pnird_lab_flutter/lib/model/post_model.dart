@@ -20,9 +20,20 @@ class Post {
   }) : likes = likes ?? []; //Initialize likes with an empty list if null
 
   factory Post.fromJson(Map<String, dynamic> json) {
+    final userData = json['userId'];
+
     return Post(
       id: json['_id'],
-      user: User.fromJson(json['userId']),
+      user: userData is String
+        ? User(
+            id: userData,
+            firebaseUID: '',
+            username: '',
+            email: '',
+            profilePicture: '',
+            bio: ''
+          )
+        : User.fromJson(userData),
       description: json['description'] ?? '', // Handle null case
       img: json['img'] ?? '', // Handle null case
       likes: json['likes'] != null

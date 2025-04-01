@@ -82,6 +82,7 @@ class _StudiesPageState extends State<StudiesPage> {
                       },
                     ),
       floatingActionButton: FloatingActionButton(
+        heroTag: Text('btn2'),
         onPressed: () async {
           final newStudy = await Navigator.push(
             context,
