@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "C:/Users/15407/Downloads/Pnird-Lab/pnird_lab_flutter/linux"
+    "cmake.sourceDirectory": "C:/Users/15407/Downloads/Pnird-Lab/pnird_lab_flutter/linux",
+    "cmake.ignoreCMakeListsMissing": true
 }

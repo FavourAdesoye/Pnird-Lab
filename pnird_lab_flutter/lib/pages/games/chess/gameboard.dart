@@ -429,7 +429,7 @@ class _GameBoardState extends State<Gameboard> {
 
     return Scaffold( 
        appBar: AppBar(
-        title: const Text("Flappy Brain", style: TextStyle(color: Colors.white)),
+        title: const Text("Chess", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.black, 
         iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
