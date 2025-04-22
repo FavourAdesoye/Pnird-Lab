@@ -1,158 +1,149 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pnirdlab/widgets/user_avatar.dart';
+import 'package:pnirdlab/pages/message_page.dart';
 
-class ChatsPage extends StatelessWidget {
+class ChatsPage extends StatefulWidget {
   const ChatsPage({super.key});
+
   @override
+  State<ChatsPage> createState() => _ChatsPageState();
+}
+
+class _ChatsPageState extends State<ChatsPage> {
+  late Future<List<dynamic>> _chatUsersFuture;
+  late String userId;
+  bool isAdminUser = false;
+
+  Future<List<dynamic>> fetchChatUsers() async {
+    final prefs = await SharedPreferences.getInstance();
+    userId = prefs.getString('firebaseId') ?? '';
+    isAdminUser = prefs.getBool('isAdmin') ?? false;
+
+    final response = await http.get(
+      Uri.parse("http://localhost:3000/api/messages/chats/$userId"),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Failed to load chat users");
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _chatUsersFuture = fetchChatUsers();
+  }
+
+ @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.amber,
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              Padding(
-                  padding: const EdgeInsets.only(top: 60, left: 5, right: 20),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            icon: const Icon(
-                              Icons.arrow_back_ios,
-                              color: Colors.white,
-                            )),
-                        UserAvatar(
-                          filename: 'drKeen.jpg',
-                        ),
-                      ]))
-            ],
-          ),
-          Positioned(
-              top: 110,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                padding: const EdgeInsets.only(top: 15, left: 25, right: 25),
-                decoration: BoxDecoration(
-                    color: Color.fromARGB(255, 21, 21, 21),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(40),
-                      topRight: Radius.circular(40),
-                    )),
-                child: Column(children: [
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextButton(
-                          style: ButtonStyle(
-                              backgroundColor:
-                                  WidgetStateProperty.all(Colors.amber),
-                              padding: WidgetStateProperty.all(
-                                  EdgeInsets.only(right: 20, left: 20)),
-                              foregroundColor:
-                                  WidgetStateProperty.all(Colors.white),
-                              shape: WidgetStateProperty.all(
-                                  RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(50.0),
-                                      side: BorderSide(color: Colors.red)))),
-                          onPressed: () {},
-                          child: Text(
-                            "Messages",
-                            style: TextStyle(fontSize: 18),
-                          ),
-                        ),
-                        TextButton(
-                          style: ButtonStyle(
-                              backgroundColor: WidgetStateProperty.all(
-                                  Color.fromARGB(255, 52, 52, 52)),
-                              padding: WidgetStateProperty.all(
-                                  EdgeInsets.only(right: 20, left: 20)),
-                              foregroundColor:
-                                  WidgetStateProperty.all(Colors.amber),
-                              shape: WidgetStateProperty.all(
-                                  RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(50.0),
-                              ))),
-                          onPressed: () {},
-                          child: Text(
-                            "Notifications",
-                            style: TextStyle(fontSize: 18),
-                          ),
-                        )
-                      ]),
-                  Expanded(
-                      child: ListView(
-                    padding: EdgeInsets.only(left: 10, top: 25),
-                    children: [
-                      Container(
-                          padding: EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(255, 52, 52, 52),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  const UserAvatar(filename: 'drKeen.jpg'),
-                                  SizedBox(
-                                    width: 15,
-                                  ),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: const [
-                                      Text(
-                                        "Alexis Morris",
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: 15),
-                                      ),
-                                      SizedBox(
-                                        height: 5,
-                                      ),
-                                      Text(
-                                        "Hello Dr. keen",
-                                        style: TextStyle(
-                                            color: Color.fromARGB(
-                                                255, 169, 169, 169)),
-                                      )
-                                    ],
-                                  )
-                                ],
-                              ),
-                              Column(children: const [
-                                Text(
-                                  '16:35',
-                                  style: TextStyle(fontSize: 10),
-                                ),
-                                SizedBox(
-                                  height: 15,
-                                ),
-                                CircleAvatar(
-                                  radius: 7,
-                                  backgroundColor: Colors.amber,
-                                  child: Text(
-                                    '1',
-                                    style: TextStyle(
-                                        fontSize: 10, color: Colors.white),
-                                  ),
-                                )
-                              ])
-                            ],
-                          ))
-                    ],
-                  ))
-                ]),
-              ))
+      backgroundColor: const Color.fromARGB(255, 11, 11, 11),
+      appBar: AppBar(
+        backgroundColor: Colors.amber,
+        elevation: 0,
+        title: Text("Chats"),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: UserAvatar(filename: 'drKeen.jpg'),
+          )
         ],
       ),
+      body: Container(
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(255, 21, 21, 21),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            // Tabs
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _tabButton("Messages", true),
+                _tabButton("Notifications", false),
+              ],
+            ),
+            const SizedBox(height: 10),
+            // Chat List
+            Expanded(
+              child: FutureBuilder<List<dynamic>>(
+                future: _chatUsersFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator(color: Colors.amber));
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text("Error: ${snapshot.error}", style: TextStyle(color: Colors.red)));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text("No chats yet", style: TextStyle(color: Colors.grey)));
+                  }
+
+                  final chatUsers = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: chatUsers.length,
+                    itemBuilder: (context, index) {
+                      final user = chatUsers[index];
+                      return ListTile(
+                        contentPadding: EdgeInsets.symmetric(vertical: 6),
+                        leading: CircleAvatar(
+                          backgroundImage: (user['profilePicture'] != null && user['profilePicture'] != '')
+                              ? NetworkImage(user['profilePicture'])
+                              : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
+                        ),
+                        title: Text(user['username'], style: TextStyle(color: Colors.white)),
+                        subtitle: Text("Tap to message", style: TextStyle(color: Colors.grey)),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MessagePage(
+                                recipientId: user['_id'],
+                                recipientName: user['username'],
+                                isAdmin: isAdminUser,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _tabButton(String label, bool isActive) {
+    return TextButton(
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.all(
+          isActive ? Colors.amber : const Color.fromARGB(255, 52, 52, 52),
+        ),
+        padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 20)),
+        foregroundColor: WidgetStateProperty.all(
+          isActive ? Colors.white : Colors.amber,
+        ),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+        ),
+      ),
+      onPressed: () {
+        // TODO: switch between tabs if needed
+      },
+      child: Text(label, style: TextStyle(fontSize: 18)),
     );
   }
 }
