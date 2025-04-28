@@ -2,6 +2,9 @@ const mongoose = require('mongoose');
 const Comment = require("../models/comment.js")
 const Post = require("../models/Post");
 const Study = require("../models/studies.js");
+const User = require("../models/User.js");
+const Notification = require("../models/notifications");
+
 
 const createComment = async (req, res) => {
     const { entityId, entityType } = req.params;
@@ -33,11 +36,33 @@ const createComment = async (req, res) => {
         if (entityType === "post") {
             entity.comments.push(createdComment._id);
             await entity.save();
+     
+            const sender = await User.findOne({ username: req.body.username });
+            const post = await Post.findById(entityId);
+            
+                await Notification.create({ //problem is notification for created comment is not being sent
+                  userId: post.userId._id,
+                  type: "comment",
+                  senderId: sender._id,
+                  message: `${req.body.username} commented on your post.`,
+                  referenceId: post._id,
+                });
+            
+              
         } else if (entityType === "study") {
             entity.comments.push(createdComment._id);
             await entity.save();
-        }
 
+            const sender = await User.findOne({ username: req.body.username });
+            const post = await Post.findById(entityId);
+            await Notification.create({ 
+                userId: post.userId._id,
+                type: "comment",
+                senderId: sender._id,
+                message: `${req.body.username} commented on your study.`,
+                referenceId: post._id,
+              });
+        }
         res.status(201).json(createdComment);
     } catch (error) {
         res.status(404).json({ message: error.message });

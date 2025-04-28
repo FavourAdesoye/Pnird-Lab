@@ -2,7 +2,8 @@ const router = require("express").Router();
 const EventsModel = require("../models/events");
 const cloudinary = require("../utils/cloudinary");
 const upload = require("../utils/multer");
-
+const User = require("../models/User");
+const Notification = require("../models/notifications");
 //create a new event with an image upload
 
 router.post("/createevent", upload.single("image"), async (req, res) => {
@@ -45,6 +46,22 @@ router.post("/createevent", upload.single("image"), async (req, res) => {
   
       // Save to database
       const savedEvent = await newEvent.save();
+      // Notify all users (optional)
+      const allusers =  await User.find({ _id: { $ne: req.body.userId } }); // or filter by role or interest
+      const sender = await User.findOne({ _id: req.body.userId });
+      for (let user of allusers) {
+  
+    const notif = new Notification({
+      userId: user._id,
+      type: "event", // or "event"
+      senderId: sender._id,
+      message: `New Event posted: ${titlepost}`,
+      referenceId: savedEvent._id,
+    });
+    await notif.save();
+  
+}
+
       res.status(201).json(savedEvent);
     } catch (err) {
       console.error(err);

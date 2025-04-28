@@ -1,6 +1,7 @@
 const {error} = require("console");
 const express = require("express");
 const app = express();
+const http = require("http");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const { default: helmet } = require("helmet");
@@ -10,13 +11,18 @@ const postRoute = require("./routes/posts");
 const commentRoute = require("./routes/comment")
 const authRoute = require("./routes/auth");
 const cors = require('cors');
+const { Server } = require("socket.io");
 const bodyParser = require("body-parser"); 
 const eventRoute = require("./routes/events");
 const studyRoute = require("./routes/studies")
+const messageRoute = require("./routes/message");
+const Message = require("./models/messages");
+const Notification = require("./models/notifications");
+const notificationRoute = require("./routes/notifications");
 const admin = require("./firebase")
 dotenv.config();
 
-const Port = process.env.PORT || 3000; 
+
 
 mongoose.
 connect(process.env.MONGO_URL
@@ -34,20 +40,87 @@ app.use(express.urlencoded({
 app.use(helmet());
 app.use(morgan("common"));
 
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"],
+        credentials: true
+    },
+});
+
+let onlineUsers = {};
+
+io.on("connection", (socket) => {
+    console.log("New connection:", socket.id);
+  
+    socket.on("register", (userId) => {
+      onlineUsers[userId] = socket.id;
+    });
+  
+    socket.on("send_message", (data) => {
+      const recipientSocket = onlineUsers[data.recipientId];
+      
+      if (recipientSocket) {
+        io.to(recipientSocket).emit("receive_message", {
+          senderId: data.senderId,
+          message: data.message,
+          timestamp: new Date().toISOString()
+        });
+        io.to(recipientId).emit("new_notification", notification);
+      }
+      
+  
+      // Save message to DB
+      const newMessage = new Message({
+        senderId: data.senderId,
+        recipientId: data.recipientId,
+        message: data.message,
+      });
+      const notification = new Notification({
+        userId: data.recipientId,
+        type: "message",
+        senderId: data.senderId,
+        message: `${data.senderName} sent you a message.`,
+        referenceId: newMessage._id,
+      });
+       notification.save().catch((err) => {
+        console.error("Error saving notification:", err.message);
+      });
+      newMessage.save().catch((err) => {
+        console.error("Error saving message:", err.message);
+      });
+    });
+  
+    socket.on("disconnect", () => {
+      for (const [userId, socketId] of Object.entries(onlineUsers)) {
+        if (socketId === socket.id) {
+          delete onlineUsers[userId];
+          break;
+        }
+      }
+      console.log("Disconnected:", socket.id);
+    });
+  });
+const Port = process.env.PORT || 3000; 
+server.listen(Port, () => {
+    console.log("Socket.io and express server running on port 3000");
+});
 app.use("/api/posts", postRoute);
 app.use("/api/users", userRoute)
 app.use("/api/auth", authRoute);
 app.use("/api/comments", commentRoute);
 app.use("/api/studies", studyRoute);
 app.use("/api/events", eventRoute);
-
+app.use("/api/messages", messageRoute);
+app.use("/api/notifications", notificationRoute);
 
 app.get("/", (req,res)=>{
     res.send("welcome to pnirdlab")
 });
-app.listen(Port, ()=>{
-    console.log(`Backend server is runninnng on port ${Port}!`);
-});
+// app.listen(Port, ()=>{
+//     console.log(`Backend server is runninnng on port ${Port}!`);
+// });
 
 
 //parsing the json  
