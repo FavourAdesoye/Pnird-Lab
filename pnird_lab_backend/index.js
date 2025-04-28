@@ -17,6 +17,7 @@ const eventRoute = require("./routes/events");
 const studyRoute = require("./routes/studies")
 const messageRoute = require("./routes/message");
 const Message = require("./models/messages");
+const Notification = require("./models/notifications");
 const notificationRoute = require("./routes/notifications");
 const admin = require("./firebase")
 dotenv.config();
@@ -66,7 +67,9 @@ io.on("connection", (socket) => {
           message: data.message,
           timestamp: new Date().toISOString()
         });
+        io.to(recipientId).emit("new_notification", notification);
       }
+      
   
       // Save message to DB
       const newMessage = new Message({
@@ -74,7 +77,16 @@ io.on("connection", (socket) => {
         recipientId: data.recipientId,
         message: data.message,
       });
-  
+      const notification = new Notification({
+        userId: data.recipientId,
+        type: "message",
+        senderId: data.senderId,
+        message: `${data.senderName} sent you a message.`,
+        referenceId: newMessage._id,
+      });
+       notification.save().catch((err) => {
+        console.error("Error saving notification:", err.message);
+      });
       newMessage.save().catch((err) => {
         console.error("Error saving message:", err.message);
       });

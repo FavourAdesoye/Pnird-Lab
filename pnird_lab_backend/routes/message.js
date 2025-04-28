@@ -3,7 +3,9 @@ const express = require("express");
 const router = express.Router();
 const Message = require("../models/messages");
 const User = require("../models/User");
+const Notification = require("../models/notifications");
 
+// Create a new message
 router.post("/", async (req, res) => {
   try {
     const senderId = await User.findById(req.body.senderId);
@@ -11,25 +13,25 @@ router.post("/", async (req, res) => {
     const message = req.body.message;
     // const { senderId, recipientId, text } = req.body;
     if (senderId === recipientId) {
-      const sender = await User.findById(senderId);
-      if (!sender.isAdmin) {
         return res.status(403).json({ message: "Users cannot message themselves." });
-      }
     }
 
     const newMessage = new Message({ senderId, recipientId, message });
     const saved = await newMessage.save();
+    const sender = await User.findOne(senderId);
+    print("Sender ID:", senderId);
+    const senderName = sender.username;
+    print("Sender Name:", senderName);
     // Notify the recipient
-    if (senderId !== recipientId) {
+
         const notif = new Notification({
           userId: recipientId,
           type: "message",
-          senderId,
+          senderId: senderId,
           message: `${senderName} sent you a message.`,
+          referenceId: saved._id,
         });
-        await notif.save();
-      }
-      
+        await notif.save(); 
     res.status(201).json(saved);
   } catch (err) {
     res.status(500).json({ error: err.message });
