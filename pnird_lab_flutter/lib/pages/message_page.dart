@@ -75,10 +75,23 @@ class _MessagePageState extends State<MessagePage> {
           "message": data["message"],
           "timestamp": data["timestamp"] ?? DateTime.now().toIso8601String(),
         });
+        
       });
 
       
     });
+  //   _socketService.socket.on("new_notification", (data) {
+  // print("New notification received: $data");
+
+  // // Optional: You can show a snackbar or toast
+  // ScaffoldMessenger.of(context).showSnackBar(
+  //   SnackBar(content: Text(data['message'] ?? 'You have a new notification')),
+  // );
+
+  // You can also refresh your notification list if you're saving notifications in a list
+  // setState(() { notifications.add(Notification.fromJson(data)); });
+// });
+
     await loadMessageHistory(); 
     
   }

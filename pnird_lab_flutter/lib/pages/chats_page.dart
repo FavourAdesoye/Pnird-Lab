@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pnirdlab/widgets/user_avatar.dart';
 import 'package:pnirdlab/pages/message_page.dart';
-
+import 'package:pnirdlab/pages/notification_page.dart';
 class ChatsPage extends StatefulWidget {
   const ChatsPage({super.key});
 
@@ -142,6 +142,19 @@ class _ChatsPageState extends State<ChatsPage> {
       ),
       onPressed: () {
         // TODO: switch between tabs if needed
+        if (label == "Notifications") {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => NotificationsPage()),
+          );
+        }
+        else {
+          // Handle Messages tab
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ChatsPage()),
+          );
+        }
       },
       child: Text(label, style: TextStyle(fontSize: 18)),
     );
