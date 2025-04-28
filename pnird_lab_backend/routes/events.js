@@ -45,6 +45,21 @@ router.post("/createevent", upload.single("image"), async (req, res) => {
   
       // Save to database
       const savedEvent = await newEvent.save();
+      // Notify all users (optional)
+      const users = await User.find(); // or filter by role or interest
+
+for (let user of users) {
+  if (user._id !== creatorId) {
+    const notif = new Notification({
+      userId: user._id,
+      type: "study", // or "event"
+      senderId: creatorId,
+      message: `New study/event posted: ${title}`,
+    });
+    await notif.save();
+  }
+}
+
       res.status(201).json(savedEvent);
     } catch (err) {
       console.error(err);

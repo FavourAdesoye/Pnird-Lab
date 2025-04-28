@@ -17,6 +17,7 @@ const eventRoute = require("./routes/events");
 const studyRoute = require("./routes/studies")
 const messageRoute = require("./routes/message");
 const Message = require("./models/messages");
+const notificationRoute = require("./routes/notifications");
 const admin = require("./firebase")
 dotenv.config();
 
@@ -48,26 +49,6 @@ const io = new Server(server, {
 });
 
 let onlineUsers = {};
-
-// io.on('connection', (socket) => {
-//     console.log('User connected:', socket.id);
-  
-//     socket.on('send_message', async (data) => {
-//       try {
-//         const newMessage = new Message({
-//           senderId: data.senderId,
-//           recipientId: data.recipientId,
-//           message: data.message,
-//         });
-//         const savedMessage = await newMessage.save();
-  
-//         io.to(data.recipientSocketId).emit('receive_message', savedMessage);
-//       } catch (err) {
-//         console.error('Error saving message:', err);
-//       }
-//     });
-//   });
-
 
 io.on("connection", (socket) => {
     console.log("New connection:", socket.id);
@@ -120,7 +101,7 @@ app.use("/api/comments", commentRoute);
 app.use("/api/studies", studyRoute);
 app.use("/api/events", eventRoute);
 app.use("/api/messages", messageRoute);
-
+app.use("/api/notifications", notificationRoute);
 
 app.get("/", (req,res)=>{
     res.send("welcome to pnirdlab")

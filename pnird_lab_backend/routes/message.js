@@ -19,7 +19,17 @@ router.post("/", async (req, res) => {
 
     const newMessage = new Message({ senderId, recipientId, message });
     const saved = await newMessage.save();
-
+    // Notify the recipient
+    if (senderId !== recipientId) {
+        const notif = new Notification({
+          userId: recipientId,
+          type: "message",
+          senderId,
+          message: `${senderName} sent you a message.`,
+        });
+        await notif.save();
+      }
+      
     res.status(201).json(saved);
   } catch (err) {
     res.status(500).json({ error: err.message });
