@@ -3,7 +3,8 @@ const StudiesModel = require("../models/studies");
 const cloudinary = require("../utils/cloudinary");
 const upload = require("../utils/multer");
 const Comment = require("../models/comment");
-
+const User = require("../models/User");
+const Notification = require("../models/notifications");
 
 
 //create a new study with an image upload
@@ -46,6 +47,23 @@ router.post("/createstudy", upload.single("image"), async (req, res) => {
   
       // Save to database
       const savedStudy = await newStudy.save();
+
+      //notify all users
+      const allusers =  await User.find({ _id: { $ne: req.body.userId } }); // or filter by role or interest
+      const sender = await User.findOne({ _id: req.body.userId });
+      for (let user of allusers) {
+  
+    const notif = new Notification({
+      userId: user._id,
+      type: "study", 
+      senderId: sender._id,
+      message: `New Study posted: ${titlepost}`,
+      referenceId: savedStudy._id,
+    });
+    await notif.save();
+  }
+
+
       res.status(201).json(savedStudy);
     } catch (err) {
       console.error(err);
