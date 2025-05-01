@@ -52,7 +52,11 @@ dependencies:
   win32: ^5.0.0
   flutter_dotenv: ^5.0.2
   file_picker: ^9.2.3
-  shared_preferences: ^2.5.2
+  shared_preferences: ^2.5.2 
+  dash_chat_2: ^0.0.21
+  chat_gpt_sdk: ^2.2.5 
+  mongo_dart: ^0.10.0
+
   socket_io_client: ^3.1.1
 
 dev_dependencies:
@@ -75,7 +79,7 @@ flutter:
     #   - images/a_dot_ham.jpeg
     - assets/images/
     - assets/logos/
-    - .env
+   # - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

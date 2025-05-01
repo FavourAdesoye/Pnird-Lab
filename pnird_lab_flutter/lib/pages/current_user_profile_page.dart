@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:pnirdlab/pages/settings/settings.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../model/post_model.dart';
@@ -11,7 +12,7 @@ import 'package:pnirdlab/pages/create_post_screen.dart';
 import 'package:pnirdlab/pages/chats_page.dart';
 class ProfilePage extends StatefulWidget {
   final String myuserId;
-  ProfilePage({required this.myuserId});
+  const ProfilePage({super.key, required this.myuserId});
   @override
   _ProfilePageState createState() => _ProfilePageState();
 }
@@ -94,9 +95,9 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Profile")),
+      appBar: AppBar(title: const Text("Profile")),
       body: userId == null
-          ? Center(child: Text("User not logged in."))
+          ? const Center(child: Text("User not logged in."))
           : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -107,15 +108,15 @@ class _ProfilePageState extends State<ProfilePage> {
                     backgroundImage:
                         profilepic != null && profilepic!.isNotEmpty
                             ? NetworkImage(profilepic!)
-                            : AssetImage('assets/images/defaultprofilepic.png')
+                            : const AssetImage('assets/images/defaultprofilepic.png')
                                 as ImageProvider,
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
 
                   // Username
                   Text(
                     username ?? "Loading...",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
 
                   // Short Bio
@@ -127,14 +128,14 @@ class _ProfilePageState extends State<ProfilePage> {
                       style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
 
                   // Post Count
                   Text(
                     postCount == 1 ? "$postCount Post" : "$postCount Posts",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
 
                   // Buttons
                   Wrap(
@@ -145,19 +146,19 @@ class _ProfilePageState extends State<ProfilePage> {
   onPressed: () {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) =>  ProfileEditScreen(userId: userId!)),
+      MaterialPageRoute(builder: (context) =>  Setting(userId: userId!)),
     );
   },
   style: ElevatedButton.styleFrom(
     backgroundColor: Colors.white,
     foregroundColor: Colors.amber,
-    side: BorderSide(color: Colors.amber),
+    side: const BorderSide(color: Colors.amber),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(8),
     ),
   ),
-  child: Text(
-    "Edit Profile",
+  child: const Text(
+    "Settings",
     style: TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.bold,
@@ -175,12 +176,12 @@ class _ProfilePageState extends State<ProfilePage> {
   style: ElevatedButton.styleFrom(
     backgroundColor: Colors.white,
     foregroundColor: Colors.amber,
-    side: BorderSide(color: Colors.amber),
+    side: const BorderSide(color: Colors.amber),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(8),
     ),
   ),
-  child: Text(
+  child: const Text(
     "Create Post",
     style: TextStyle(
       fontSize: 12,
@@ -193,18 +194,18 @@ class _ProfilePageState extends State<ProfilePage> {
   onPressed: () {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ChatsPage()),
+      MaterialPageRoute(builder: (context) => const ChatsPage()),
     );
   },
   style: ElevatedButton.styleFrom(
     backgroundColor: Colors.white,
     foregroundColor: Colors.amber,
-    side: BorderSide(color: Colors.amber),
+    side: const BorderSide(color: Colors.amber),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(8),
     ),
   ),
-  child: Text(
+  child: const Text(
     "Message",
     style: TextStyle(
       fontSize: 12,
@@ -215,15 +216,15 @@ class _ProfilePageState extends State<ProfilePage> {
 
                     ],
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
                   // Grid View of Posts
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: GridView.builder(
                       shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 3,
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
@@ -231,7 +232,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       itemCount: posts.isNotEmpty ? posts.length : 1,
                       itemBuilder: (context, index) {
                         if (posts.isEmpty) {
-                          return Center(child: Text("No posts yet."));
+                          return const Center(child: Text("No posts yet."));
                         }
                         return GestureDetector(
                           onTap: () {
@@ -256,15 +257,16 @@ class _ProfilePageState extends State<ProfilePage> {
                                     .cover, // Ensures the image fills the container
                                 loadingBuilder:
                                     (context, child, loadingProgress) {
-                                  if (loadingProgress == null)
+                                  if (loadingProgress == null) {
                                     return child; // Image loaded
-                                  return Center(
+                                  }
+                                  return const Center(
                                     child:
                                         CircularProgressIndicator(), // Show loader while image loads
                                   );
                                 },
                                 errorBuilder: (context, error, stackTrace) {
-                                  return Icon(Icons.broken_image,
+                                  return const Icon(Icons.broken_image,
                                       color:
                                           Colors.grey); // Handle broken images
                                 },

@@ -1,0 +1,2 @@
+const String openApiKey = "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";
+const String assistantId = 'asst_6OWtx9YjalgOvHPj8HH8pMm5';
