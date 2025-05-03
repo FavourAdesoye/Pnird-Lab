@@ -3,7 +3,6 @@ const Post = require("../models/Post");
 const cloudinary = require("../utils/cloudinary");
 const upload = require("../utils/multer");
 const User = require("../models/User");
-const Notification = require("../models/notifications");
 //create a post with an image upload
 
 router.post('/upload', upload.single('image'), async (req, res) => {
@@ -40,19 +39,6 @@ router.post('/upload', upload.single('image'), async (req, res) => {
         updatedAt: new Date()
       });
       await post.save();
-      const allUsers = await User.find({ _id: { $ne: req.body.userId } });
-      const sender = await User.findOne({ _id: req.body.userId });
-      for (let user of allUsers) {
-        const notif = new Notification({
-          userId: user._id,
-          type: "new_post",
-          senderId: sender._id,
-          message: `${sender.username} made a new post.`,
-          referenceId: post._id,
-        });
-        await notif.save();
-      }
-
       res.json(post);
     }  
       catch(err){
@@ -64,18 +50,8 @@ router.post('/upload', upload.single('image'), async (req, res) => {
 router.put("/:id/like", async(req,res)=>{
     try{
         const post = await Post.findById(req.params.id);
-        const user = await User.findOne({ _id: req.body.userId });
         if (!post.likes.includes(req.body.userId)){
             await post.updateOne({$push:{likes:req.body.userId}});
-            if (post.userId._id.toString() !== req.body.userId) {
-              await Notification.create({
-                userId: post.userId._id,
-                senderId: req.body.userId,
-                type: "like",
-                referenceId: post._id,
-                message: `${user.username} liked your post`,
-              });
-            }
             res.status(200).json("The post has been liked")
         }else{
             await post.updateOne({$pull:{likes:req.body.userId}});
