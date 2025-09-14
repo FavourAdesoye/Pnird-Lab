@@ -64,29 +64,36 @@ void initState() {
                 horizontal: 16,
               ).copyWith(right: 0),
               child: GestureDetector(
-                onTap: () {
-                  String clickedUserId = widget.post.user.id; //getting the regular id. not firebase id
-                  print("clickedUserId: $clickedUserId");
-
-                  if (loggedInUserId != null && clickedUserId == loggedInUserId
-                   ) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProfilePage(myuserId: clickedUserId), //regular id
-                      ),
-                    );
-                   } 
-                   else {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            PublicProfilePage(userId: clickedUserId),
-                      ),
-                    );
-                  }
-                },
+                onTap: () async {
+  String clickedUserId = widget.post.user.id;
+  print("clickedUserId: $clickedUserId");
+  print("loggedInUserId: $loggedInUserId");
+  
+  // Load the user ID if not already loaded
+  if (loggedInUserId == null) {
+    loggedInUserId = await getLoggedInUserId();
+  }
+  
+  print("Comparing: '$clickedUserId' == '$loggedInUserId'");
+  
+  if (loggedInUserId != null && clickedUserId == loggedInUserId) {
+    print("Navigating to OWN profile (ProfilePage)");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfilePage(myuserId: clickedUserId),
+      ),
+    );
+  } else {
+    print("Navigating to PUBLIC profile (PublicProfilePage)");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PublicProfilePage(userId: clickedUserId),
+      ),
+    );
+  }
+},
              
                 child: Row(
                   children: [

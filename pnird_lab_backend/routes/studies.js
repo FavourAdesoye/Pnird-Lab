@@ -84,7 +84,7 @@ for (let user of allusers) {
   });
 
 // Fetch all studies
-router.get('/api/studies', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const studies = await StudiesModel.find();
         res.status(200).json(studies);
@@ -94,7 +94,7 @@ router.get('/api/studies', async (req, res) => {
 });
 
 // Fetch a single study by ID
-router.get('/api/studies/:id', async (req, res) => {
+router.get('/:id', async (req, res) => {
     try {
         const study = await StudiesModel.findById(req.params.id);
         if (!study) {
@@ -107,7 +107,7 @@ router.get('/api/studies/:id', async (req, res) => {
 });
 
 // Update a study
-router.put('/api/studies/:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
     try {
         const {date_time, image_url, description, titlepost } = req.body;
 
@@ -128,7 +128,7 @@ router.put('/api/studies/:id', async (req, res) => {
 });
 
 // Delete a study
-router.delete('/api/studies/:id', async (req, res) => {
+router.delete('/:id', async (req, res) => {
     try {
         const deletedStudy = await StudiesModel.findByIdAndDelete(req.params.id);
 

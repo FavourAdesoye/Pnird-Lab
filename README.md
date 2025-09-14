@@ -134,12 +134,21 @@ PORT=3000
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
+CLOUDINARY_UPLOAD_URL=https://api.cloudinary.com/v1_1/dky55f2w4/image/upload
+UPLOAD_PRESET=pnird_lab
 ```
 
 ### Flutter (.env)
 ```env
 API_BASE_URL=http://localhost:3000/api
 SOCKET_URL=http://localhost:3000
+MONGO_URL=mongodb://localhost:27017/pnirdlab
+PORT=3000
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+CLOUDINARY_UPLOAD_URL=https://api.cloudinary.com/v1_1/dky55f2w4/image/upload
+UPLOAD_PRESET=pnird_lab
 ```
 
 ## 🎮 Games & Cognitive Training

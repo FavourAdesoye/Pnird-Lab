@@ -61,20 +61,162 @@ router.post('/users', async (req, res) => {
   res.status(200).send('User saved successfully');
 });
 
+// Helper function to suggest alternative usernames
+async function suggestUsernames(baseUsername) {
+  const suggestions = [];
+  const base = baseUsername.toLowerCase().replace(/\s+/g, '');
+  
+  // Try variations
+  for (let i = 1; i <= 5; i++) {
+    const suggestion = `${base}${i}`;
+    const exists = await User.findOne({ username: suggestion });
+    if (!exists) {
+      suggestions.push(suggestion);
+      if (suggestions.length >= 3) break;
+    }
+  }
+  
+  return suggestions;
+}
+
 router.post('/register', async(req,res) => {
     const { username, email, firebaseUID, role } = req.body;
 
   try {
-    // Check if user already exists
-    let user = await User.findOne({ firebaseUID });
-    if (user) return res.status(400).json({ message: 'User already registered' });
+    console.log('Registration attempt:', { username, email, firebaseUID, role });
+    
+    // Validate required fields
+    if (!username || !email || !firebaseUID || !role) {
+      return res.status(400).json({ 
+        message: 'Missing required fields: username, email, firebaseUID, and role are required' 
+      });
+    }
 
-    // Create new user in MongoDB
-    user = new User({ username, email, firebaseUID, role });
+    // Verify the Firebase UID exists
+    try {
+      const userRecord = await admin.auth().getUser(firebaseUID);
+      if (userRecord.email !== email.trim().toLowerCase()) {
+        return res.status(400).json({ 
+          message: 'Firebase UID does not match the provided email' 
+        });
+      }
+    } catch (firebaseError) {
+      return res.status(400).json({ 
+        message: 'Invalid Firebase UID' 
+      });
+    }
+
+    // Check for existing username
+    const existingUsername = await User.findOne({ username: username.trim() });
+    if (existingUsername) {
+      const suggestions = await suggestUsernames(username);
+      return res.status(400).json({ 
+        message: `Username '${username}' is already taken. Please choose a different username.`,
+        suggestions: suggestions
+      });
+    }
+
+    // Check for existing email
+    const existingEmail = await User.findOne({ email: email.trim().toLowerCase() });
+    if (existingEmail) {
+      return res.status(400).json({ 
+        message: `Email '${email}' is already registered. Please use a different email or try logging in.` 
+      });
+    }
+
+    // Check for existing Firebase UID
+    const existingFirebaseUID = await User.findOne({ firebaseUID });
+    if (existingFirebaseUID) {
+      return res.status(400).json({ 
+        message: 'This Firebase account is already registered' 
+      });
+    }
+
+    // Validate role
+    if (!['staff', 'student'].includes(role)) {
+      return res.status(400).json({ 
+        message: 'Invalid role. Must be either "staff" or "student"' 
+      });
+    }
+
+    // Create user in MongoDB
+    const user = new User({ 
+      username: username.trim(), 
+      email: email.trim().toLowerCase(), 
+      firebaseUID, 
+      role 
+    });
+    
     await user.save();
-    res.status(200).json({ message: 'User registered successfully' });
+    console.log('User registered successfully:', user._id);
+    
+    res.status(201).json({ 
+      message: 'User registered successfully',
+      userId: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      firebaseUID: user.firebaseUID
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Registration error:', err);
+    
+    // Handle specific MongoDB errors
+    if (err.code === 11000) {
+      const field = Object.keys(err.keyPattern)[0];
+      const value = err.keyValue[field];
+      
+      return res.status(400).json({ 
+        message: `Registration failed: ${field} '${value}' is already taken. Please try again.` 
+      });
+    }
+    
+    // Handle validation errors
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map(e => e.message);
+      return res.status(400).json({ 
+        message: 'Validation failed',
+        errors: errors
+      });
+    }
+    
+    // Generic error
+    res.status(500).json({ 
+      message: 'Registration failed. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+    });
+  }
+});
+
+// Cleanup endpoint to remove orphaned MongoDB records
+router.post('/cleanup-orphaned', async (req, res) => {
+  try {
+    // Find users without corresponding Firebase accounts
+    // This is a helper endpoint for cleanup
+    const users = await User.find({});
+    let cleanedCount = 0;
+    
+    for (const user of users) {
+      try {
+        // Try to verify the Firebase UID exists
+        await admin.auth().getUser(user.firebaseUID);
+      } catch (error) {
+        // If Firebase user doesn't exist, delete MongoDB record
+        await User.findByIdAndDelete(user._id);
+        cleanedCount++;
+        console.log(`Cleaned up orphaned user: ${user.username}`);
+      }
+    }
+    
+    res.status(200).json({ 
+      message: `Cleanup completed. Removed ${cleanedCount} orphaned records.` 
+    });
+  } catch (err) {
+    console.error('Cleanup error:', err);
+    res.status(500).json({ 
+      message: 'Cleanup failed',
+      error: err.message 
+    });
   }
 });
 
@@ -167,4 +309,48 @@ router.get("/id/:id", async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
+// Check email verification status
+router.get('/email-verification-status/:firebaseUID', async (req, res) => {
+  try {
+    const { firebaseUID } = req.params;
+    
+    // Get user from Firebase
+    const userRecord = await admin.auth().getUser(firebaseUID);
+    
+    res.status(200).json({
+      emailVerified: userRecord.emailVerified,
+      email: userRecord.email
+    });
+  } catch (error) {
+    console.error('Error checking email verification:', error);
+    res.status(500).json({ message: 'Failed to check verification status' });
+  }
+});
+
+// Resend email verification
+router.post('/resend-verification', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+    
+    // Generate new verification link
+    const link = await admin.auth().generateEmailVerificationLink(email.trim().toLowerCase());
+    
+    // In production, send this link via email service
+    console.log('New verification link generated:', link);
+    
+    res.status(200).json({ 
+      message: 'Verification email sent',
+      verificationLink: link // For testing purposes
+    });
+  } catch (error) {
+    console.error('Error resending verification:', error);
+    res.status(500).json({ message: 'Failed to resend verification email' });
+  }
+});
+
 module.exports = router

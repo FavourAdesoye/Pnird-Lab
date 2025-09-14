@@ -5,6 +5,8 @@ import 'package:pnirdlab/pages/about_us.dart';
 import 'package:pnirdlab/pages/games/gamehome.dart';
 import 'package:pnirdlab/pages/home.dart';
 import 'package:pnirdlab/pages/studies.dart';
+import 'package:pnirdlab/services/auth.dart';
+import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
 
 class MainScreenPage extends StatefulWidget {
   const MainScreenPage({super.key});
@@ -22,9 +24,99 @@ class _MainScreenPageState extends State<MainScreenPage> {
     const AboutUsPage(),
     const Gamehome(),
   ];
+
+  Future<void> _logout() async {
+    // Show confirmation dialog
+    final bool? shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout == true) {
+      try {
+        await Auth.logout();
+        // Navigate to login screen and clear the navigation stack
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const ChooseAccountTypePage()),
+          (route) => false,
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logout failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Drawer menu
+      drawer: Drawer(
+        backgroundColor: Colors.black,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.yellow,
+              ),
+              child: Text(
+                'Pnird Lab',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person, color: Colors.white),
+              title: const Text('Profile', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                // Navigate to profile page
+                // You'll need to get the current user ID here
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings, color: Colors.white),
+              title: const Text('Settings', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                // Navigate to settings page
+              },
+            ),
+            const Divider(color: Colors.grey),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Logout', style: TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(context);
+                _logout();
+              },
+            ),
+          ],
+        ),
+      ),
       //App Bar widget
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 0, 0, 0),
@@ -69,6 +161,14 @@ class _MainScreenPageState extends State<MainScreenPage> {
                   MaterialPageRoute(builder: (context) => const ChatsPage()),
                 );
               }),
+          // Logout button
+          IconButton(
+              icon: const Icon(
+                Icons.logout,
+                color: Colors.red,
+                size: 36.0,
+              ),
+              onPressed: _logout),
         ],
       ),
       body: IndexedStack(

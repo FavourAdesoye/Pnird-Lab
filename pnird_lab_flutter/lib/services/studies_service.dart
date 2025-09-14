@@ -8,7 +8,7 @@ class StudiesApi {
 
   // Fetch all studies
   static Future<List<Study>> fetchStudies() async {
-    final response = await http.get(Uri.parse('$baseUrl/api/studies'));
+    final response = await http.get(Uri.parse('$baseUrl'));
     if (response.statusCode == 200) {
       final List studies = json.decode(response.body);
       return studies.map((study) => Study.fromJson(study)).toList();

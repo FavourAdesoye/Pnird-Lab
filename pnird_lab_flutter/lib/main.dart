@@ -9,7 +9,10 @@ import 'package:pnirdlab/pages/loginpages/staff_login.dart';
 import 'package:pnirdlab/pages/loginpages/student_login.dart';
 import 'package:pnirdlab/pages/loginpages/student_signup.dart';
 import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
+import 'package:pnirdlab/pages/loginpages/email_verification_page.dart';
+import 'package:pnirdlab/pages/loginpages/email_test_page.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:pnirdlab/services/auth.dart';
 
 
 void main() async {
@@ -47,10 +50,13 @@ void main() async {
 }
 
 Future<bool> checkUserLoggedIn() async {
-  // Here, you would implement the logic to check if the user is logged in
-  // For demonstration purposes, let's return false (not logged in)
-  await Future.delayed(Duration(seconds: 1)); // Simulate loading
-  return false; // Change this based on your actual login state
+  try {
+    // Check if user is logged in using the new auth service
+    return await Auth.isLoggedIn();
+  } catch (e) {
+    print('Error checking login state: $e');
+    return false;
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -75,6 +81,8 @@ class MyApp extends StatelessWidget {
         '/student_login': (context) => StudentLoginPage(),
         '/staff_login': (context) => StaffLoginPage(),
         '/staff_signup': (context) => StaffSignUpPage(),
+        '/email_verification': (context) => EmailVerificationPage(email: ''),
+        '/email_test': (context) => EmailTestPage(),
         '/home': (context) => MainScreenPage()
       },
     );

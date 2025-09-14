@@ -3,12 +3,13 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../model/post_model.dart';
-import '../model/user_model.dart';
-import '../model/comment_model.dart';
 import 'package:pnirdlab/pages/post_detail_page.dart';
 import 'package:pnirdlab/pages/edit_profile_screen.dart';
 import 'package:pnirdlab/pages/create_post_screen.dart';
 import 'package:pnirdlab/pages/chats_page.dart';
+import 'package:pnirdlab/services/auth.dart';
+import 'package:pnirdlab/services/api_service.dart';
+import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
 class ProfilePage extends StatefulWidget {
   final String myuserId;
   ProfilePage({required this.myuserId});
@@ -30,6 +31,47 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     loadUserData();
+  }
+
+  Future<void> _logout() async {
+    // Show confirmation dialog
+    final bool? shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout == true) {
+      try {
+        await Auth.logout();
+        // Navigate to login screen and clear the navigation stack
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const ChooseAccountTypePage()),
+          (Route<dynamic> route) => false,
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logout failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   // Load userId from local storage
@@ -54,47 +96,89 @@ class _ProfilePageState extends State<ProfilePage> {
   // Fetch profile data for the specific user
   Future<void> fetchProfileData(String userId) async {
     print("fetching profile data for user: $userId");
-    final response = await http.get(
-      Uri.parse('http://localhost:3000/api/users/$firebaseId'),
-      // headers: {
-      //   'Authorization': 'Bearer <token>', // Include token if required
-      // },
-    );
+    try {
+      final response = await http.get(
+        Uri.parse(ApiService.getUserByIdEndpoint(userId)),
+        // headers: {
+        //   'Authorization': 'Bearer <token>', // Include token if required
+        // },
+      );
 
-    if (response.statusCode == 200) {
-      final responseData = json.decode(response.body);
-      print("Profile data: $responseData");
-      setState(() {
-        username =
-            responseData['username']; // Replace with data from API response
-        bio = responseData['bio'];
-        profilepic = responseData['profilePicture'];
-      });
-    } else {
-      throw Exception('Failed to load profile data');
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        print("Profile data: $responseData");
+        setState(() {
+          username = responseData['username'];
+          bio = responseData['bio'];
+          profilepic = responseData['profilePicture'];
+        });
+      } else {
+        print("API Error: ${response.statusCode} - ${response.body}");
+        throw Exception('Failed to load profile data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print("Exception in fetchProfileData: $e");
+      throw Exception('Failed to load profile data: $e');
     }
   }
 
   Future<void> fetchUserPosts(String userId) async {
-    final response = await http.get(
-      Uri.parse('http://localhost:3000/api/posts/user/$firebaseId'),
-    );
-    if (response.statusCode == 200) {
-      final responseData = jsonDecode(response.body);
-      print(responseData);
-      setState(() {
-        posts = List<Post>.from(responseData.map((post) => Post.fromJson(post)));
-        postCount = posts.length;
-      });
-    } else {
-      throw Exception("Failed to load user posts");
+    try {
+      print("fetching posts for user: $userId");
+      final response = await http.get(
+        Uri.parse(ApiService.getUserPostsEndpoint(userId)),
+      );
+      
+      print("Posts response status: ${response.statusCode}");
+      print("Posts response body: ${response.body}");
+      
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print("Posts data: $responseData");
+        setState(() {
+          posts = List<Post>.from(responseData.map((post) => Post.fromJson(post)));
+          postCount = posts.length;
+        });
+      } else {
+        print("Posts API Error: ${response.statusCode} - ${response.body}");
+        throw Exception("Failed to load user posts: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Exception in fetchUserPosts: $e");
+      throw Exception("Failed to load user posts: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Profile")),
+      appBar: AppBar(
+        title: Text("Profile"),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (String value) {
+              if (value == 'logout') {
+                _logout();
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Logout'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
       body: userId == null
           ? Center(child: Text("User not logged in."))
           : SingleChildScrollView(
