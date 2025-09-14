@@ -189,7 +189,7 @@ class _NewStudyPageState extends State<NewStudyPage> {
                       style: TextStyle(color: Colors.red),
                     ),
                   ),
-                if (_uploadedImageUrl != null)
+                if (_uploadedImageUrl != null && _uploadedImageUrl!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 20),
                     child: Column(

@@ -49,9 +49,12 @@ router.post("/createstudy", upload.single("image"), async (req, res) => {
       const savedStudy = await newStudy.save();
 
       //notify all users
-      const allusers =  await User.find({ _id: { $ne: req.body.userId } }); // or filter by role or interest
+      if (req.body.userId) { 
+        const allusers =  await User.find({ _id: { $ne: req.body.userId } }); // or filter by role or interest
       const sender = await User.findOne({ _id: req.body.userId });
-      for (let user of allusers) {
+      
+      if (sender) { 
+for (let user of allusers) {
   
     const notif = new Notification({
       userId: user._id,
@@ -62,7 +65,16 @@ router.post("/createstudy", upload.single("image"), async (req, res) => {
     });
     await notif.save();
   }
+      } else{
+        console.warn("Sender not found for userId:", req.body.userId);
 
+      }
+    }
+      else{
+        console.warn("No userId provided in request body for notification.");
+      }
+      
+      
 
       res.status(201).json(savedStudy);
     } catch (err) {

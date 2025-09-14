@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const StudiesSchema = new mongoose.Schema({ 
     image_url : { 
         type : String, 
-        required: true
+        required: false
     } ,
     cloudinary_id:{
         type: String

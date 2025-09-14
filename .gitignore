@@ -1,6 +1,59 @@
-pnird_lab_backend/pnird-lab-firebase-adminsdk-avod6-157fc3b4bb.json
-pnird_lab_backend/firebase.js 
+# Environment variables
 pnird_lab_backend/.env
+pnird_lab_flutter/.env
+
+# Firebase credentials (keep these secure!)
+pnird_lab_backend/pnird-lab-firebase-adminsdk-avod6-157fc3b4bb.json
+pnird_lab_backend/firebase.js
+
+# Node.js
+pnird_lab_backend/node_modules/
+pnird_lab_backend/package-lock.json
+
+# Flutter
+pnird_lab_flutter/build/
+pnird_lab_flutter/.dart_tool/
+pnird_lab_flutter/.packages
+pnird_lab_flutter/pubspec.lock
+pnird_lab_flutter/windows/
+
+# Uploads and generated files
 pnird_lab_backend/uploads/
+
+# IDE
 .vscode/
-pnird_lab_flutter/windows
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
