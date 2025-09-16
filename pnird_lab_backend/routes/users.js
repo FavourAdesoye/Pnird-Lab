@@ -310,6 +310,20 @@ router.get("/id/:id", async (req, res) => {
   }
 });
 
+// Get user by username
+router.get("/username/:username", async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.params.username });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Error fetching user by username:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 // Check email verification status
 router.get('/email-verification-status/:firebaseUID', async (req, res) => {
   try {

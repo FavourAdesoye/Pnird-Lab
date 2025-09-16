@@ -6,6 +6,7 @@ class Post {
   String? description;
   String? img;
   List<String>? likes;
+  List<dynamic>? comments; // Add comments field
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -15,9 +16,11 @@ class Post {
     this.description,
     this.img,
     List<String>? likes,
+    List<dynamic>? comments,
     required this.createdAt,
     required this.updatedAt,
-  }) : likes = likes ?? []; //Initialize likes with an empty list if null
+  }) : likes = likes ?? [], //Initialize likes with an empty list if null
+       comments = comments ?? []; //Initialize comments with an empty list if null
 
   factory Post.fromJson(Map<String, dynamic> json) {
     final userData = json['userId'];
@@ -38,6 +41,9 @@ class Post {
       img: json['img'] ?? '', // Handle null case
       likes: json['likes'] != null
           ? List<String>.from(json['likes'])
+          : [], // Handle null case
+      comments: json['comments'] != null
+          ? List<dynamic>.from(json['comments'])
           : [], // Handle null case
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),

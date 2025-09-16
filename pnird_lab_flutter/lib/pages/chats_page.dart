@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:pnirdlab/widgets/user_avatar.dart';
 import 'package:pnirdlab/pages/message_page.dart';
 import 'package:pnirdlab/pages/notification_page.dart';
 class ChatsPage extends StatefulWidget {
@@ -16,6 +15,7 @@ class _ChatsPageState extends State<ChatsPage> {
   late Future<List<dynamic>> _chatUsersFuture;
   late String userId;
   bool isAdminUser = false;
+  String? currentUserProfilePicture;
 
   Future<List<dynamic>> fetchChatUsers() async {
     final prefs = await SharedPreferences.getInstance();
@@ -33,10 +33,33 @@ class _ChatsPageState extends State<ChatsPage> {
     }
   }
 
+  Future<void> fetchCurrentUserProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final mongoUserId = prefs.getString('userId');
+    
+    if (mongoUserId != null) {
+      try {
+        final response = await http.get(
+          Uri.parse("http://localhost:3000/api/users/id/$mongoUserId"),
+        );
+        
+        if (response.statusCode == 200) {
+          final userData = jsonDecode(response.body);
+          setState(() {
+            currentUserProfilePicture = userData['profilePicture'];
+          });
+        }
+      } catch (e) {
+        // Handle error silently
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _chatUsersFuture = fetchChatUsers();
+    fetchCurrentUserProfile();
   }
 
  @override
@@ -54,7 +77,15 @@ class _ChatsPageState extends State<ChatsPage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12.0),
-            child: UserAvatar(filename: 'drKeen.jpg'),
+            child: CircleAvatar(
+              radius: 20,
+              backgroundImage: (currentUserProfilePicture != null && currentUserProfilePicture!.isNotEmpty)
+                  ? NetworkImage(currentUserProfilePicture!)
+                  : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
+              onBackgroundImageError: (exception, stackTrace) {
+                // Handle image loading error silently
+              },
+            ),
           )
         ],
       ),

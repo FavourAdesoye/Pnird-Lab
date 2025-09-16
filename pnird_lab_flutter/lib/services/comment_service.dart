@@ -23,14 +23,19 @@ class CommentService {
 
   // Fetch comments by entity type (post or study) and ID
   Future<List<Comment>> getComments(String entityType, String entityId) async {
-    final response =
-        await http.get(Uri.parse(_getCommentsUrl(entityType, entityId)));
+    try {
+      final response =
+          await http.get(Uri.parse(_getCommentsUrl(entityType, entityId)));
 
-    if (response.statusCode == 200) {
-      List<dynamic> jsonResponse = json.decode(response.body);
-      return jsonResponse.map((commentJson) => Comment.fromJson(commentJson)).toList();
-    } else {
-      throw Exception('Failed to load comments');
+      if (response.statusCode == 200) {
+        List<dynamic> jsonResponse = json.decode(response.body);
+        return jsonResponse.map((commentJson) => Comment.fromJson(commentJson)).toList();
+      } else {
+        throw Exception('Failed to load comments: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Handle error silently
+      rethrow;
     }
   }
 
@@ -49,7 +54,7 @@ class CommentService {
     );
 
     if (response.statusCode != 201) {
-      throw Exception('Failed to post comment');
+      throw Exception('Failed to post comment: ${response.statusCode} - ${response.body}');
     }
   }
 
@@ -66,7 +71,7 @@ class CommentService {
     );
 
     if (response.statusCode != 201) {
-      throw Exception('Failed to post reply');
+      throw Exception('Failed to post reply: ${response.statusCode} - ${response.body}');
     }
   }
 }

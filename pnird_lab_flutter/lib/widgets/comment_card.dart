@@ -2,8 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:pnirdlab/model/comment_model.dart';
-import 'package:pnirdlab/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class CommentCard extends StatelessWidget {
   final Comment comment;
@@ -16,6 +17,22 @@ class CommentCard extends StatelessWidget {
     return DateFormat('yyyy-MM-dd HH:mm a').format(dateTime);
   }
 
+  Future<String?> _getUserProfilePicture(String username) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:3000/api/users/username/$username'),
+      );
+      
+      if (response.statusCode == 200) {
+        final userData = jsonDecode(response.body);
+        return userData['profilePicture'];
+      }
+    } catch (e) {
+      // Handle error silently
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -25,7 +42,17 @@ class CommentCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              UserAvatar(filename: "drKeen.jpg"),
+              CircleAvatar(
+                radius: 20,
+                backgroundImage: (comment.profilePicture != null && 
+                                comment.profilePicture!.isNotEmpty && 
+                                comment.profilePicture!.startsWith('http'))
+                    ? NetworkImage(comment.profilePicture!)
+                    : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
+                onBackgroundImageError: (exception, stackTrace) {
+                  // Handle image loading error silently
+                },
+              ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(left: 16),
@@ -72,13 +99,29 @@ class CommentCard extends StatelessWidget {
             ],
           ),
           // Display replies
-          if (comment.replies != null && comment.replies.isNotEmpty)
+          if (comment.replies.isNotEmpty)
             ...comment.replies.map((reply) => Padding(
                   padding: const EdgeInsets.only(left: 16, top: 8),
                   child: Row(
                     children: [
-                      UserAvatar(
-                          filename: "drKeen.jpg"), // Use the appropriate avatar
+                      FutureBuilder<String?>(
+                        future: _getUserProfilePicture(reply.username),
+                        builder: (context, snapshot) {
+                          String? profilePicture = reply.profilePicture ?? snapshot.data;
+                          
+                          return CircleAvatar(
+                            radius: 16,
+                            backgroundImage: (profilePicture != null && 
+                                            profilePicture.isNotEmpty && 
+                                            profilePicture.startsWith('http'))
+                                ? NetworkImage(profilePicture)
+                                : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
+                            onBackgroundImageError: (exception, stackTrace) {
+                              // Handle image loading error silently
+                            },
+                          );
+                        },
+                      ),
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.only(left: 16),

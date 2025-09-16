@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:provider/provider.dart';
 import 'package:pnirdlab/main_screen.dart';
 import 'package:pnirdlab/pages/loginpages/staff_signup.dart';
 import 'package:pnirdlab/pages/loginpages/staff_login.dart';
@@ -13,6 +14,8 @@ import 'package:pnirdlab/pages/loginpages/email_verification_page.dart';
 import 'package:pnirdlab/pages/loginpages/email_test_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:pnirdlab/services/auth.dart';
+import 'package:pnirdlab/providers/theme_provider.dart';
+import 'package:pnirdlab/theme/app_theme.dart';
 
 
 void main() async {
@@ -66,25 +69,37 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: "Pnird Lab",
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color.fromRGBO(0, 0, 0, 1),
-        textTheme: ThemeData.dark().textTheme.apply(
-              fontFamily: 'Roboto',
+    return ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: "Pnird Lab",
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme.copyWith(
+              textTheme: AppTheme.lightTheme.textTheme.apply(
+                fontFamily: 'Roboto',
+              ),
             ),
+            darkTheme: AppTheme.darkTheme.copyWith(
+              textTheme: AppTheme.darkTheme.textTheme.apply(
+                fontFamily: 'Roboto',
+              ),
+            ),
+            themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            home: isLoggedIn ? MainScreenPage() : ChooseAccountTypePage(),
+            routes: {
+              '/student_signup': (context) => StudentSignUpPage(),
+              '/student_login': (context) => StudentLoginPage(),
+              '/staff_login': (context) => StaffLoginPage(),
+              '/staff_signup': (context) => StaffSignUpPage(),
+              '/email_verification': (context) => EmailVerificationPage(email: ''),
+              '/email_test': (context) => EmailTestPage(),
+              '/home': (context) => MainScreenPage()
+            },
+          );
+        },
       ),
-      home: isLoggedIn ? MainScreenPage() : ChooseAccountTypePage(),
-      routes: {
-        '/student_signup': (context) => StudentSignUpPage(),
-        '/student_login': (context) => StudentLoginPage(),
-        '/staff_login': (context) => StaffLoginPage(),
-        '/staff_signup': (context) => StaffSignUpPage(),
-        '/email_verification': (context) => EmailVerificationPage(email: ''),
-        '/email_test': (context) => EmailTestPage(),
-        '/home': (context) => MainScreenPage()
-      },
     );
   }
 }

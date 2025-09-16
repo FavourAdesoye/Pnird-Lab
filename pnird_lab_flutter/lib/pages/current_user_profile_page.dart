@@ -84,18 +84,16 @@ class _ProfilePageState extends State<ProfilePage> {
         userId = userId;
         loggedInUserId = userId;
       });
-      print("useridset: $userId");
       // Fetch user details and posts from the backend
       await fetchProfileData(userId!);
       await fetchUserPosts(userId!);
     } else {
-      print("No user ID found!");
+      // Handle case where no user ID is found
     }
   }
 
   // Fetch profile data for the specific user
   Future<void> fetchProfileData(String userId) async {
-    print("fetching profile data for user: $userId");
     try {
       final response = await http.get(
         Uri.parse(ApiService.getUserByIdEndpoint(userId)),
@@ -104,50 +102,43 @@ class _ProfilePageState extends State<ProfilePage> {
         // },
       );
 
-      print("Response status: ${response.statusCode}");
-      print("Response body: ${response.body}");
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
-        print("Profile data: $responseData");
         setState(() {
           username = responseData['username'];
           bio = responseData['bio'];
           profilepic = responseData['profilePicture'];
         });
       } else {
-        print("API Error: ${response.statusCode} - ${response.body}");
+        // Handle API error
         throw Exception('Failed to load profile data: ${response.statusCode}');
       }
     } catch (e) {
-      print("Exception in fetchProfileData: $e");
+      // Handle exception
       throw Exception('Failed to load profile data: $e');
     }
   }
 
   Future<void> fetchUserPosts(String userId) async {
     try {
-      print("fetching posts for user: $userId");
       final response = await http.get(
         Uri.parse(ApiService.getUserPostsEndpoint(userId)),
       );
       
-      print("Posts response status: ${response.statusCode}");
-      print("Posts response body: ${response.body}");
       
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        print("Posts data: $responseData");
         setState(() {
           posts = List<Post>.from(responseData.map((post) => Post.fromJson(post)));
           postCount = posts.length;
         });
       } else {
-        print("Posts API Error: ${response.statusCode} - ${response.body}");
+        // Handle API error
         throw Exception("Failed to load user posts: ${response.statusCode}");
       }
     } catch (e) {
-      print("Exception in fetchUserPosts: $e");
+      // Handle exception
       throw Exception("Failed to load user posts: $e");
     }
   }
@@ -334,25 +325,21 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                posts[index].img ?? 'assets/images/defaultprofilepic.png', // Assuming each post contains an image URL
-                                fit: BoxFit
-                                    .cover, // Ensures the image fills the container
-                                loadingBuilder:
-                                    (context, child, loadingProgress) {
-                                  if (loadingProgress == null)
-                                    return child; // Image loaded
-                                  return Center(
-                                    child:
-                                        CircularProgressIndicator(), // Show loader while image loads
-                                  );
-                                },
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Icon(Icons.broken_image,
-                                      color:
-                                          Colors.grey); // Handle broken images
-                                },
-                              ),
+                              child: posts[index].img != null && posts[index].img!.isNotEmpty
+                                  ? Image.network(
+                                      posts[index].img!,
+                                      fit: BoxFit.cover,
+                                      loadingBuilder: (context, child, loadingProgress) {
+                                        if (loadingProgress == null) return child;
+                                        return const Center(child: CircularProgressIndicator());
+                                      },
+                                    )
+                                  : Container(
+                                      color: Colors.grey[200],
+                                      child: const Center(
+                                        child: Icon(Icons.image, size: 48, color: Colors.grey),
+                                      ),
+                                    ),
                             ),
                           ),
                         );

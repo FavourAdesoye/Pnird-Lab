@@ -66,18 +66,13 @@ void initState() {
               child: GestureDetector(
                 onTap: () async {
   String clickedUserId = widget.post.user.id;
-  print("clickedUserId: $clickedUserId");
-  print("loggedInUserId: $loggedInUserId");
   
   // Load the user ID if not already loaded
   if (loggedInUserId == null) {
     loggedInUserId = await getLoggedInUserId();
   }
   
-  print("Comparing: '$clickedUserId' == '$loggedInUserId'");
-  
   if (loggedInUserId != null && clickedUserId == loggedInUserId) {
-    print("Navigating to OWN profile (ProfilePage)");
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -85,7 +80,6 @@ void initState() {
       ),
     );
   } else {
-    print("Navigating to PUBLIC profile (PublicProfilePage)");
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -165,7 +159,7 @@ void initState() {
   try {
     await likePost(widget.post.id, loggedInUserId!);
   } catch (e) {
-    print("Failed to like post on double tap: $e");
+    // Handle error silently
   }
 }
 
@@ -199,7 +193,7 @@ void initState() {
   try {
     await likePost(widget.post.id, loggedInUserId!);
   } catch (e) {
-    print("Failed to like post: $e");
+    // Handle error silently
     // Revert the like state on failure
     setState(() {
       if (alreadyLiked) {

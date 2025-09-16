@@ -10,6 +10,7 @@ const createComment = async (req, res) => {
     const { entityId, entityType } = req.params;
     const { comment, username } = req.body;
 
+
     try {
         let entity;
         if (entityType === "post") {
@@ -24,13 +25,21 @@ const createComment = async (req, res) => {
             return res.status(404).json({ message: `${entityType} not found` });
         }
 
+        // Find the user to get their ID
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
         // Create the comment
         const createdComment = await Comment.create({
             entityId,
             entityType,
             comment,
             username,
+            userId: user._id,
         });
+
 
         // Add the comment's ObjectId to the corresponding entity's comments array
         if (entityType === "post") {
@@ -78,18 +87,122 @@ const getCommentsByEntity = async (req, res) => {
             if (!post) {
                 return res.status(404).json({ message: 'Post not found' });
             }
-            comments = await Comment.find({ entityId: post._id, entityType: "post" }).sort({ createdAt: -1 });
+            comments = await Comment.find({ entityId: post._id, entityType: "post" })
+                .populate('userId', 'username profilePicture')
+                .sort({ createdAt: -1 });
         } else if (entityType === "study") {
             const study = await Study.findById(entityId);
             if (!study) {
                 return res.status(404).json({ message: 'Study not found' });
             }
-            comments = await Comment.find({ entityId: study._id, entityType: "study" }).sort({ createdAt: -1 });
+            comments = await Comment.find({ entityId: study._id, entityType: "study" })
+                .populate('userId', 'username profilePicture')
+                .sort({ createdAt: -1 });
         } else {
             return res.status(400).json({ message: "Invalid entity type" });
         }
 
-        res.status(200).json(comments);
+        // For comments without userId (legacy comments), find user by username
+        for (let comment of comments) {
+            if (!comment.userId) {
+                const user = await User.findOne({ username: comment.username });
+                if (user) {
+                    comment.userId = {
+                        _id: user._id,
+                        username: user.username,
+                        profilePicture: user.profilePicture || null
+                    };
+                }
+            }
+            
+            // Handle replies - populate user data for each reply
+            for (let reply of comment.replies) {
+                if (!reply.userId) {
+                    const user = await User.findOne({ username: reply.username });
+                    if (user) {
+                        // Convert to plain object and add user data
+                        reply.userId = {
+                            _id: user._id,
+                            username: user.username,
+                            profilePicture: user.profilePicture || null
+                        };
+                    }
+                } else if (reply.userId && typeof reply.userId === 'object' && reply.userId._id) {
+                    // If userId is already populated, ensure it has the right structure
+                    // No action needed
+                } else {
+                    // If userId is just an ObjectId, populate it
+                    const user = await User.findById(reply.userId);
+                    if (user) {
+                        reply.userId = {
+                            _id: user._id,
+                            username: user.username,
+                            profilePicture: user.profilePicture || null
+                        };
+                    }
+                }
+            }
+        }
+
+        // Convert to plain objects to ensure proper JSON serialization
+        const plainComments = await Promise.all(comments.map(async (comment) => {
+            const plainComment = comment.toObject();
+            // Ensure replies have proper user data by using the modified reply objects
+            plainComment.replies = await Promise.all(comment.replies.map(async (reply) => {
+                // Create plain reply object
+                let userData = null;
+                
+                // If userId is a string (ObjectId), fetch the user data
+                if (typeof reply.userId === 'string') {
+                    const user = await User.findById(reply.userId);
+                    if (user) {
+                        userData = {
+                            _id: user._id,
+                            username: user.username,
+                            profilePicture: user.profilePicture || null
+                        };
+                    }
+                } else if (reply.userId && typeof reply.userId === 'object' && reply.userId._id) {
+                    // If userId is already populated with user data, use it
+                    if (reply.userId.username && reply.userId.profilePicture !== undefined) {
+                        userData = reply.userId;
+                    } else {
+                        // If it's just an ObjectId object, fetch the user data
+                        const user = await User.findById(reply.userId._id);
+                        if (user) {
+                            userData = {
+                                _id: user._id,
+                                username: user.username,
+                                profilePicture: user.profilePicture || null
+                            };
+                        }
+                    }
+                } else {
+                    // If no userId, try to find by username
+                    const user = await User.findOne({ username: reply.username });
+                    if (user) {
+                        userData = {
+                            _id: user._id,
+                            username: user.username,
+                            profilePicture: user.profilePicture || null
+                        };
+                    }
+                }
+                
+                const plainReply = {
+                    _id: reply._id,
+                    username: reply.username,
+                    comment: reply.comment,
+                    createdAt: reply.createdAt,
+                    userId: userData
+                };
+                
+                return plainReply;
+            }));
+            return plainComment;
+        }));
+        
+        res.status(200).json(plainComments);
     } catch (error) {
         console.error("Error in getCommentsByEntity:", error);
         res.status(500).json({ message: error.message });
@@ -102,21 +215,37 @@ const addReply = async (req, res) => {
     const { username, reply } = req.body;
 
     try {
+        // Find the user to get their ID (optional)
+        const user = await User.findOne({ username });
+        
         // Find the comment by ID
         const comment = await Comment.findById(commentId);
         if (comment) {
-            // Push the reply to the replies array
-            comment.replies.push({
+            // Create reply object
+            const replyData = {
                 username,
                 comment: reply,  // This should match the schema's 'comment' field
                 createdAt: new Date(),  // Include createdAt timestamp
-            });
+            };
+            
+            // Add userId if user is found
+            if (user) {
+                replyData.userId = {
+                    _id: user._id,
+                    username: user.username,
+                    profilePicture: user.profilePicture || null
+                };
+            }
+            
+            // Push the reply to the replies array
+            comment.replies.push(replyData);
             await comment.save();  // Save the updated comment
             res.status(201).json(comment);  // Return the updated comment
         } else {
             res.status(404).json({ message: "Comment not found" });
         }
     } catch (error) {
+        console.error("Error in addReply:", error);
         res.status(500).json({ message: error.message });
     }
 };

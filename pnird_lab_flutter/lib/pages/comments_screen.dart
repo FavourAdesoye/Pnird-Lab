@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:pnirdlab/widgets/user_avatar.dart';
 import 'package:pnirdlab/widgets/comment_card.dart';
 import 'package:pnirdlab/services/comment_service.dart';
 import 'package:pnirdlab/model/comment_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class CommentsScreen extends StatefulWidget {
   final String entityId;
@@ -21,11 +22,35 @@ class _CommentsScreenState extends State<CommentsScreen> {
   final TextEditingController _replyController = TextEditingController();
   final CommentService _commentService = CommentService();
   String? replyingToCommentId;
+  String? currentUserProfilePicture;
 
   @override
   void initState() {
     super.initState();
     fetchComments();
+    fetchCurrentUserProfile();
+  }
+
+  Future<void> fetchCurrentUserProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final mongoUserId = prefs.getString('userId');
+    
+    if (mongoUserId != null) {
+      try {
+        final response = await http.get(
+          Uri.parse("http://localhost:3000/api/users/id/$mongoUserId"),
+        );
+        
+        if (response.statusCode == 200) {
+          final userData = jsonDecode(response.body);
+          setState(() {
+            currentUserProfilePicture = userData['profilePicture'];
+          });
+        }
+      } catch (e) {
+        // Handle error silently
+      }
+    }
   }
 
   void fetchComments() async {
@@ -35,7 +60,9 @@ class _CommentsScreenState extends State<CommentsScreen> {
       setState(() {});
     } catch (e) {
       // Handle error appropriately
-      print(e.toString());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading comments: $e')),
+      );
     }
   }
 
@@ -49,9 +76,20 @@ class _CommentsScreenState extends State<CommentsScreen> {
            username, commentText); 
         _commentController.clear();
         fetchComments(); // Refresh comments after posting
+        
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Comment posted successfully!')),
+          );
+        }
       } catch (e) {
         // Handle error appropriately
-        print(e.toString());
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to post comment: $e')),
+          );
+        }
       }
     }
   }
@@ -67,8 +105,19 @@ class _CommentsScreenState extends State<CommentsScreen> {
         _replyController.clear();
         replyingToCommentId = null; // Reset reply tracking
         fetchComments(); // Refresh comments after posting
+        
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Reply posted successfully!')),
+          );
+        }
       } catch (e) {
-        print('Failed to post reply: ${e.toString()}');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to post reply: $e')),
+          );
+        }
       }
     }
   }
@@ -104,7 +153,15 @@ class _CommentsScreenState extends State<CommentsScreen> {
               padding: const EdgeInsets.only(left: 16, right: 8),
               child: Row(
                 children: [
-                  const UserAvatar(filename: "drKeen.jpg"),
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundImage: (currentUserProfilePicture != null && currentUserProfilePicture!.isNotEmpty)
+                        ? NetworkImage(currentUserProfilePicture!)
+                        : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
+                    onBackgroundImageError: (exception, stackTrace) {
+                      // Handle image loading error silently
+                    },
+                  ),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(left: 16, right: 8),
@@ -139,7 +196,15 @@ class _CommentsScreenState extends State<CommentsScreen> {
             padding: const EdgeInsets.only(left: 16, right: 8),
             child: Row(
               children: [
-                const UserAvatar(filename: "drKeen.jpg"),
+                CircleAvatar(
+                  radius: 20,
+                  backgroundImage: (currentUserProfilePicture != null && currentUserProfilePicture!.isNotEmpty)
+                      ? NetworkImage(currentUserProfilePicture!)
+                      : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
+                  onBackgroundImageError: (exception, stackTrace) {
+                    // Handle image loading error silently
+                  },
+                ),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(left: 16, right: 8),

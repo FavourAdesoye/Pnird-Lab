@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:pnirdlab/pages/chats_page.dart';
 import 'package:pnirdlab/pages/events_page.dart';
 import 'package:pnirdlab/pages/about_us.dart';
 import 'package:pnirdlab/pages/games/gamehome.dart';
-import 'package:pnirdlab/pages/home.dart';
+import 'package:pnirdlab/pages/optimized_home.dart';
 import 'package:pnirdlab/pages/studies.dart';
 import 'package:pnirdlab/services/auth.dart';
 import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
+import 'package:pnirdlab/providers/theme_provider.dart';
 
 class MainScreenPage extends StatefulWidget {
   const MainScreenPage({super.key});
@@ -18,7 +20,7 @@ class MainScreenPage extends StatefulWidget {
 class _MainScreenPageState extends State<MainScreenPage> {
   int currentIndex = 0;
   final _screens = [
-    const HomePage(),
+    const OptimizedHomePage(),
     const StudiesPage(),
     const EventsPage(),
     const AboutUsPage(),
@@ -59,7 +61,7 @@ class _MainScreenPageState extends State<MainScreenPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Logout failed: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.amber,
           ),
         );
       }
@@ -105,10 +107,27 @@ class _MainScreenPageState extends State<MainScreenPage> {
                 // Navigate to settings page
               },
             ),
+            Consumer<ThemeProvider>(
+              builder: (context, themeProvider, child) {
+                return SwitchListTile(
+                  title: const Text('Dark Mode', style: TextStyle(color: Colors.white)),
+                  subtitle: Text(
+                    themeProvider.isDarkMode ? 'Enabled' : 'Disabled',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  value: themeProvider.isDarkMode,
+                  onChanged: (bool value) {
+                    themeProvider.toggleTheme();
+                  },
+                  activeColor: Colors.yellow,
+                  inactiveThumbColor: Colors.grey,
+                );
+              },
+            ),
             const Divider(color: Colors.grey),
             ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Logout', style: TextStyle(color: Colors.red)),
+              leading: const Icon(Icons.logout, color: Colors.amber),
+              title: const Text('Logout', style: TextStyle(color: Colors.amber)),
               onTap: () {
                 Navigator.pop(context);
                 _logout();
@@ -153,7 +172,7 @@ class _MainScreenPageState extends State<MainScreenPage> {
               icon: const Icon(
                 Icons.email,
                 color: Color.fromARGB(255, 237, 230, 230),
-                size: 36.0,
+                size: 30.0,
               ),
               onPressed: () {
                 Navigator.push(
@@ -165,8 +184,8 @@ class _MainScreenPageState extends State<MainScreenPage> {
           IconButton(
               icon: const Icon(
                 Icons.logout,
-                color: Colors.red,
-                size: 36.0,
+                color: Colors.yellow,
+                size: 30.0,
               ),
               onPressed: _logout),
         ],

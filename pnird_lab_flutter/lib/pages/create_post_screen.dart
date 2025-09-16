@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pnirdlab/services/post_service.dart';
 import 'package:pnirdlab/model/post_model.dart';
+import 'package:pnirdlab/utils/image_processor.dart';
 
 
 
@@ -43,12 +44,34 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       // Pick the file
       final result = await FilePicker.platform.pickFiles(
         type: FileType.image,
-        withData: true, // Ensures we get the file bytes
+        allowedExtensions: ImageProcessor.allowedFormats,
       );
 
       if (result == null || result.files.isEmpty) return; // No file selected
-      final fileBytes = result.files.first.bytes!;
-      final fileName = result.files.first.name;
+      
+      final filePath = result.files.first.path!;
+      final originalFile = File(filePath);
+      
+      // Validate image
+      final isValid = await ImageProcessor.validateImage(originalFile);
+      if (!isValid) {
+        setState(() {
+          _errorMessage = 'Invalid image. Please select a JPG, PNG, or WebP image under 2MB.';
+        });
+        return;
+      }
+
+      // Process image (resize, compress, convert to JPEG)
+      final processedFile = await ImageProcessor.processPostImage(originalFile);
+      if (processedFile == null) {
+        setState(() {
+          _errorMessage = 'Failed to process image. Please try again.';
+        });
+        return;
+      }
+
+      final fileBytes = await processedFile.readAsBytes();
+      final fileName = 'post_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
       // Create a multipart request for the file
       final request = http.MultipartRequest('POST', Uri.parse(uploadUrl));
