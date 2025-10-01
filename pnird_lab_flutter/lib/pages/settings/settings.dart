@@ -15,7 +15,7 @@ class Setting extends StatelessWidget {
 }
 
 class _SettingPage extends StatefulWidget {
-  const _SettingPage({super.key});
+  const _SettingPage();
 
   @override
   SettingPageUI createState() => SettingPageUI();
@@ -37,7 +37,7 @@ class SettingPageUI extends State<_SettingPage> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) =>  ProfilePage(myuserId: '',)),
+              MaterialPageRoute(builder: (context) =>  const ProfilePage(myuserId: '',)),
             );
           },
         ), 
@@ -68,7 +68,7 @@ class SettingPageUI extends State<_SettingPage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) =>  ProfileEditScreen(userId: '',)),
+                MaterialPageRoute(builder: (context) =>  const ProfileEditScreen(userId: '',)),
               );
             },
           ),
@@ -134,8 +134,8 @@ class SettingPageUI extends State<_SettingPage> {
               onPressed: () => Navigator.of(ctx).pop(),
             ),
             TextButton(
-              child: const Text('Confirm'),
               onPressed: onConfirm,
+              child: const Text('Confirm'),
             ),
           ],
         );

@@ -4,10 +4,7 @@ import 'package:pnirdlab/pages/settings/settings.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../model/post_model.dart';
-import '../model/user_model.dart';
-import '../model/comment_model.dart';
 import 'package:pnirdlab/pages/post_detail_page.dart';
-import 'package:pnirdlab/pages/edit_profile_screen.dart';
 import 'package:pnirdlab/pages/create_post_screen.dart';
 import 'package:pnirdlab/pages/chats_page.dart';
 class ProfilePage extends StatefulWidget {

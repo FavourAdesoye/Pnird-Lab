@@ -17,7 +17,16 @@ void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   // Keep splash screen while loading resources
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-  await dotenv.load(fileName: ".env");
+  if (!kIsWeb) {
+    try {
+      await dotenv.load(fileName: ".env");
+      print("Environment variables loaded successfully");
+    } catch (e) {
+      print("Error loading environment variables: $e");
+    }
+  } else {
+    print("Skipping environment variable loading for web build");
+  }
   try{
   if (kIsWeb) {
     await Firebase.initializeApp(

@@ -92,9 +92,7 @@ void initState() {
                   children: [
                     CircleAvatar(
                       radius: 20,
-                      backgroundImage: widget.post.user.profilePicture !=
-                                  null &&
-                              widget.post.user.profilePicture.isNotEmpty
+                      backgroundImage: widget.post.user.profilePicture.isNotEmpty
                           ? NetworkImage(widget.post.user.profilePicture)
                           : AssetImage('assets/images/defaultprofilepic.png')
                               as ImageProvider,
@@ -249,7 +247,7 @@ void initState() {
                               color: Color.fromARGB(255, 250, 228, 33)),
                           children: [
                         TextSpan(
-                          text: '${widget.post.description ?? ''}',
+                          text: widget.post.description ?? '',
                         ),
                       ])),
                 ),

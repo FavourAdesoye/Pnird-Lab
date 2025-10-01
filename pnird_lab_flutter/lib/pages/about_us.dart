@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:pnirdlab/components/allowbutton.dart';
-import 'package:pnirdlab/pages/chatbot/main_chatbot.dart';
 import 'package:pnirdlab/pages/chatbot/main_chatbot.dart';
 
 class AboutUsPage extends StatefulWidget {

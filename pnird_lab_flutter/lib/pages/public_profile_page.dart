@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:pnirdlab/model/user_model.dart';
 import 'package:pnirdlab/model/post_model.dart';
 import 'package:pnirdlab/services/user_service.dart';
 import 'package:pnirdlab/services/post_service.dart';
@@ -9,7 +8,7 @@ import 'package:pnirdlab/pages/chats_page.dart';
 class PublicProfilePage extends StatefulWidget {
   final String userId;
 
-  PublicProfilePage({required this.userId});
+  const PublicProfilePage({super.key, required this.userId});
 
   @override
   _PublicProfilePageState createState() => _PublicProfilePageState();
@@ -51,9 +50,9 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("User Profile")),
+      appBar: AppBar(title: const Text("User Profile")),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -62,12 +61,12 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                     radius: 50,
                     backgroundImage: (profilepic != null && profilepic!.isNotEmpty)
                         ? NetworkImage(profilepic!)
-                        : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
+                        : const AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
                     username ?? "Loading...",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -80,7 +79,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
     
                   Text(
                     postCount == 1 ? "$postCount Post" : "$postCount Posts",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -92,27 +91,27 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                   MaterialPageRoute(builder: (context) => const ChatsPage()),
                 );
               },
-      child: Text("Message"),
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.white,
         foregroundColor: Colors.amber,
-        textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        side: BorderSide(color: Colors.amber), // Optional: outline
+        textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        side: const BorderSide(color: Colors.amber), // Optional: outline
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
       ),
+      child: const Text("Message"),
     ),
                     ],
                   ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: posts.isEmpty
-                        ? Text("No posts yet.")
+                        ? const Text("No posts yet.")
                         : GridView.builder(
                             shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 3,
                               crossAxisSpacing: 8,
                               mainAxisSpacing: 8,
@@ -140,7 +139,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                                       posts[index].img ?? '', // <- access the img field of Post
                                       fit: BoxFit.cover,
                                       errorBuilder: (context, error, stackTrace) {
-                                        return Icon(Icons.broken_image, color: Colors.grey);
+                                        return const Icon(Icons.broken_image, color: Colors.grey);
                                       },
                                     ),
                                   ),

@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:pnirdlab/widgets/post_card.dart';
 import '../services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
 
 class NotificationsPage extends StatefulWidget {
+  const NotificationsPage({super.key});
+
   @override
   _NotificationsPageState createState() => _NotificationsPageState();
 }
@@ -32,16 +33,16 @@ class _NotificationsPageState extends State<NotificationsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Notifications")),
+      appBar: AppBar(title: const Text("Notifications")),
       body: notifications.isEmpty
-          ? Center(child: Text("No notifications yet"))
+          ? const Center(child: Text("No notifications yet"))
           : ListView.builder(
               itemCount: notifications.length,
               itemBuilder: (context, index) {
                 final notif = notifications[index];
                 print(notif);
                 return ListTile(
-                  leading: Icon(Icons.notifications),
+                  leading: const Icon(Icons.notifications),
                   title: Text(notif['message']),
                   subtitle: Text(
   notif['timestamp'] != null

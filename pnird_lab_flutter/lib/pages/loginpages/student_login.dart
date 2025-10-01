@@ -40,7 +40,7 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
           Navigator.pushNamed(context, '/home');
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
                 content: Text(
                     'You are registered not registered as a student in our database')),
           );
@@ -65,7 +65,7 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
         backgroundColor: Colors.grey[900],
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context); // Navigates back to the previous screen
           },
@@ -90,7 +90,7 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
                         color: Colors.black.withOpacity(0.5),
                         spreadRadius: 5,
                         blurRadius: 7,
-                        offset: Offset(0, 3),
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),

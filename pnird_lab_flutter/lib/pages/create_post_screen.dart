@@ -1,21 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
-import 'package:pnirdlab/services/user_service.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/file_utils.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:pnirdlab/services/post_service.dart';
 import 'package:pnirdlab/model/post_model.dart';
 
 
 
 class CreatePostScreen extends StatefulWidget {
   final String userId;
-  CreatePostScreen({required this.userId});
+  const CreatePostScreen({super.key, required this.userId});
   @override
   _CreatePostScreenState createState() => _CreatePostScreenState();
 }
@@ -133,7 +129,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       if(response.statusCode == 200){
         print('Post created successfully');
         ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(content: Text('Post created successfully')),
+  const SnackBar(content: Text('Post created successfully')),
 );
         final newPost = Post.fromJson(jsonDecode(response.body));
         Navigator.pop(context, newPost);
@@ -151,7 +147,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Edit Profile')),
+      appBar: AppBar(title: const Text('Edit Profile')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -164,43 +160,43 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 backgroundColor: Colors.grey[300],
                 backgroundImage: _uploadedImageUrl == null ? null : Image.network(_uploadedImageUrl!, fit: BoxFit.cover).image,
                 child: _uploadedImageUrl == null
-                    ? Icon(Icons.camera_alt, color: Colors.white)
+                    ? const Icon(Icons.camera_alt, color: Colors.white)
                     : null,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             TextButton(
               onPressed: _pickImageAndUpload,
-              child: Text('Add a photo', style: TextStyle(color: Colors.white)),
               style: TextButton.styleFrom(
                 backgroundColor: Colors.black,
-                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
               ),
+              child: const Text('Add a photo', style: TextStyle(color: Colors.white)),
             ),
             
        
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             TextFormField(
               controller: _description,
               decoration: InputDecoration(
                 labelText: 'Write a caption...',
-                labelStyle: TextStyle(color: Colors.white),
+                labelStyle: const TextStyle(color: Colors.white),
                 filled: true,
                 fillColor: Colors.black.withOpacity(0.5),
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person, color: Colors.white),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.person, color: Colors.white),
               ),
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
             ),
-            SizedBox(height: 40),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
+            const SizedBox(height: 40),
             ElevatedButton(
-              onPressed: _createPost,    
-              child: Text('Create Post'),
+              onPressed: _createPost,
               style: ElevatedButton.styleFrom(
            
-                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 60),
-              ),
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 60),
+              ),    
+              child: const Text('Create Post'),
             ),
           ],
         ),

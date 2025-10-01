@@ -1,16 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:image_picker/image_picker.dart'; // For selecting images
+// For selecting images
 import '../model/study_model.dart';
-import '../services/studies_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/file_utils.dart';
-import 'studies.dart';
 
 class NewStudyPage extends StatefulWidget {
   const NewStudyPage({super.key});
@@ -152,41 +149,41 @@ class _NewStudyPageState extends State<NewStudyPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Add New Study')),
+      appBar: AppBar(title: const Text('Add New Study')),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
             child: Column(
               children: [
                 TextFormField(
-                  decoration: InputDecoration(labelText: 'Title'),
+                  decoration: const InputDecoration(labelText: 'Title'),
                   validator: (value) =>
                       value!.isEmpty ? 'Please enter a title' : null,
                   onSaved: (value) => _title = value!,
                 ),
                 TextFormField(
-                  decoration: InputDecoration(labelText: 'Description'),
+                  decoration: const InputDecoration(labelText: 'Description'),
                   onSaved: (value) => _description = value!,
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 if (kIsWeb)
                   TextFormField(
-                    decoration: InputDecoration(labelText: 'Image URL'),
+                    decoration: const InputDecoration(labelText: 'Image URL'),
                     onChanged: (value) => _uploadedImageUrl = value,
                   )
                 else
                   ElevatedButton(
                     onPressed: _pickImageAndUpload,
-                    child: Text('Select Image File'),
+                    child: const Text('Select Image File'),
                   ),
                 if (_errorMessage != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 10),
                     child: Text(
                       _errorMessage!,
-                      style: TextStyle(color: Colors.red),
+                      style: const TextStyle(color: Colors.red),
                     ),
                   ),
                 if (_uploadedImageUrl != null && _uploadedImageUrl!.isNotEmpty)
@@ -194,14 +191,14 @@ class _NewStudyPageState extends State<NewStudyPage> {
                     padding: const EdgeInsets.only(top: 20),
                     child: Column(
                       children: [
-                        Text('Uploaded Image:'),
-                        SizedBox(height: 10),
+                        const Text('Uploaded Image:'),
+                        const SizedBox(height: 10),
                         Image.network(_uploadedImageUrl!, height: 150),
                       ],
                     ),
                   ),
                 SwitchListTile(
-                  title: Text('Allow Scheduling'),
+                  title: const Text('Allow Scheduling'),
                   value: _allowScheduling,
                   onChanged: (value) {
                     setState(() {
@@ -210,7 +207,7 @@ class _NewStudyPageState extends State<NewStudyPage> {
                   },
                 ),
                 SwitchListTile(
-                  title: Text('Allow Comments'),
+                  title: const Text('Allow Comments'),
                   value: _allowComments,
                   onChanged: (value) {
                     setState(() {
@@ -218,10 +215,10 @@ class _NewStudyPageState extends State<NewStudyPage> {
                     });
                   },
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _submitStudy,
-                  child: Text('Submit'),
+                  child: const Text('Submit'),
                 ),
               ],
             ),

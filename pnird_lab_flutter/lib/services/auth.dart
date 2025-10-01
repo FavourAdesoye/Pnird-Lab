@@ -45,7 +45,7 @@ class Auth {
 
       // Optional: Use Firebase UID to retrieve user role and profile from backend
       var response = await http.post(
-        Uri.parse('http://your_backend_api.com/login'),
+        Uri.parse('http://localhost:3000/login'),
         body: {'firebaseUID': firebaseUID},
       );
 

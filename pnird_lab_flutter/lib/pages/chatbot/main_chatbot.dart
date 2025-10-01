@@ -1,148 +1,125 @@
 import 'dart:convert';
-import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pnirdlab/pages/about_us.dart';
-import 'package:pnirdlab/pages/chatbot/consts.dart';
 
 class Chathome extends StatelessWidget {
-  
-
   const Chathome({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(home: ChatPage());
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: ChatPage(),
+    );
   }
 }
-class ChatPage extends StatefulWidget { 
-  const ChatPage({super.key}); 
 
-  @override State<ChatPage> createState() => _ChatPageState();
-} 
+class ChatPage extends StatefulWidget {
+  const ChatPage({super.key});
 
-class _ChatPageState extends State<ChatPage> {   
+  @override
+  State<ChatPage> createState() => _ChatPageState();
+}
 
-  //calling openai chatgpt
-  final _openAI = OpenAI.instance.build(token: openApiKey, baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 5,)), enableLog:true); 
-  
+class _ChatPageState extends State<ChatPage> {
+  // Current user (you)
+  final ChatUser _currentUser =
+      ChatUser(id: '1', firstName: "Billy", lastName: "Smith");
 
-  //saves messages for current user
-  final ChatUser  _currentUser = ChatUser(id: '1', firstName: "Billy", lastName: "Smith"); 
-
-  //saves messages for chatgpt
-  final ChatUser  _gptChatUser = ChatUser(id: '2', firstName: "Chat", lastName: "GPT"); 
+  // Bot user
+  final ChatUser _gptChatUser =
+      ChatUser(id: '2', firstName: "Chat", lastName: "Bot");
 
   final List<ChatMessage> _messages = <ChatMessage>[];
   final List<ChatUser> _typingUsers = <ChatUser>[];
+
   @override
-  Widget build(BuildContext context){ 
-    return Scaffold(
-     appBar: AppBar( 
+  Widget build(BuildContext context) {
+    return Scaffold( 
+      backgroundColor: Colors.white,
+      appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Center(child: Text('Learn more about the Lab', style: TextStyle(color: Colors.white))),  
-         leading: IconButton(
+        title: const Center(
+          child: Text('Learn more about the Lab',
+              style: TextStyle(color: Colors.white)),
+        ),
+        leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-             Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AboutUsPage())
-                );
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AboutUsPage()),
+            );
           },
         ),
-      ), 
-      //displays messages between gpt and user
-      body: DashChat(currentUser: _currentUser, typingUsers: _typingUsers, messageOptions:const MessageOptions(currentUserContainerColor: Colors.black, currentUserTextColor: Colors.white, containerColor: Colors.yellow, textColor: Colors.black) ,onSend: (ChatMessage m) { 
-        getChatResponse(m);
-      }, messages:  _messages),
+      ),
+      body: DashChat(
+        currentUser: _currentUser,
+        typingUsers: _typingUsers,
+        messageOptions: const MessageOptions(
+          currentUserContainerColor: Colors.black,
+          currentUserTextColor: Colors.white,
+          containerColor: Colors.yellow,
+          textColor: Colors.black,
+        ),
+        onSend: (ChatMessage m) {
+          getChatResponse(m);
+        },
+        messages: _messages,
+      ),
     );
-  } 
+  }
 
-  //displays current user message on screen, stores messages history, calls gpt and retrieves response
-  Future<void> getChatResponse(ChatMessage m) async { 
-    setState(() { 
-      _messages.insert(0,m); 
+  Future<void> getChatResponse(ChatMessage m) async {
+    setState(() {
+      _messages.insert(0, m);
       _typingUsers.add(_gptChatUser);
-    });  
+    });
 
-    try { 
-      final reply = await getAssistantResponse(m.text); 
-      setState(() { 
-        _messages.insert( 
-          0, 
-          ChatMessage(user: _gptChatUser, createdAt: DateTime.now(), text: reply),
+    try {
+      final reply = await getAssistantResponse(m.text);
+      setState(() {
+        _messages.insert(
+          0,
+          ChatMessage(
+              user: _gptChatUser, createdAt: DateTime.now(), text: reply),
         );
       });
-    } catch (e) { 
-      setState(() { 
-        _messages.insert( 
-          0, 
-          ChatMessage(user: _gptChatUser, createdAt: DateTime.now(), text: 'Error: $e'),
+    } catch (e) {
+      setState(() {
+        _messages.insert(
+          0,
+          ChatMessage(
+              user: _gptChatUser,
+              createdAt: DateTime.now(),
+              text: 'Error: $e'),
         );
       });
     }
-    setState(() { 
+    setState(() {
       _typingUsers.remove(_gptChatUser);
     });
-  } 
+  }
 
-  Future<String> getAssistantResponse(String userMessage) async { 
-    const String apiKey = openApiKey; 
-    const String assistant = assistantId; 
-    final headers = { 
-      'Authorization': 'Bearer $apiKey', 
-      'Content-Type': 'application/json', 
-      'OpenAI-Beta' : 'assistants=v1',
-    };  
-
-    // Step 1: Create a new thread
-    final threadResponse = await http.post(
-      Uri.parse('https://api.openai.com/v1/threads'),
-      headers: headers,
-    );
-    final threadId = jsonDecode(threadResponse.body)['id'];
-
-    // Step 2: Send the user's message to the thread
-    await http.post(
-      Uri.parse('https://api.openai.com/v1/threads/$threadId/messages'),
-      headers: headers,
-      body: jsonEncode({
-        'role': 'user',
-        'content': userMessage,
-      }),
-    );
-
-    // Step 3: Run the assistant
-    final runResponse = await http.post(
-      Uri.parse('https://api.openai.com/v1/threads/$threadId/runs'),
-      headers: headers,
-      body: jsonEncode({'assistant_id': assistant}),
-    );
-    final runId = jsonDecode(runResponse.body)['id'];
-
-    // Step 4: Poll for completion
-    String status = 'queued';
-    while (status != 'completed') {
-      final statusResponse = await http.get(
-        Uri.parse('https://api.openai.com/v1/threads/$threadId/runs/$runId'),
-        headers: headers,
+  // ✅ Updated: Call your Node.js backend instead of OpenAI
+  Future<String> getAssistantResponse(String userMessage) async {
+    try {
+      final response = await http.post(
+        Uri.parse("http://127.0.0.1:3000/ask"), // Replace with your backend URL
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"question": userMessage}),
       );
-      final statusJson = jsonDecode(statusResponse.body);
-      status = statusJson['status'];
-      if (status != 'completed') {
-        await Future.delayed(const Duration(seconds: 2));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data["answer"];
+      } else {
+        return "Error: ${response.body}";
       }
+    } catch (e) {
+      return "Error: $e";
     }
-
-    // Step 5: Fetch assistant's reply
-    final messagesResponse = await http.get(
-      Uri.parse('https://api.openai.com/v1/threads/$threadId/messages'),
-      headers: headers,
-    );
-    final messages = jsonDecode(messagesResponse.body)['data'];
-    final lastMessage = messages.firstWhere((m) => m['role'] == 'assistant');
-
-    return lastMessage['content'][0]['text']['value'];
   }
 }

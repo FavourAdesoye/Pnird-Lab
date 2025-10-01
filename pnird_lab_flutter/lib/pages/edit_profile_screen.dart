@@ -1,12 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
-import 'package:pnirdlab/services/user_service.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/file_utils.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pnirdlab/services/post_service.dart';
 
@@ -14,7 +11,7 @@ import 'package:pnirdlab/services/post_service.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   final String userId;
-  ProfileEditScreen({required this.userId});
+  const ProfileEditScreen({super.key, required this.userId});
   @override
   _ProfileEditScreenState createState() => _ProfileEditScreenState();
 }
@@ -63,7 +60,7 @@ Future<void> updateUserProfile(userId, bio, username, profilePicture) async {
 
   void _showSuccessMessage() {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text('Your information has been updated.Please reload the app to see your changes!'),
         backgroundColor: Colors.green,
       ),
@@ -72,7 +69,7 @@ Future<void> updateUserProfile(userId, bio, username, profilePicture) async {
 
   void _showErrorMessage() {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text('Failed to update your information. Please try again.'),
         backgroundColor: Colors.red,
       ),
@@ -169,7 +166,7 @@ Future<void> updateUserProfile(userId, bio, username, profilePicture) async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Edit Profile')),
+      appBar: AppBar(title: const Text('Edit Profile')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -182,48 +179,48 @@ Future<void> updateUserProfile(userId, bio, username, profilePicture) async {
                 backgroundColor: Colors.grey[300],
                 backgroundImage: _uploadedImageUrl == null ? null : Image.network(_uploadedImageUrl!, fit: BoxFit.cover).image,
                 child: _uploadedImageUrl == null
-                    ? Icon(Icons.camera_alt, color: Colors.white)
+                    ? const Icon(Icons.camera_alt, color: Colors.white)
                     : null,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             TextButton(
               onPressed: _pickImageAndUpload,
-              child: Text('Add a photo', style: TextStyle(color: Colors.white)),
               style: TextButton.styleFrom(
                 backgroundColor: Colors.black,
-                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
               ),
+              child: const Text('Add a photo', style: TextStyle(color: Colors.white)),
             ),
             
        
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             TextFormField(
               controller: _username,
               decoration: InputDecoration(
                 labelText: 'Edit username',
-                labelStyle: TextStyle(color: Colors.white),
+                labelStyle: const TextStyle(color: Colors.white),
                 filled: true,
                 fillColor: Colors.black.withOpacity(0.5),
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person, color: Colors.white),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.person, color: Colors.white),
               ),
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             TextFormField(
               controller: _bio,
               decoration: InputDecoration(
                 labelText: 'Edit bio',
-                labelStyle: TextStyle(color: Colors.white),
+                labelStyle: const TextStyle(color: Colors.white),
                 filled: true,
                 fillColor: Colors.black.withOpacity(0.5),
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email, color: Colors.white),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.email, color: Colors.white),
               ),
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () {
                 String bio = _bio.text;
@@ -231,11 +228,11 @@ String username = _username.text;
                 updateUserProfile(widget.userId, bio, username, _uploadedImageUrl?? '');
 
               },
-              child: Text('Next'),
               style: ElevatedButton.styleFrom(
            
-                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 60),
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 60),
               ),
+              child: const Text('Next'),
             ),
           ],
         ),

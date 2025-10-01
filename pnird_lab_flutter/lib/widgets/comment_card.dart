@@ -9,8 +9,7 @@ class CommentCard extends StatelessWidget {
   final Comment comment;
   final Function(String) onReply; // Callback for replying to a comment
 
-  const CommentCard({Key? key, required this.comment, required this.onReply})
-      : super(key: key);
+  const CommentCard({super.key, required this.comment, required this.onReply});
 
   String formattedDateTime(DateTime dateTime) {
     return DateFormat('yyyy-MM-dd HH:mm a').format(dateTime);
@@ -72,7 +71,7 @@ class CommentCard extends StatelessWidget {
             ],
           ),
           // Display replies
-          if (comment.replies != null && comment.replies.isNotEmpty)
+          if (comment.replies.isNotEmpty)
             ...comment.replies.map((reply) => Padding(
                   padding: const EdgeInsets.only(left: 16, top: 8),
                   child: Row(

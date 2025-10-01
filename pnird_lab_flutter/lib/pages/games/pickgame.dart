@@ -24,7 +24,7 @@ class _Pickgamepage extends State<_Pickgame> {
     const Placeholder(
       child: Center(child: Text('Home Page')), // Placeholder for Home
     ),
-    StudiesPage(),
+    const StudiesPage(),
     const Placeholder(
       child: Center(child: Text('Events Page')), // Placeholder for Events
     ),

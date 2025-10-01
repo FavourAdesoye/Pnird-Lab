@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:pnirdlab/pages/games/flappybrain/bird.dart';
 import 'package:pnirdlab/pages/games/flappybrain/barries.dart';
 
+import '../gamehome.dart';
 import '../pickgame.dart';
 
 class Flappyhome extends StatelessWidget {
@@ -30,6 +31,58 @@ class _HomepageState extends State<Homepage> {
   static double barrierXone = 0;
   double barrierXtwo = barrierXone + 1.5;
   int score = 0; // Track the current score
+
+
+  // --- Add this collision check function ---
+  bool checkCollision() {
+    // Bird's horizontal position is always 0 (center)
+    const double birdX = 0;
+    const double birdWidth = 0.1; // Adjust as needed
+    const double birdHeight = 0.1; // Adjust as needed
+
+    // Barrier sizes and positions
+    const double barrierWidth = 0.2; // Adjust as needed
+    // Barrier 1 (bottom)
+    double barrier1X = barrierXone;
+    double barrier1Y = 1.1;
+    double barrier1Height = 100 / 300 * 2; // 100 is size, 300 is screen units, *2 for [-1,1] range
+
+    // Barrier 2 (top)
+    double barrier2X = barrierXtwo;
+    double barrier2Y = -1.1;
+    double barrier2Height = 150 / 300 * 2; // 150 is size
+
+    // Bird's bounding box
+    double birdTop = birdYaxis - birdHeight / 2;
+    double birdBottom = birdYaxis + birdHeight / 2;
+    double birdLeft = birdX - birdWidth / 2;
+    double birdRight = birdX + birdWidth / 2; 
+
+    // Barrier 1 bounding box (bottom)
+    double barrier1Top = barrier1Y - barrier1Height;
+    double barrier1Bottom = barrier1Y;
+    double barrier1Left = barrier1X - barrierWidth / 2;
+    double barrier1Right = barrier1X + barrierWidth / 2;
+
+    // Barrier 2 bounding box (top)
+    double barrier2Top = barrier2Y;
+    double barrier2Bottom = barrier2Y + barrier2Height;
+    double barrier2Left = barrier2X - barrierWidth / 2;
+    double barrier2Right = barrier2X + barrierWidth / 2;
+
+    // Check collision with barrier 1 (bottom)
+    bool collide1 = birdRight > barrier1Left &&
+        birdLeft < barrier1Right &&
+        birdBottom > barrier1Top &&
+        birdTop < barrier1Bottom;
+
+    // Check collision with barrier 2 (top)
+    bool collide2 = birdRight > barrier2Left &&
+        birdLeft < barrier2Right &&
+        birdBottom > barrier2Top &&
+        birdTop < barrier2Bottom; 
+     return collide1 || collide2;
+  }
 
   // Reset game state
   void resetGame() {
@@ -77,7 +130,15 @@ class _HomepageState extends State<Homepage> {
         } else {
           barrierXtwo -= 0.05;
         }
-      });
+      }); 
+
+      // --- Add collision check here ---
+      if (checkCollision()) {
+        timer.cancel();
+        gamehasStarted = false;
+        showGameOverDialog();
+      }
+      // --- End collision check ---
 
       // End the game if the bird hits the ground
       if (birdYaxis > 1) {
@@ -108,7 +169,10 @@ class _HomepageState extends State<Homepage> {
             TextButton(
               onPressed: () {
                 Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Go back to Pickgame
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const Gamehome()),
+                ); // Go to Gamehome
               },
               child: const Text("Exit"),
             ),
@@ -173,12 +237,12 @@ class _HomepageState extends State<Homepage> {
                 AnimatedContainer(
                   alignment: Alignment(barrierXone, 1.1),
                   duration: const Duration(milliseconds: 0),
-                  child: const MyBarrier(size: 200.0),
+                  child: const MyBarrier(size: 100.0),
                 ),
                 AnimatedContainer(
                   alignment: Alignment(barrierXtwo, -1.1),
                   duration: const Duration(milliseconds: 0),
-                  child: const MyBarrier(size: 250.0),
+                  child: const MyBarrier(size: 150.0),
                 ),
               ],
             ),
