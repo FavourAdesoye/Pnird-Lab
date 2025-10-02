@@ -59,38 +59,41 @@ class _OptimizedPostCardState extends State<OptimizedPostCard> {
           // Header with profile picture and username
           Padding(
             padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => _navigateToProfile(),
-                  child: OptimizedProfilePicture(
-                    imageUrl: widget.post.user.profilePicture,
-                    size: 40,
+            child: GestureDetector(
+              onTap: () => _navigateToProfile(),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundImage: (widget.post.user.profilePicture != null && 
+                                    widget.post.user.profilePicture!.isNotEmpty)
+                        ? NetworkImage(widget.post.user.profilePicture!)
+                        : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.post.user.username,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.post.user.username,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
-                      ),
-                      Text(
-                        formattedDateTime(widget.post.createdAt),
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
+                        Text(
+                          formattedDateTime(widget.post.createdAt),
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           

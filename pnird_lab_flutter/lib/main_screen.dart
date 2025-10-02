@@ -100,6 +100,17 @@ class _MainScreenPageState extends State<MainScreenPage> {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.message, color: Colors.white),
+              title: const Text('Messages', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ChatsPage()),
+                );
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.settings, color: Colors.white),
               title: const Text('Settings', style: TextStyle(color: Colors.white)),
               onTap: () {
@@ -125,13 +136,21 @@ class _MainScreenPageState extends State<MainScreenPage> {
               },
             ),
             const Divider(color: Colors.grey),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.amber),
-              title: const Text('Logout', style: TextStyle(color: Colors.amber)),
-              onTap: () {
-                Navigator.pop(context);
-                _logout();
-              },
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
+              ),
+              child: ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _logout();
+                },
+              ),
             ),
           ],
         ),
@@ -143,7 +162,6 @@ class _MainScreenPageState extends State<MainScreenPage> {
         //Logo
         leading: Container(
             margin: const EdgeInsets.all(0),
-            // alignment: Alignment.center,
             child: Image.asset(
               'assets/logos/logophoto_large.png',
               fit: BoxFit.contain,
@@ -166,7 +184,7 @@ class _MainScreenPageState extends State<MainScreenPage> {
           ),
         ),
 
-        //message
+        //message and menu
         actions: [
           IconButton(
               icon: const Icon(
@@ -180,14 +198,16 @@ class _MainScreenPageState extends State<MainScreenPage> {
                   MaterialPageRoute(builder: (context) => const ChatsPage()),
                 );
               }),
-          // Logout button
-          IconButton(
+          Builder(
+            builder: (context) => IconButton(
               icon: const Icon(
-                Icons.logout,
-                color: Colors.yellow,
+                Icons.menu,
+                color: Colors.white,
                 size: 30.0,
               ),
-              onPressed: _logout),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            ),
+          ),
         ],
       ),
       body: IndexedStack(

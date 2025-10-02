@@ -128,7 +128,7 @@ class _NewStudyPageState extends State<NewStudyPage> {
 
         final response = await http.post(
           Uri.parse('http://localhost:3000/api/studies/createstudy'),
-          headers: {'Content-Type': 'application/json'},
+          headers: {'Conten∏t-Type': 'application/json'},
           body: jsonEncode({
             'titlepost': _title,
             'description': _description,
