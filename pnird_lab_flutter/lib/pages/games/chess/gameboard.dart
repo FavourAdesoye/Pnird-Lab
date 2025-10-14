@@ -421,6 +421,79 @@ class _GameBoardState extends State<Gameboard> {
     });
 
     isWhiteTurn = !isWhiteTurn;
+    // --- Draw detection logic: add this block ---
+    if (isDrawByInsufficientMaterial() || isStalemate()) {
+      showDrawDialog();
+    }
+    // --- End draw detection logic ---
+  }
+  // --- Helper function: Insufficient material ---
+  bool isDrawByInsufficientMaterial() {
+    List<ChessPiece> remainingPieces = [];
+    for (var row in board) {
+      for (var piece in row) {
+        if (piece != null) remainingPieces.add(piece);
+      }
+    }
+    // Only kings left
+    if (remainingPieces.length == 2 &&
+        remainingPieces.every((p) => p.type == ChessPieceType.king)) {
+      return true;
+    }
+    // King vs king and bishop or knight
+    if (remainingPieces.length == 3) {
+      if (remainingPieces.where((p) => p.type == ChessPieceType.king).length == 2) {
+        var minor = remainingPieces.firstWhere((p) => p.type != ChessPieceType.king);
+        if (minor.type == ChessPieceType.bishop || minor.type == ChessPieceType.knight) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  // --- Helper function: Stalemate ---
+  bool isStalemate() {
+    // If the current player is not in check and has no legal moves, it's stalemate
+    bool inCheck = isKingInCheck(isWhiteTurn);
+    if (inCheck) return false;
+
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        ChessPiece? piece = board[i][j];
+        if (piece != null && piece.isWhite == isWhiteTurn) {
+          var moves = calculateRealValidMoves(i, j, piece, true);
+          if (moves.isNotEmpty) return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  // --- Helper function: Show draw dialog ---
+  void showDrawDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Draw"),
+          content: const Text("The game is a draw!"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const Pickgame()),
+                );
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override

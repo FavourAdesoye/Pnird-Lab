@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pnirdlab/services/socket_service.dart';
 import 'package:intl/intl.dart';
-import 'package:pnirdlab/model/user_model.dart';
 import 'package:pnirdlab/services/user_service.dart';
 
 class MessagePage extends StatefulWidget {
@@ -14,7 +12,7 @@ class MessagePage extends StatefulWidget {
   final bool isAdmin;
 
 
-  const MessagePage({
+  const MessagePage({super.key, 
     required this.recipientId,
     required this.recipientName,
     required this.isAdmin,
@@ -26,7 +24,7 @@ class MessagePage extends StatefulWidget {
 
 class _MessagePageState extends State<MessagePage> {
   final SocketService _socketService = SocketService();
-  TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
   List<Map<String, dynamic>> messages = [];
   String? recipientUsername = "";
   String? recipientProfilePic = "";
@@ -129,7 +127,7 @@ Future<void> fetchSenderUser() async {
 
     if (!widget.isAdmin && widget.recipientId == userId) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("You can't message yourself")),
+        const SnackBar(content: Text("You can't message yourself")),
       );
       return;
     }
@@ -161,12 +159,12 @@ Future<void> fetchSenderUser() async {
   radius: 20,
   backgroundImage: (recipientProfilePic != null && recipientProfilePic!.isNotEmpty)?
     NetworkImage(recipientProfilePic!)
-    : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
+    : const AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
 ),
 
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Text('Chat with ${recipientUsername ?? widget.recipientName}',
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.black,
                   fontSize: 18,
                 )),
@@ -193,7 +191,7 @@ Future<void> fetchSenderUser() async {
                     controller: _controller,
                     decoration: InputDecoration(
                       hintText: 'Type any text here',
-                      hintStyle: TextStyle(color: Colors.white54),
+                      hintStyle: const TextStyle(color: Colors.white54),
                       filled: true,
                       fillColor: Colors.grey[800],
                       border: OutlineInputBorder(
@@ -205,7 +203,7 @@ Future<void> fetchSenderUser() async {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.send, color: Colors.purple),
+                  icon: const Icon(Icons.send, color: Colors.purple),
                   onPressed: () =>
                     _sendMessage(),
                 ),
@@ -235,10 +233,10 @@ Widget buildMessageBubble(Map<String, dynamic> message) {
             backgroundImage: recipientImage
                 != null && recipientImage.isNotEmpty
                 ? NetworkImage(recipientImage)
-                : AssetImage('assets/images/defaultprofilepic.png')
+                : const AssetImage('assets/images/defaultprofilepic.png')
                     as ImageProvider,
           ),
-        if (!isUserMessage) SizedBox(width: 8),
+        if (!isUserMessage) const SizedBox(width: 8),
         Flexible(
           child: Column(
             crossAxisAlignment: isUserMessage
@@ -250,16 +248,16 @@ Widget buildMessageBubble(Map<String, dynamic> message) {
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: isUserMessage
-                      ? Color(0xFFE0CB12)
+                      ? const Color(0xFFE0CB12)
                       : Colors.grey[800],
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   message['message'] ?? '',
-                  style: TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white),
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
                 DateFormat('hh:mm a').format(
                   message['timestamp'] != null
@@ -271,14 +269,14 @@ Widget buildMessageBubble(Map<String, dynamic> message) {
             ],
           ),
         ),
-        if (isUserMessage) SizedBox(width: 8),
+        if (isUserMessage) const SizedBox(width: 8),
         if (isUserMessage)
           CircleAvatar(
             radius: 16,
             backgroundImage: senderImage
                 != null && senderImage.isNotEmpty
                 ? NetworkImage(senderImage)
-                : AssetImage('assets/images/defaultprofilepic.png')
+                : const AssetImage('assets/images/defaultprofilepic.png')
                     as ImageProvider,
           ),
       ],

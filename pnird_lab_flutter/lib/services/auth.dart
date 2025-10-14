@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:mongo_dart/mongo_dart.dart';
 class Auth {
   Future<void> signUp(String email, String password, String username) async {
     try {
@@ -43,7 +45,7 @@ class Auth {
 
       // Optional: Use Firebase UID to retrieve user role and profile from backend
       var response = await http.post(
-        Uri.parse('http://your_backend_api.com/login'),
+        Uri.parse('http://localhost:3000/login'),
         body: {'firebaseUID': firebaseUID},
       );
 
@@ -56,7 +58,7 @@ class Auth {
       print("Error during log-in: $e");
     }
   }
-}
+
 
 Future<void> saveUserId(String userId) async {
   final prefs = await SharedPreferences.getInstance();
@@ -71,4 +73,27 @@ Future<String?> getUserId() async {
 Future<void> logout() async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.remove('userId'); // Remove only the userId
+} 
+
+Future<void> delete(BuildContext context) async {
+final user = FirebaseAuth.instance.currentUser;
+
+  // First, delete data from MongoDB
+      final db = await Db.create('mongodb+srv://<username>:<password>@<cluster-url>/<dbname>');
+      await db.open();
+
+      final userId = user?.uid; // Firebase UID
+      final collection = db.collection('your_collection_name');
+
+      await collection.deleteMany({'userId': userId});
+
+      await db.close();
+
+      // Then, delete the user from Firebase Auth
+      await user?.delete();
+
+      // Optionally, navigate the user back to a login/signup page
+      Navigator.of(context).pushReplacement(MaterialPageRoute( builder: (context) =>  const ChooseAccountTypePage()));
+}
+
 }

@@ -2,14 +2,16 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.js", 
+  
   "scripts": {
     "start": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
+  "dependencies": { 
+    "type":"commonjs",
     "body-parser": "^1.20.2",
     "buffer": "^6.0.3",
     "build": "^0.1.4",
@@ -18,14 +20,17 @@
     "dotenv": "^16.6.1",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
+    "faiss-node": "^0.5.1",
     "firebase-admin": "^12.7.0",
     "helmet": "^8.0.0",
+    "langchain": "^0.3.34",
     "mongoose": "^8.4.1",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "ollama": "^0.5.18",
     "path-browserify": "^1.0.1",
+    "pdf-parse": "^1.1.1",
     "process": "^0.11.10",
-    "socket.io": "^4.8.1",
     "stream-http": "^3.2.0",
     "url": "^0.11.3"
   },

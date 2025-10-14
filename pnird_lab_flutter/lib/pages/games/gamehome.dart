@@ -11,12 +11,12 @@ class Gamehome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(home: _GamePage());
+    return const MaterialApp(debugShowCheckedModeBanner: false,  home: _GamePage());
   }
 }
 
 class _GamePage extends StatefulWidget {
-  const _GamePage({super.key});
+  const _GamePage();
 
   @override
   GameHomePage createState() => GameHomePage();
@@ -31,7 +31,7 @@ class GameHomePage extends State<_GamePage> {
     const Placeholder(
       child: Center(child: Text('Home Page')), // Placeholder for Home
     ),
-    StudiesPage(),
+    const StudiesPage(),
     const Placeholder(
       child: Center(child: Text('Events Page')), // Placeholder for Events
     ),
@@ -68,7 +68,7 @@ class GamehomeContent extends StatelessWidget {
             Center(child: Image.asset('assets/images/brain.png')),
             const SizedBox(height: 70),
             const Text(
-              "Brain Train",
+              "Game Play",
               style: TextStyle(
                 color: Colors.amber,
                 fontWeight: FontWeight.bold,
@@ -79,7 +79,7 @@ class GamehomeContent extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.only(bottom: 10),
               child: Text(
-                "This section is designed to help train your brain. We have implemented two different games you can choose to play.",
+                "This section is designed to give your brain a break. We have implemented two different games you can choose to play.",
                 maxLines: 3,
                 style: TextStyle(
                   color: Color.fromARGB(255, 245, 207, 40),
@@ -90,7 +90,7 @@ class GamehomeContent extends StatelessWidget {
               ),
             ),
             AllowBtn(
-              btnText: 'Train Your Brain!',
+              btnText: 'Game Play!',
               btnFun: () => Navigator.push(
                 context,
                 MaterialPageRoute(

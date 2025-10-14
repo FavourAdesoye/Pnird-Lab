@@ -3,7 +3,6 @@ import 'package:pnirdlab/widgets/user_avatar.dart';
 import 'package:pnirdlab/widgets/comment_card.dart';
 import 'package:pnirdlab/services/comment_service.dart';
 import 'package:pnirdlab/model/comment_model.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class CommentsScreen extends StatefulWidget {
   final String entityId;
@@ -20,6 +19,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
   final TextEditingController _commentController = TextEditingController();
   final TextEditingController _replyController = TextEditingController();
   final CommentService _commentService = CommentService();
+  String username = "Guest";
   String? replyingToCommentId;
 
   @override
@@ -41,12 +41,10 @@ class _CommentsScreenState extends State<CommentsScreen> {
 
   void postComment() async {
     final commentText = _commentController.text.trim();
-    final prefs = await SharedPreferences.getInstance();
-    final username = prefs.getString('username') ?? '';
     if (commentText.isNotEmpty) {
       try {
         await _commentService.createComment(widget.entityType, widget.entityId,
-           username, commentText); 
+            "username", commentText); // Replace with actual user ID
         _commentController.clear();
         fetchComments(); // Refresh comments after posting
       } catch (e) {
@@ -58,8 +56,6 @@ class _CommentsScreenState extends State<CommentsScreen> {
 
   void postReply(String entityType, String commentId) async {
     final replyText = _replyController.text.trim();
-    final prefs = await SharedPreferences.getInstance();
-    final username = prefs.getString('username') ?? '';
     if (replyText.isNotEmpty) {
       try {
         await _commentService.createReply(

@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:pnirdlab/widgets/post_card.dart';
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pnirdlab/model/post_model.dart';
 
 class PostDetailPage extends StatefulWidget {
   final List<Post> posts;
   final int initialIndex;
 
-  PostDetailPage({required this.posts, required this.initialIndex});
+  const PostDetailPage({super.key, required this.posts, required this.initialIndex});
 
   @override
   _PostDetailPageState createState() => _PostDetailPageState();
@@ -24,8 +21,9 @@ class _PostDetailPageState extends State<PostDetailPage> {
     _scrollController = ScrollController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.initialIndex < widget.posts.length)
+      if (widget.initialIndex < widget.posts.length) {
         _scrollController.jumpTo(widget.initialIndex * 700.0); // Adjust height
+      }
     });
   }
 

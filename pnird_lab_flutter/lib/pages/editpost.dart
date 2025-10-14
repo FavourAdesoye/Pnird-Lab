@@ -86,7 +86,7 @@ class _EditPostState extends State<EditPost> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        heroTag: Text('btn1'),
+        heroTag: const Text('btn1'),
         onPressed: () => getImage(context),
         tooltip: 'Pick Image',
         child: const Icon(Icons.add_a_photo),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pnirdlab/pages/chatbot/main_chatbot.dart';
 
 class AboutUsPage extends StatefulWidget {
   const AboutUsPage({super.key});
@@ -103,10 +104,34 @@ class _AboutUsPageState extends State<AboutUsPage> {
                     Text(
                       'STC is a fully integrated growth focused pioneer of highly engineered advanced materials delivering',
                       style: TextStyle(fontSize: 16, color: Colors.white),
-                    ),
+                    ), 
+                     
                   ],
+                  
+                ),
+              ), 
+                Card(
+            color: const Color.fromARGB(255, 245, 207, 40),
+            clipBehavior: Clip.hardEdge,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const Chathome()),
+                );
+              },
+              child: const SizedBox(
+                width: 300,
+                height: 50,
+                child: Center(
+                  child: Text(
+                    'Chat with AI',
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
                 ),
               ),
+            ),
+          ),
             ],
           ),
         ));
