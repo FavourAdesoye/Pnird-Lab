@@ -49,6 +49,7 @@ dependencies:
   flame: ^1.17.0
   firebase_core: ^2.24.2
   firebase_auth: ^4.15.3
+  firebase_auth_web: ^5.8.13
   win32: ^5.0.0
   flutter_dotenv: ^5.0.2
   file_picker: ^9.2.3
