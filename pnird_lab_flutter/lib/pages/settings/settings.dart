@@ -82,7 +82,7 @@ class SettingPageUI extends State<_SettingPage> {
                 title: 'Delete Account',
                 content: 'Are you sure you want to delete your account?',
                 onConfirm: () {
-                  context.read<Auth>().delete(context);
+                  context.read<Auth>().deleteAccount(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Account deleted.')),
                   );
@@ -101,7 +101,7 @@ class SettingPageUI extends State<_SettingPage> {
                 content: 'Are you sure you want to log out?',
                 onConfirm: () { 
 
-                  context.read<Auth>().logout();
+                  context.read<Auth>().logoutUser();
                   // Handle logout logic here
                   Navigator.pop(context); // Close dialog
                   ScaffoldMessenger.of(context).showSnackBar(

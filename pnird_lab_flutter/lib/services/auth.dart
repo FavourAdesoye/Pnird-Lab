@@ -7,12 +7,12 @@ import 'package:mongo_dart/mongo_dart.dart';
 
 class AuthResult {
   final bool success;
-  final String? message;
+  final String message;
   final Map<String, dynamic>? data;
 
   AuthResult({
     required this.success,
-    this.message,
+    this.message = '',
     this.data,
   });
 }
@@ -179,11 +179,11 @@ class Auth {
   }
 
   // Instance methods for Provider compatibility
-  Future<void> delete(BuildContext context) async {
+  Future<void> deleteAccount(BuildContext context) async {
     await Auth.delete(context);
   }
 
-  Future<void> logout() async {
+  Future<void> logoutUser() async {
     await Auth.logout();
   }
 
