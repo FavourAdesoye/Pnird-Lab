@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/auth.dart';
+import '../../widgets/enhanced_text_form_field.dart';
+import '../../widgets/auth_button.dart';
 
 class StaffLoginPage extends StatefulWidget {
   const StaffLoginPage({super.key});
@@ -17,55 +16,59 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  final bool _isLoading = false; // Add loading indicator
+  bool _isLoading = false; // Add loading indicator
 
   Future<void> loginUser(String email, String password) async {
-    try {
-      if(email.isEmpty || password.isEmpty){
-        throw Exception("Email and password cannot be empty");
-      }
-      UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: email, password: password);
+    setState(() {
+      _isLoading = true;
+    });
 
-      // Get Firebase UID
-      String uid = userCredential.user!.uid;
-      print('uid: $uid');
-   
-      // Send UID to backend to get role
-      var response = await http.post(
-        Uri.parse("http://localhost:3000/api/users/getUserRole"),
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({"uid": uid}),
-      );
-      print('response: ${response.body}');
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        print('api response: $data');
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString("firebaseId", uid);
-        await prefs.setString("userId", data['userId']);
-        await prefs.setString("username", data['username']);
-        await prefs.setString("profilePicture", data['profilePicture'] ?? "");
-        String role = data['role'];
+    try {
+      final result = await Auth.login(email, password);
+      
+      if (result.success && result.data != null) {
+        final data = result.data!;
+        final role = data['role'] as String;
+        
+        // Save login state
+        await Auth.saveLoginState(
+          data['userId'] as String,
+          data['username'] as String,
+          role,
+          data['profilePicture'] as String? ?? '',
+        );
 
         // Redirect based on user role
         if (role == "staff") {
           Navigator.pushNamed(context, '/home');
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text(
-                    'You are registered not registered as a staff in our database')),
+            SnackBar(
+              content: Text('You are not registered as a staff in our database'),
+              backgroundColor: Colors.red,
+            ),
           );
-
-          // Navigate to the student login page
           Navigator.pushNamed(context, '/student_login');
         }
       } else {
-        print("Error fetching role: ${response.body}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.message),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
-      print("Error logging in: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An unexpected error occurred'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -76,7 +79,7 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
         backgroundColor: Colors.grey[900],
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context); // Navigates back to the previous screen
           },
@@ -100,7 +103,7 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
                         color: Colors.black.withOpacity(0.5),
                         spreadRadius: 5,
                         blurRadius: 7,
-                        offset: const Offset(0, 3),
+                        offset: Offset(0, 3),
                       ),
                     ],
                   ),
@@ -145,20 +148,10 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      TextFormField(
+                      EnhancedTextFormField(
                         controller: _emailController,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          hintText: 'example@gmail.com',
-                          labelStyle: const TextStyle(color: Colors.orange),
-                          hintStyle: const TextStyle(color: Colors.white54),
-                          filled: true,
-                          fillColor: Colors.grey[800],
-                          border: const OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.white),
+                        label: 'Email',
+                        hint: 'example@gmail.com',
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -171,34 +164,17 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
                         },
                       ),
                       const SizedBox(height: 10),
-                      TextFormField(
+                      EnhancedTextFormField(
                         controller: _passwordController,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          hintText: 'Must have at least 8 characters',
-                          labelStyle: const TextStyle(color: Colors.orange),
-                          hintStyle: const TextStyle(color: Colors.white54),
-                          filled: true,
-                          fillColor: Colors.grey[800],
-                          border: const OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                          ),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              color: Colors.white,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.white),
+                        label: 'Password',
+                        hint: 'Must have at least 8 characters',
                         obscureText: _obscurePassword,
+                        showToggle: true,
+                        onToggleVisibility: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your password';
@@ -234,32 +210,16 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
                       ),
                       const SizedBox(height: 20),
                       Center(
-                        child: ElevatedButton(
+                        child: AuthButton(
+                          text: 'Login',
                           onPressed: () {
                             if (_staffLoginformKey.currentState!.validate()) {
                               String email = _emailController.text;
                               String password = _passwordController.text;
-
                               loginUser(email, password);
                             }
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.yellow,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 50, vertical: 15),
-                            child: Text(
-                              'Login',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
+                          isLoading: _isLoading,
                         ),
                       ),
                       const SizedBox(height: 20),

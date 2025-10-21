@@ -2,6 +2,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../services/auth.dart';
+import '../../widgets/enhanced_text_form_field.dart';
+import '../../widgets/auth_button.dart';
+import '../../widgets/password_strength_indicator.dart';
+import 'email_verification_page.dart';
 
 class StudentSignUpPage extends StatefulWidget {
   const StudentSignUpPage({super.key});
@@ -17,40 +22,60 @@ class _StudentSignUpPageState extends State<StudentSignUpPage> {
   final _passwordController = TextEditingController();
   final _mobileNumberController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   Future<void> registerUser(String email, String password, String fullName,
       String mobileNumber, String role) async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
-      // Register user with Firebase Authentication
-      UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(email: email, password: password);
-
-      // Firebase UID for the registered user
-      String firebaseUID = userCredential.user!.uid;
-
-      // Send UID, email, and role to backend for storing in MongoDB
-      var response = await http.post(
-        Uri.parse("http://localhost:3000/api/users/register"),
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({
-          "username": fullName,
-          "firebaseUID": firebaseUID,
-          "email": email,
-          "role": role, // either "student" or "staff"
-        }),
-      );
-
-      if (response.statusCode == 201) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Registration Successful')));
+      final result = await Auth.signUp(email, password, fullName, role);
+      
+      if (result.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Registration Successful! Please verify your email to continue.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Navigate to email verification page
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EmailVerificationPage(email: email),
+          ),
+        );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content:
-                Text('Failed to register user on backend: ${response.body}')));
+        // Show error with suggestions if available
+        String errorMessage = result.message;
+        if (result.data != null && result.data!['suggestions'] != null) {
+          final suggestions = result.data!['suggestions'] as List<dynamic>;
+          if (suggestions.isNotEmpty) {
+            errorMessage += '\n\nSuggested usernames:\n${suggestions.join(', ')}';
+          }
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 5),
+          ),
+        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An unexpected error occurred'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -64,7 +89,7 @@ class _StudentSignUpPageState extends State<StudentSignUpPage> {
         backgroundColor: Colors.grey[900],
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context); // Navigates back to the previous screen
           },
@@ -89,7 +114,7 @@ class _StudentSignUpPageState extends State<StudentSignUpPage> {
                       color: Colors.black.withOpacity(0.5),
                       spreadRadius: 5,
                       blurRadius: 7,
-                      offset: const Offset(0, 3),
+                      offset: Offset(0, 3),
                     ),
                   ],
                 ),
@@ -138,50 +163,35 @@ class _StudentSignUpPageState extends State<StudentSignUpPage> {
                       ),
                       const SizedBox(height: 20),
                       // Username input field
-                      TextFormField(
+                      EnhancedTextFormField(
                         controller: _fullNameController,
-                        decoration: InputDecoration(
-                          labelText: 'Username',
-                          hintText: 'First and Last name',
-                          labelStyle: const TextStyle(color: Colors.orange),
-                          hintStyle: const TextStyle(color: Colors.white54),
-                          filled: true,
-                          fillColor: Colors.grey[800],
-                          border: const OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.white),
+                        label: 'Full Name',
+                        hint: 'First and Last name',
+                        enabled: !_isLoading,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your full name';
+                          }
+                          if (value.trim().split(' ').length < 2) {
+                            return 'Please enter your first and last name';
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 10),
                       // Email input field
-                      TextFormField(
+                      EnhancedTextFormField(
                         controller: _emailController,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          hintText: 'example@gmail.com',
-                          labelStyle: const TextStyle(color: Colors.orange),
-                          hintStyle: const TextStyle(color: Colors.white54),
-                          filled: true,
-                          fillColor: Colors.grey[800],
-                          border: const OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.white),
+                        label: 'Email',
+                        hint: 'example@vsu.edu',
                         keyboardType: TextInputType.emailAddress,
+                        enabled: !_isLoading,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your email';
                           }
-                          // Regex to validate email
-                          if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                          // Enhanced email validation
+                          if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value)) {
                             return 'Please enter a valid email address';
                           }
                           return null;
@@ -189,35 +199,18 @@ class _StudentSignUpPageState extends State<StudentSignUpPage> {
                       ),
                       const SizedBox(height: 10),
                       // Password input field
-                      TextFormField(
+                      EnhancedTextFormField(
                         controller: _passwordController,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          hintText: 'Must have at least 8 characters',
-                          labelStyle: const TextStyle(color: Colors.orange),
-                          hintStyle: const TextStyle(color: Colors.white54),
-                          filled: true,
-                          fillColor: Colors.grey[800],
-                          border: const OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                          ),
-                          // Toggle visibility icon
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              color: Colors.white,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.white),
+                        label: 'Password',
+                        hint: 'Create a strong password',
                         obscureText: _obscurePassword,
+                        showToggle: true,
+                        enabled: !_isLoading,
+                        onToggleVisibility: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your password';
@@ -228,29 +221,30 @@ class _StudentSignUpPageState extends State<StudentSignUpPage> {
                           return null;
                         },
                       ),
+                      const SizedBox(height: 8),
+                      // Password strength indicator
+                      ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _passwordController,
+                        builder: (context, value, child) {
+                          return PasswordStrengthIndicator(
+                            password: value.text,
+                          );
+                        },
+                      ),
                       const SizedBox(height: 10),
                       // Mobile number input field
-                      TextFormField(
+                      EnhancedTextFormField(
                         controller: _mobileNumberController,
-                        decoration: InputDecoration(
-                          labelText: 'Mobile no',
-                          hintText: 'Enter your mobile number',
-                          labelStyle: const TextStyle(color: Colors.orange),
-                          hintStyle: const TextStyle(color: Colors.white54),
-                          filled: true,
-                          fillColor: Colors.grey[800],
-                          border: const OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.white),
+                        label: 'Mobile Number',
+                        hint: 'Enter your mobile number',
                         keyboardType: TextInputType.phone,
+                        enabled: !_isLoading,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your mobile number';
                           }
                           if (!RegExp(r'^\d{10}$').hasMatch(value)) {
-                            return 'Please enter a valid mobile number';
+                            return 'Please enter a valid 10-digit mobile number';
                           }
                           return null;
                         },
@@ -258,34 +252,19 @@ class _StudentSignUpPageState extends State<StudentSignUpPage> {
                       const SizedBox(height: 20),
                       // Sign Up button
                       Center(
-                        child: ElevatedButton(
+                        child: AuthButton(
+                          text: 'Sign Up',
+                          isLoading: _isLoading,
                           onPressed: () {
                             if (_signUpFormKey.currentState!.validate()) {
                               registerUser(
-                                  _emailController.text,
+                                  _emailController.text.trim(),
                                   _passwordController.text,
-                                  _fullNameController.text,
-                                  _mobileNumberController.text,
+                                  _fullNameController.text.trim(),
+                                  _mobileNumberController.text.trim(),
                                   "student");
                             }
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.yellow,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 50, vertical: 15),
-                            child: Text(
-                              'Sign Up',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
                         ),
                       ),
                       const SizedBox(height: 20),

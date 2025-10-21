@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../services/auth.dart';
+import '../../widgets/enhanced_text_form_field.dart';
+import '../../widgets/auth_button.dart';
 
 class StudentLoginPage extends StatefulWidget {
   const StudentLoginPage({super.key});
@@ -15,44 +18,59 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   Future<void> loginUser(String email, String password) async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
-      UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: email, password: password);
-
-      // Get Firebase UID
-      String uid = userCredential.user!.uid;
-
-      // Send UID to backend to get role
-      var response = await http.post(
-        Uri.parse("http://localhost:3000/api/users/getUserRole"),
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({"uid": uid}),
-      );
-
-      if (response.statusCode == 200) {
-        var data = json.decode(response.body);
-        String role = data['role'];
+      final result = await Auth.login(email, password);
+      
+      if (result.success && result.data != null) {
+        final data = result.data!;
+        final role = data['role'] as String;
+        
+        // Save login state
+        await Auth.saveLoginState(
+          data['userId'] as String,
+          data['username'] as String,
+          role,
+          data['profilePicture'] as String? ?? '',
+        );
 
         // Redirect based on user role
         if (role == "student") {
           Navigator.pushNamed(context, '/home');
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text(
-                    'You are registered not registered as a student in our database')),
+            SnackBar(
+              content: Text('You are not registered as a student in our database'),
+              backgroundColor: Colors.red,
+            ),
           );
-
-          // Navigate to the student login page
           Navigator.pushNamed(context, '/staff_login');
         }
       } else {
-        print("Error fetching role: ${response.body}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.message),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
-      print("Error logging in: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An unexpected error occurred'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -65,7 +83,7 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
         backgroundColor: Colors.grey[900],
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context); // Navigates back to the previous screen
           },
@@ -90,7 +108,7 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
                         color: Colors.black.withOpacity(0.5),
                         spreadRadius: 5,
                         blurRadius: 7,
-                        offset: const Offset(0, 3),
+                        offset: Offset(0, 3),
                       ),
                     ],
                   ),
@@ -139,27 +157,18 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
                       ),
                       const SizedBox(height: 20),
                       // Email input field
-                      TextFormField(
+                      EnhancedTextFormField(
                         controller: _emailController,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          hintText: 'example@gmail.com',
-                          labelStyle: const TextStyle(color: Colors.orange),
-                          hintStyle: const TextStyle(color: Colors.white54),
-                          filled: true,
-                          fillColor: Colors.grey[800],
-                          border: const OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.white),
+                        label: 'Email',
+                        hint: 'example@vsu.edu',
                         keyboardType: TextInputType.emailAddress,
+                        enabled: !_isLoading,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your email';
                           }
-                          // Regex to validate email
-                          if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                          // Enhanced email validation
+                          if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value)) {
                             return 'Please enter a valid email address';
                           }
                           return null;
@@ -167,35 +176,18 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
                       ),
                       const SizedBox(height: 10),
                       // Password input field
-                      TextFormField(
+                      EnhancedTextFormField(
                         controller: _passwordController,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          hintText: 'Must have at least 8 characters',
-                          labelStyle: const TextStyle(color: Colors.orange),
-                          hintStyle: const TextStyle(color: Colors.white54),
-                          filled: true,
-                          fillColor: Colors.grey[800],
-                          border: const OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                          ),
-                          // Toggle visibility icon
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              color: Colors.white,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.white),
+                        label: 'Password',
+                        hint: 'Enter your password',
                         obscureText: _obscurePassword,
+                        showToggle: true,
+                        enabled: !_isLoading,
+                        onToggleVisibility: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your password';
@@ -226,7 +218,9 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
                       const SizedBox(height: 20),
                       // Login button
                       Center(
-                        child: ElevatedButton(
+                        child: AuthButton(
+                          text: 'Login',
+                          isLoading: _isLoading,
                           onPressed: () {
                             if (_studentLoginformKey.currentState!.validate()) {
                               // Get values from controllers
@@ -237,23 +231,6 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
                               loginUser(email, password);
                             }
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.yellow,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 50, vertical: 15),
-                            child: Text(
-                              'Login',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
                         ),
                       ),
                       const SizedBox(height: 20),
