@@ -64,37 +64,70 @@ class Auth {
   // Static method for login
   static Future<AuthResult> login(String email, String password) async {
     try {
-      // Firebase log-in
-      UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: email, password: password);
-
-      // Retrieve Firebase UID
-      String firebaseUID = userCredential.user!.uid;
-
-      // Optional: Use Firebase UID to retrieve user role and profile from backend
-      var response = await http.post(
-        Uri.parse('http://localhost:3000/login'),
-        body: {'firebaseUID': firebaseUID},
-      );
-
-      if (response.statusCode == 200) {
-        print("User successfully logged in and role verified!");
-        return AuthResult(
-          success: true,
-          data: {'user': userCredential.user, 'userId': firebaseUID},
-        );
-      } else {
-        print("Failed to retrieve user data: ${response.body}");
+      // Firebase log-in with better error handling
+      UserCredential userCredential;
+      try {
+        userCredential = await FirebaseAuth.instance
+            .signInWithEmailAndPassword(email: email, password: password);
+      } catch (firebaseError) {
+        print("Firebase Auth Error: $firebaseError");
+        // Handle specific Firebase errors
+        if (firebaseError.toString().contains('PigeonUserDetails')) {
+          return AuthResult(
+            success: false,
+            message: 'Authentication service temporarily unavailable. Please try again.',
+          );
+        }
         return AuthResult(
           success: false,
-          message: 'Failed to retrieve user data',
+          message: 'Invalid email or password. Please check your credentials.',
+        );
+      }
+
+      // Retrieve Firebase UID
+      String firebaseUID = userCredential.user?.uid ?? '';
+
+      if (firebaseUID.isEmpty) {
+        return AuthResult(
+          success: false,
+          message: 'Failed to retrieve user information.',
+        );
+      }
+
+      // Optional: Use Firebase UID to retrieve user role and profile from backend
+      try {
+        var response = await http.post(
+          Uri.parse('http://localhost:3000/login'),
+          body: {'firebaseUID': firebaseUID},
+        );
+
+        if (response.statusCode == 200) {
+          print("User successfully logged in and role verified!");
+          return AuthResult(
+            success: true,
+            data: {'user': userCredential.user, 'userId': firebaseUID},
+          );
+        } else {
+          print("Failed to retrieve user data: ${response.body}");
+          return AuthResult(
+            success: false,
+            message: 'Failed to retrieve user data from server',
+          );
+        }
+      } catch (backendError) {
+        print("Backend Error: $backendError");
+        // Still return success for Firebase auth, but note backend issue
+        return AuthResult(
+          success: true,
+          data: {'user': userCredential.user, 'userId': firebaseUID, 'backendError': true},
+          message: 'Logged in successfully, but some features may be limited',
         );
       }
     } catch (e) {
       print("Error during log-in: $e");
       return AuthResult(
         success: false,
-        message: e.toString(),
+        message: 'Login failed. Please try again.',
       );
     }
   }
