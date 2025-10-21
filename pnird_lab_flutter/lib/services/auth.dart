@@ -4,9 +4,22 @@ import 'package:http/http.dart' as http;
 import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mongo_dart/mongo_dart.dart';
+
+class AuthResult {
+  final bool success;
+  final String? message;
+  final Map<String, dynamic>? data;
+
+  AuthResult({
+    required this.success,
+    this.message,
+    this.data,
+  });
+}
+
 class Auth {
   // Static method for sign up
-  static Future<Map<String, dynamic>> signUp(String email, String password, String fullName, String role) async {
+  static Future<AuthResult> signUp(String email, String password, String fullName, String role) async {
     try {
       // Sign up user with Firebase Auth
       UserCredential userCredential = await FirebaseAuth.instance
@@ -28,19 +41,28 @@ class Auth {
 
       if (response.statusCode == 200) {
         print("User successfully registered in MongoDB!");
-        return {'success': true, 'user': userCredential.user};
+        return AuthResult(
+          success: true,
+          data: {'user': userCredential.user, 'userId': firebaseUID, 'role': role},
+        );
       } else {
         print("Failed to register user in MongoDB: ${response.body}");
-        return {'success': false, 'error': 'Failed to register user in backend'};
+        return AuthResult(
+          success: false,
+          message: 'Failed to register user in backend',
+        );
       }
     } catch (e) {
       print("Error during sign-up: $e");
-      return {'success': false, 'error': e.toString()};
+      return AuthResult(
+        success: false,
+        message: e.toString(),
+      );
     }
   }
 
   // Static method for login
-  static Future<Map<String, dynamic>> login(String email, String password) async {
+  static Future<AuthResult> login(String email, String password) async {
     try {
       // Firebase log-in
       UserCredential userCredential = await FirebaseAuth.instance
@@ -57,23 +79,35 @@ class Auth {
 
       if (response.statusCode == 200) {
         print("User successfully logged in and role verified!");
-        return {'success': true, 'user': userCredential.user};
+        return AuthResult(
+          success: true,
+          data: {'user': userCredential.user, 'userId': firebaseUID},
+        );
       } else {
         print("Failed to retrieve user data: ${response.body}");
-        return {'success': false, 'error': 'Failed to retrieve user data'};
+        return AuthResult(
+          success: false,
+          message: 'Failed to retrieve user data',
+        );
       }
     } catch (e) {
       print("Error during log-in: $e");
-      return {'success': false, 'error': e.toString()};
+      return AuthResult(
+        success: false,
+        message: e.toString(),
+      );
     }
   }
 
   // Static method to save login state
-  static Future<void> saveLoginState(String userId, String email, String role) async {
+  static Future<void> saveLoginState(String userId, String email, String role, [String? profilePicture]) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('userId', userId);
     await prefs.setString('email', email);
     await prefs.setString('role', role);
+    if (profilePicture != null) {
+      await prefs.setString('profilePicture', profilePicture);
+    }
   }
 
   // Static method to check email verification
@@ -87,17 +121,23 @@ class Auth {
   }
 
   // Static method to resend verification email
-  static Future<Map<String, dynamic>> resendVerificationEmail(String email) async {
+  static Future<AuthResult> resendVerificationEmail(String email) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null && user.email == email) {
         await user.sendEmailVerification();
-        return {'success': true};
+        return AuthResult(success: true);
       } else {
-        return {'success': false, 'error': 'User not found or email mismatch'};
+        return AuthResult(
+          success: false,
+          message: 'User not found or email mismatch',
+        );
       }
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      return AuthResult(
+        success: false,
+        message: e.toString(),
+      );
     }
   }
 
@@ -136,6 +176,15 @@ class Auth {
 
     // Optionally, navigate the user back to a login/signup page
     Navigator.of(context).pushReplacement(MaterialPageRoute( builder: (context) =>  const ChooseAccountTypePage()));
+  }
+
+  // Instance methods for Provider compatibility
+  Future<void> delete(BuildContext context) async {
+    await Auth.delete(context);
+  }
+
+  Future<void> logout() async {
+    await Auth.logout();
   }
 
 }
