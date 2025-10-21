@@ -178,7 +178,7 @@ packages:
     source: hosted
     version: "1.0.8"
   dash_chat_2:
-    dependency: "direct main"
+    dependency: "direct overridden"
     description:
       name: dash_chat_2
       sha256: "87ff33cbd1d5fe6241eb6c2044de32d64ef888f5d2ec9b4ab75a949d4b3742d3"
@@ -391,7 +391,7 @@ packages:
     source: hosted
     version: "2.2.1"
   flutter_pdfview:
-    dependency: "direct main"
+    dependency: "direct overridden"
     description:
       name: flutter_pdfview
       sha256: c0b2cc4ebf461a5a4bb9312a165222475a7d93845c7a0703f4abb7f442eb6d54
@@ -713,7 +713,7 @@ packages:
     source: hosted
     version: "1.0.6"
   mongo_dart:
-    dependency: "direct main"
+    dependency: "direct overridden"
     description:
       name: mongo_dart
       sha256: "43b62b43c6449a0159bf138fba27653cb35acd92d3587ad26d1ec068cd645559"
@@ -777,7 +777,7 @@ packages:
     source: hosted
     version: "1.0.1"
   path_provider:
-    dependency: "direct main"
+    dependency: "direct overridden"
     description:
       name: path_provider
       sha256: fec0d61223fba3154d87759e3cc27fe2c8dc498f6386c6d6fc80d1afdd1bf378
@@ -1030,7 +1030,7 @@ packages:
     source: sdk
     version: "0.0.0"
   socket_io_client:
-    dependency: "direct main"
+    dependency: "direct overridden"
     description:
       name: socket_io_client
       sha256: c8471c2c6843cf308a5532ff653f2bcdb7fa9ae79d84d1179920578a06624f0d
@@ -1182,7 +1182,7 @@ packages:
     source: hosted
     version: "0.3.0"
   url_launcher:
-    dependency: "direct main"
+    dependency: "direct overridden"
     description:
       name: url_launcher
       sha256: "9d06212b1362abc2f0f0d78e6f09f726608c74e3b9462e8368bb03314aa8d603"
