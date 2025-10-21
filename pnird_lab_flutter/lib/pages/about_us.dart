@@ -478,7 +478,6 @@ class _AboutUsPageState extends State<AboutUsPage> {
                       )).toList(),
                     ),
                     const SizedBox(height: 20),
-                    
                     // Contact action buttons
                     Wrap(
                       spacing: 16,
@@ -511,6 +510,84 @@ class _AboutUsPageState extends State<AboutUsPage> {
                           ),
                       ],
                     ),
+                    SizedBox(height: 20),
+                     // Publications section
+                    if (member.publications.isNotEmpty) ...[
+                      const Text(
+                        'Publications',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ...member.publications.map((publication) => GestureDetector(
+                        onTap: () => _viewPublication(publication.pdfPath, publication.title),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[800],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.yellow.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.picture_as_pdf,
+                                color: Colors.red,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      publication.title,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.3,
+                                      ),
+                                    ),
+                                    if (publication.journal != null) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${publication.journal}${publication.year != null ? ' (${publication.year})' : ''}',
+                                        style: TextStyle(
+                                          color: Colors.yellow[300],
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                    if (publication.authors != null && publication.authors!.isNotEmpty) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        publication.authors!.join(', '),
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.open_in_new,
+                                color: Colors.yellow,
+                                size: 16,
+                              ),
+                            ],
+                          ),
+                        ),
+                      )).toList(),
+                      const SizedBox(height: 20),
+                    ],
                     
                     // Bottom padding for safe area
                     SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
@@ -675,6 +752,19 @@ class _AboutUsPageState extends State<AboutUsPage> {
         builder: (context) => CvViewerPage(
           cvPath: cvPath,
           memberName: memberName,
+        ),
+      ),
+    );
+  }
+
+  /// Opens publication PDF viewer page
+  void _viewPublication(String pdfPath, String publicationTitle) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CvViewerPage(
+          cvPath: pdfPath,
+          memberName: publicationTitle,
         ),
       ),
     );

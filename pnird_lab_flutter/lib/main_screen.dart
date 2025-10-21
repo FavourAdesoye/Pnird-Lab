@@ -111,6 +111,17 @@ class _MainScreenPageState extends State<MainScreenPage> {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.people, color: Colors.white),
+              title: const Text('Team Members', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AboutUsPage()),
+                );
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.settings, color: Colors.white),
               title: const Text('Settings', style: TextStyle(color: Colors.white)),
               onTap: () {

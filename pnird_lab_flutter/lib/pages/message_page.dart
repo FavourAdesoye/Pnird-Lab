@@ -44,23 +44,41 @@ class _MessagePageState extends State<MessagePage> {
     fetchRecipientUser();
   }  
   Future<void> loadMessageHistory() async {
-  final response = await http.get(
-    Uri.parse('http://localhost:3000/api/messages/$userId')
-  );
+    try {
+      // Use a more flexible API URL - you may need to update this based on your deployment
+      final baseUrl = 'http://10.0.2.2:3000'; // For Android emulator
+      // For iOS simulator use: 'http://localhost:3000'
+      // For production use your actual server URL
+      
+      print('Loading message history for user: $userId');
+      final url = '$baseUrl/api/messages/$userId';
+      print('Message history URL: $url');
+      
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+      );
 
-  if (response.statusCode == 200) {
-    final List<dynamic> history = json.decode(response.body);
-    setState(() {
-      messages = history.map((m) => {
-        "from": m["senderId"],
-        "message": m["message"],
-        "timestamp": m["timestamp"] ?? DateTime.now().toIso8601String(),
-      }).toList();
-    });
-  } else {
-    print("Failed to load message history");
+      print('Message history response status: ${response.statusCode}');
+      print('Message history response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> history = json.decode(response.body);
+        print('Message history data: $history');
+        setState(() {
+          messages = history.map((m) => {
+            "from": m["senderId"],
+            "message": m["message"],
+            "timestamp": m["timestamp"] ?? DateTime.now().toIso8601String(),
+          }).toList();
+        });
+      } else {
+        print("Failed to load message history: ${response.statusCode} - ${response.body}");
+      }
+    } catch (e) {
+      print("Error loading message history: $e");
+    }
   }
-}
 
   Future<void> _initUser() async {
     final prefs = await SharedPreferences.getInstance();
