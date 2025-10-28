@@ -334,7 +334,7 @@ class _EventsPageState extends State<EventsPage> {
           ),
         ),
         floatingActionButton: FloatingActionButton(
-        heroTag: Text('btn3'),
+        heroTag: 'events_fab',
         onPressed: () async {
           Navigator.push(
             context,

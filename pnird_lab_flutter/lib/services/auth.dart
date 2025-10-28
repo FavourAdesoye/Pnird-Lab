@@ -1,9 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mongo_dart/mongo_dart.dart';
 
 class AuthResult {
   final bool success;
@@ -21,20 +20,17 @@ class Auth {
   // Static method for sign up
   static Future<AuthResult> signUp(String email, String password, String fullName, String role) async {
     try {
-      // Sign up user with Firebase Auth
-      UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(email: email, password: password);
-
-      // Retrieve Firebase UID
-      String firebaseUID = userCredential.user!.uid;
-
+      // Simple local authentication for now
+      String userId = 'local_${email.hashCode}';
+      
       // Send details to Node.js backend to create user in MongoDB
       var response = await http.post(
-        Uri.parse('http://localhost:3000/register'),
+        Uri.parse('http://localhost:3000/api/auth/register'),
         body: {
           'username': fullName,
           'email': email,
-          'firebaseUID': firebaseUID,
+          'password': password,
+          'firebaseUID': userId,
           'role': role,
         },
       );
@@ -43,7 +39,7 @@ class Auth {
         print("User successfully registered in MongoDB!");
         return AuthResult(
           success: true,
-          data: {'user': userCredential.user, 'userId': firebaseUID, 'role': role},
+          data: {'userId': userId, 'role': role, 'local': true},
         );
       } else {
         print("Failed to register user in MongoDB: ${response.body}");
@@ -64,60 +60,29 @@ class Auth {
   // Static method for login
   static Future<AuthResult> login(String email, String password) async {
     try {
-      // Try Firebase authentication first
-      UserCredential? userCredential;
-      try {
-        userCredential = await FirebaseAuth.instance
-            .signInWithEmailAndPassword(email: email, password: password);
-      } catch (firebaseError) {
-        print("Firebase Auth Error: $firebaseError");
-        
-        // If Firebase fails due to type casting issues, try fallback authentication
-        if (firebaseError.toString().contains('PigeonUserDetails') || 
-            firebaseError.toString().contains('List<Object?>')) {
-          
-          // For now, return a fallback success for testing
-          // In production, you might want to implement a different auth method
-          return AuthResult(
-            success: true,
-            data: {
-              'user': null,
-              'userId': 'fallback_${email.hashCode}',
-              'role': 'student', // Default role
-              'fallback': true,
-            },
-            message: 'Logged in using fallback authentication. Some features may be limited.',
-          );
-        }
-        
-        return AuthResult(
-          success: false,
-          message: 'Invalid email or password. Please check your credentials.',
-        );
-      }
-
-      // Retrieve Firebase UID
-      String firebaseUID = userCredential?.user?.uid ?? '';
-
-      if (firebaseUID.isEmpty) {
-        return AuthResult(
-          success: false,
-          message: 'Failed to retrieve user information.',
-        );
-      }
-
-      // Optional: Use Firebase UID to retrieve user role and profile from backend
+      // Simple local authentication
+      String userId = 'local_${email.hashCode}';
+      
+      // Try to verify with backend
       try {
         var response = await http.post(
-          Uri.parse('http://localhost:3000/login'),
-          body: {'firebaseUID': firebaseUID},
+          Uri.parse('http://localhost:3000/api/auth/login'),
+          body: {'firebaseUID': userId, 'email': email},
         );
 
         if (response.statusCode == 200) {
-          print("User successfully logged in and role verified!");
+          print("User successfully logged in!");
+          final responseData = json.decode(response.body);
+          final userData = responseData['user'];
           return AuthResult(
             success: true,
-            data: {'user': userCredential?.user, 'userId': firebaseUID},
+            data: {
+              'userId': userId, 
+              'username': userData['username'],
+              'email': userData['email'],
+              'role': userData['role'],
+              'local': true
+            },
           );
         } else {
           print("Failed to retrieve user data: ${response.body}");
@@ -128,11 +93,11 @@ class Auth {
         }
       } catch (backendError) {
         print("Backend Error: $backendError");
-        // Still return success for Firebase auth, but note backend issue
+        // Still return success for local auth, but note backend issue
         return AuthResult(
           success: true,
-          data: {'user': userCredential?.user, 'userId': firebaseUID, 'backendError': true},
-          message: 'Logged in successfully, but some features may be limited',
+          data: {'userId': userId, 'local': true, 'backendError': true},
+          message: 'Logged in successfully (local mode), but some features may be limited',
         );
       }
     } catch (e) {
@@ -157,42 +122,26 @@ class Auth {
 
   // Static method to check email verification
   static Future<bool> isEmailVerified() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      await user.reload();
-      return user.emailVerified;
-    }
-    return false;
+    // For local auth, always return true
+    return true;
   }
 
   // Static method to resend verification email
   static Future<AuthResult> resendVerificationEmail(String email) async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null && user.email == email) {
-        await user.sendEmailVerification();
-        return AuthResult(success: true);
-      } else {
-        return AuthResult(
-          success: false,
-          message: 'User not found or email mismatch',
-        );
-      }
-    } catch (e) {
-      return AuthResult(
-        success: false,
-        message: e.toString(),
-      );
-    }
+    // For local auth, always return success
+    return AuthResult(
+      success: true,
+      message: 'Email verification not required in local mode',
+    );
   }
 
   // Static method for logout
   static Future<void> logout() async {
-    await FirebaseAuth.instance.signOut();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('userId');
     await prefs.remove('email');
     await prefs.remove('role');
+    await prefs.remove('profilePicture');
   }
 
   // Static method to get user ID
@@ -203,23 +152,11 @@ class Auth {
 
   // Static method to delete user account
   static Future<void> delete(BuildContext context) async {
-    final user = FirebaseAuth.instance.currentUser;
+    // For local auth, just clear preferences and navigate
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
 
-    // First, delete data from MongoDB
-    final db = await Db.create('mongodb+srv://<username>:<password>@<cluster-url>/<dbname>');
-    await db.open();
-
-    final userId = user?.uid; // Firebase UID
-    final collection = db.collection('your_collection_name');
-
-    await collection.deleteMany({'userId': userId});
-
-    await db.close();
-
-    // Then, delete the user from Firebase Auth
-    await user?.delete();
-
-    // Optionally, navigate the user back to a login/signup page
+    // Navigate the user back to a login/signup page
     Navigator.of(context).pushReplacement(MaterialPageRoute( builder: (context) =>  const ChooseAccountTypePage()));
   }
 

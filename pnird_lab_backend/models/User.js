@@ -28,7 +28,8 @@ const UserSchema = new mongoose.Schema({
     },
    role: {
     type: String,
-    enum: ["staff", "student"]
+    enum: ["staff", "student", "admin"],
+    default: "student"
    },
 
    cloudinary_id:{

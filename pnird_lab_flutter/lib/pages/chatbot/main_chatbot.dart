@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pnirdlab/pages/about_us.dart';
@@ -23,17 +22,22 @@ class ChatPage extends StatefulWidget {
   State<ChatPage> createState() => _ChatPageState();
 }
 
+class Message {
+  final String text;
+  final bool isUser;
+  final DateTime timestamp;
+
+  Message({
+    required this.text,
+    required this.isUser,
+    required this.timestamp,
+  });
+}
+
 class _ChatPageState extends State<ChatPage> {
-  // Current user (you)
-  final ChatUser _currentUser =
-      ChatUser(id: '1', firstName: "Billy", lastName: "Smith");
-
-  // Bot user
-  final ChatUser _gptChatUser =
-      ChatUser(id: '2', firstName: "Chat", lastName: "Bot");
-
-  final List<ChatMessage> _messages = <ChatMessage>[];
-  final List<ChatUser> _typingUsers = <ChatUser>[];
+  final List<Message> _messages = [];
+  final TextEditingController _textController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -55,71 +59,134 @@ class _ChatPageState extends State<ChatPage> {
           },
         ),
       ),
-      body: DashChat(
-        currentUser: _currentUser,
-        typingUsers: _typingUsers,
-        messageOptions: const MessageOptions(
-          currentUserContainerColor: Colors.black,
-          currentUserTextColor: Colors.white,
-          containerColor: Colors.yellow,
-          textColor: Colors.black,
-        ),
-        onSend: (ChatMessage m) {
-          getChatResponse(m);
-        },
-        messages: _messages,
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final message = _messages[index];
+                return _buildMessageBubble(message);
+              },
+            ),
+          ),
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: CircularProgressIndicator(),
+            ),
+          _buildInputArea(),
+        ],
       ),
     );
   }
 
-  Future<void> getChatResponse(ChatMessage m) async {
-    setState(() {
-      _messages.insert(0, m);
-      _typingUsers.add(_gptChatUser);
-    });
-
-    try {
-      final reply = await getAssistantResponse(m.text);
-      setState(() {
-        _messages.insert(
-          0,
-          ChatMessage(
-              user: _gptChatUser, createdAt: DateTime.now(), text: reply),
-        );
-      });
-    } catch (e) {
-      setState(() {
-        _messages.insert(
-          0,
-          ChatMessage(
-              user: _gptChatUser,
-              createdAt: DateTime.now(),
-              text: 'Error: $e'),
-        );
-      });
-    }
-    setState(() {
-      _typingUsers.remove(_gptChatUser);
-    });
+  Widget _buildMessageBubble(Message message) {
+    return Align(
+      alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+        decoration: BoxDecoration(
+          color: message.isUser ? Colors.blue : Colors.grey[300],
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+        child: Text(
+          message.text,
+          style: TextStyle(
+            color: message.isUser ? Colors.white : Colors.black,
+          ),
+        ),
+      ),
+    );
   }
 
-  // ✅ Updated: Call your Node.js backend instead of OpenAI
-  Future<String> getAssistantResponse(String userMessage) async {
+  Widget _buildInputArea() {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _textController,
+              decoration: const InputDecoration(
+                hintText: 'Type your message...',
+                border: OutlineInputBorder(),
+              ),
+              onSubmitted: (value) => _sendMessage(),
+            ),
+          ),
+          const SizedBox(width: 8.0),
+          IconButton(
+            onPressed: _isLoading ? null : _sendMessage,
+            icon: const Icon(Icons.send),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _sendMessage() {
+    final text = _textController.text.trim();
+    if (text.isEmpty || _isLoading) return;
+
+    setState(() {
+      _messages.add(Message(
+        text: text,
+        isUser: true,
+        timestamp: DateTime.now(),
+      ));
+      _textController.clear();
+      _isLoading = true;
+    });
+
+    _getChatResponse(text);
+  }
+
+  Future<void> _getChatResponse(String userMessage) async {
     try {
       final response = await http.post(
-        Uri.parse("http://127.0.0.1:3000/ask"), // Replace with your backend URL
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"question": userMessage}),
+        Uri.parse('http://localhost:3000/chat'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'question': userMessage}),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data["answer"];
+        final botMessage = data['answer'] ?? 'Sorry, I could not process your request.';
+        
+        setState(() {
+          _messages.add(Message(
+            text: botMessage,
+            isUser: false,
+            timestamp: DateTime.now(),
+          ));
+          _isLoading = false;
+        });
       } else {
-        return "Error: ${response.body}";
+        setState(() {
+          _messages.add(Message(
+            text: 'Sorry, I encountered an error. Please try again.',
+            isUser: false,
+            timestamp: DateTime.now(),
+          ));
+          _isLoading = false;
+        });
       }
     } catch (e) {
-      return "Error: $e";
+      setState(() {
+        _messages.add(Message(
+          text: 'Sorry, I encountered an error. Please try again.',
+          isUser: false,
+          timestamp: DateTime.now(),
+        ));
+        _isLoading = false;
+      });
     }
   }
 }

@@ -3,13 +3,14 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pnirdlab/main_screen.dart';
 import 'package:pnirdlab/pages/loginpages/staff_signup.dart';
 import 'package:pnirdlab/pages/loginpages/staff_login.dart';
 import 'package:pnirdlab/pages/loginpages/student_login.dart';
 import 'package:pnirdlab/pages/loginpages/student_signup.dart';
 import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
-import 'package:firebase_core/firebase_core.dart';
+// import 'package:firebase_core/firebase_core.dart';
 
 
 void main() async {
@@ -27,24 +28,8 @@ void main() async {
   } else {
     print("Skipping environment variable loading for web build");
   }
-  try{
-  if (kIsWeb) {
-    await Firebase.initializeApp(
-        options: FirebaseOptions(
-            apiKey: "AIzaSyAs4SE6TE1gccD76rC93BYShdZv27T8FZE",
-            authDomain: "pnird-lab.firebaseapp.com",
-            appId: "1:1060625556937:web:facd645c0df6912eadf418",
-            storageBucket: "pnird-lab.firebasestorage.app",
-            messagingSenderId: "1060625556937",
-            measurementId: "G-G5JGKLPG9B",
-            projectId: "pnird-lab"));
-  } else {
-    await Firebase.initializeApp();
-  }
-  print("Firebase Initialized successfully");
-  } catch(e){
-  print("Error initializing Firebase: $e");
-  }
+  // Firebase initialization removed for now
+  print("App initialized without Firebase");
   
   // Simulating an authentication check
   bool isLoggedIn = await checkUserLoggedIn();
@@ -56,10 +41,19 @@ void main() async {
 }
 
 Future<bool> checkUserLoggedIn() async {
-  // Here, you would implement the logic to check if the user is logged in
-  // For demonstration purposes, let's return false (not logged in)
-  await Future.delayed(Duration(seconds: 1)); // Simulate loading
-  return false; // Change this based on your actual login state
+  // Check if user is logged in using SharedPreferences
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId');
+    final email = prefs.getString('email');
+    final role = prefs.getString('role');
+    
+    // User is logged in if we have all required data
+    return userId != null && email != null && role != null;
+  } catch (e) {
+    print("Error checking login state: $e");
+    return false;
+  }
 }
 
 class MyApp extends StatelessWidget {
