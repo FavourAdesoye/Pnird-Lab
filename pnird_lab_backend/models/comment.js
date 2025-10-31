@@ -3,6 +3,7 @@ const mongoose = require("mongoose")
 const ReplySchema = new mongoose.Schema({
     username: { type: String, required: true },
     comment: { type: String, required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
     createdAt: { type: Date, default: Date.now },
   });
 
@@ -19,6 +20,11 @@ const commentSchema = new mongoose.Schema({
       },
     username:{
         type: String,
+        required: true,
+    },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
         required: true,
     },
     comment:{

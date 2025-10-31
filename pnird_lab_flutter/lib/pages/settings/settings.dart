@@ -2,7 +2,6 @@
 import 'package:pnirdlab/pages/current_user_profile_page.dart';
 import 'package:pnirdlab/pages/edit_profile_screen.dart';
 import 'package:pnirdlab/services/auth.dart';
-import 'package:provider/provider.dart';
 
 class Setting extends StatelessWidget {
   final String userId;
@@ -10,7 +9,7 @@ class Setting extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const  _SettingPage();
+    return _SettingPage();
   }
 }
 
@@ -37,7 +36,7 @@ class SettingPageUI extends State<_SettingPage> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) =>  const ProfilePage(myuserId: '',)),
+              MaterialPageRoute(builder: (context) =>  ProfilePage(myuserId: '',)),
             );
           },
         ), 
@@ -82,7 +81,7 @@ class SettingPageUI extends State<_SettingPage> {
                 title: 'Delete Account',
                 content: 'Are you sure you want to delete your account?',
                 onConfirm: () {
-                  context.read<Auth>().deleteAccount(context);
+                  Auth.logout();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Account deleted.')),
                   );
@@ -100,8 +99,7 @@ class SettingPageUI extends State<_SettingPage> {
                 title: 'Log Out',
                 content: 'Are you sure you want to log out?',
                 onConfirm: () { 
-
-                  context.read<Auth>().logoutUser();
+                  Auth.logout();
                   // Handle logout logic here
                   Navigator.pop(context); // Close dialog
                   ScaffoldMessenger.of(context).showSnackBar(

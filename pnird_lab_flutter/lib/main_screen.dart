@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:pnirdlab/pages/chats_page.dart';
 import 'package:pnirdlab/pages/events_page.dart';
 import 'package:pnirdlab/pages/about_us.dart';
 import 'package:pnirdlab/pages/games/gamehome.dart';
-import 'package:pnirdlab/pages/home.dart';
+import 'package:pnirdlab/pages/optimized_home.dart';
 import 'package:pnirdlab/pages/studies.dart';
+import 'package:pnirdlab/services/auth.dart';
+import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
+import 'package:pnirdlab/providers/theme_provider.dart';
 
 class MainScreenPage extends StatefulWidget {
   const MainScreenPage({super.key});
@@ -16,15 +20,152 @@ class MainScreenPage extends StatefulWidget {
 class _MainScreenPageState extends State<MainScreenPage> {
   int currentIndex = 0;
   final _screens = [
-    const HomePage(),
+    const OptimizedHomePage(),
     const StudiesPage(),
     const EventsPage(),
     const AboutUsPage(),
     const Gamehome(),
   ];
+
+  Future<void> _logout() async {
+    // Show confirmation dialog
+    final bool? shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout == true) {
+      try {
+        await Auth.logout();
+        // Navigate to login screen and clear the navigation stack
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const ChooseAccountTypePage()),
+          (route) => false,
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logout failed: $e'),
+            backgroundColor: Colors.amber,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Drawer menu
+      drawer: Drawer(
+        backgroundColor: Colors.black,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.yellow,
+              ),
+              child: Text(
+                'Pnird Lab',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person, color: Colors.white),
+              title: const Text('Profile', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                // Navigate to profile page
+                // You'll need to get the current user ID here
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.message, color: Colors.white),
+              title: const Text('Messages', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ChatsPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.people, color: Colors.white),
+              title: const Text('Team Members', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AboutUsPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings, color: Colors.white),
+              title: const Text('Settings', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                // Navigate to settings page
+              },
+            ),
+            Consumer<ThemeProvider>(
+              builder: (context, themeProvider, child) {
+                return SwitchListTile(
+                  title: const Text('Dark Mode', style: TextStyle(color: Colors.white)),
+                  subtitle: Text(
+                    themeProvider.isDarkMode ? 'Enabled' : 'Disabled',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  value: themeProvider.isDarkMode,
+                  onChanged: (bool value) {
+                    themeProvider.toggleTheme();
+                  },
+                  activeColor: Colors.yellow,
+                  inactiveThumbColor: Colors.grey,
+                );
+              },
+            ),
+            const Divider(color: Colors.grey),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
+              ),
+              child: ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _logout();
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
       //App Bar widget
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 0, 0, 0),
@@ -32,7 +173,6 @@ class _MainScreenPageState extends State<MainScreenPage> {
         //Logo
         leading: Container(
             margin: const EdgeInsets.all(0),
-            // alignment: Alignment.center,
             child: Image.asset(
               'assets/logos/logophoto_large.png',
               fit: BoxFit.contain,
@@ -55,13 +195,13 @@ class _MainScreenPageState extends State<MainScreenPage> {
           ),
         ),
 
-        //message
+        //message and menu
         actions: [
           IconButton(
               icon: const Icon(
                 Icons.email,
                 color: Color.fromARGB(255, 237, 230, 230),
-                size: 36.0,
+                size: 30.0,
               ),
               onPressed: () {
                 Navigator.push(
@@ -69,6 +209,16 @@ class _MainScreenPageState extends State<MainScreenPage> {
                   MaterialPageRoute(builder: (context) => const ChatsPage()),
                 );
               }),
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(
+                Icons.menu,
+                color: Colors.white,
+                size: 30.0,
+              ),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            ),
+          ),
         ],
       ),
       body: IndexedStack(

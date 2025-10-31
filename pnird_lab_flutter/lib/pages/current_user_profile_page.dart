@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:pnirdlab/pages/settings/settings.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../model/post_model.dart';
 import 'package:pnirdlab/pages/post_detail_page.dart';
+import 'package:pnirdlab/pages/edit_profile_screen.dart';
 import 'package:pnirdlab/pages/create_post_screen.dart';
 import 'package:pnirdlab/pages/chats_page.dart';
+import 'package:pnirdlab/services/auth.dart';
+import 'package:pnirdlab/services/api_service.dart';
+import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
 class ProfilePage extends StatefulWidget {
   final String myuserId;
-  const ProfilePage({super.key, required this.myuserId});
+  ProfilePage({required this.myuserId});
   @override
   _ProfilePageState createState() => _ProfilePageState();
 }
@@ -30,6 +33,47 @@ class _ProfilePageState extends State<ProfilePage> {
     loadUserData();
   }
 
+  Future<void> _logout() async {
+    // Show confirmation dialog
+    final bool? shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout == true) {
+      try {
+        await Auth.logout();
+        // Navigate to login screen and clear the navigation stack
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const ChooseAccountTypePage()),
+          (Route<dynamic> route) => false,
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logout failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   // Load userId from local storage
   Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -40,61 +84,94 @@ class _ProfilePageState extends State<ProfilePage> {
         userId = userId;
         loggedInUserId = userId;
       });
-      print("useridset: $userId");
       // Fetch user details and posts from the backend
       await fetchProfileData(userId!);
       await fetchUserPosts(userId!);
     } else {
-      print("No user ID found!");
+      // Handle case where no user ID is found
     }
   }
 
   // Fetch profile data for the specific user
   Future<void> fetchProfileData(String userId) async {
-    print("fetching profile data for user: $userId");
-    final response = await http.get(
-      Uri.parse('http://localhost:3000/api/users/$firebaseId'),
-      // headers: {
-      //   'Authorization': 'Bearer <token>', // Include token if required
-      // },
-    );
+    try {
+      final response = await http.get(
+        Uri.parse(ApiService.getUserByIdEndpoint(userId)),
+        // headers: {
+        //   'Authorization': 'Bearer <token>', // Include token if required
+        // },
+      );
 
-    if (response.statusCode == 200) {
-      final responseData = json.decode(response.body);
-      print("Profile data: $responseData");
-      setState(() {
-        username =
-            responseData['username']; // Replace with data from API response
-        bio = responseData['bio'];
-        profilepic = responseData['profilePicture'];
-      });
-    } else {
-      throw Exception('Failed to load profile data');
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        setState(() {
+          username = responseData['username'];
+          bio = responseData['bio'];
+          profilepic = responseData['profilePicture'];
+        });
+      } else {
+        // Handle API error
+        throw Exception('Failed to load profile data: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Handle exception
+      throw Exception('Failed to load profile data: $e');
     }
   }
 
   Future<void> fetchUserPosts(String userId) async {
-    final response = await http.get(
-      Uri.parse('http://localhost:3000/api/posts/user/$firebaseId'),
-    );
-    if (response.statusCode == 200) {
-      final responseData = jsonDecode(response.body);
-      print(responseData);
-      setState(() {
-        posts = List<Post>.from(responseData.map((post) => Post.fromJson(post)));
-        postCount = posts.length;
-      });
-    } else {
-      throw Exception("Failed to load user posts");
+    try {
+      final response = await http.get(
+        Uri.parse(ApiService.getUserPostsEndpoint(userId)),
+      );
+      
+      
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        setState(() {
+          posts = List<Post>.from(responseData.map((post) => Post.fromJson(post)));
+          postCount = posts.length;
+        });
+      } else {
+        // Handle API error
+        throw Exception("Failed to load user posts: ${response.statusCode}");
+      }
+    } catch (e) {
+      // Handle exception
+      throw Exception("Failed to load user posts: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Profile")),
+      appBar: AppBar(
+        title: Text("Profile"),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (String value) {
+              if (value == 'logout') {
+                _logout();
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Logout'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
       body: userId == null
-          ? const Center(child: Text("User not logged in."))
+          ? Center(child: Text("User not logged in."))
           : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -105,15 +182,15 @@ class _ProfilePageState extends State<ProfilePage> {
                     backgroundImage:
                         profilepic != null && profilepic!.isNotEmpty
                             ? NetworkImage(profilepic!)
-                            : const AssetImage('assets/images/defaultprofilepic.png')
+                            : AssetImage('assets/images/defaultprofilepic.png')
                                 as ImageProvider,
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
 
                   // Username
                   Text(
                     username ?? "Loading...",
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
 
                   // Short Bio
@@ -125,14 +202,14 @@ class _ProfilePageState extends State<ProfilePage> {
                       style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
 
                   // Post Count
                   Text(
                     postCount == 1 ? "$postCount Post" : "$postCount Posts",
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
 
                   // Buttons
                   Wrap(
@@ -143,19 +220,19 @@ class _ProfilePageState extends State<ProfilePage> {
   onPressed: () {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) =>  Setting(userId: userId!)),
+      MaterialPageRoute(builder: (context) =>  ProfileEditScreen(userId: userId!)),
     );
   },
   style: ElevatedButton.styleFrom(
     backgroundColor: Colors.white,
     foregroundColor: Colors.amber,
-    side: const BorderSide(color: Colors.amber),
+    side: BorderSide(color: Colors.amber),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(8),
     ),
   ),
-  child: const Text(
-    "Settings",
+  child: Text(
+    "Edit Profile",
     style: TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.bold,
@@ -173,12 +250,12 @@ class _ProfilePageState extends State<ProfilePage> {
   style: ElevatedButton.styleFrom(
     backgroundColor: Colors.white,
     foregroundColor: Colors.amber,
-    side: const BorderSide(color: Colors.amber),
+    side: BorderSide(color: Colors.amber),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(8),
     ),
   ),
-  child: const Text(
+  child: Text(
     "Create Post",
     style: TextStyle(
       fontSize: 12,
@@ -191,18 +268,18 @@ class _ProfilePageState extends State<ProfilePage> {
   onPressed: () {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const ChatsPage()),
+      MaterialPageRoute(builder: (context) => ChatsPage()),
     );
   },
   style: ElevatedButton.styleFrom(
     backgroundColor: Colors.white,
     foregroundColor: Colors.amber,
-    side: const BorderSide(color: Colors.amber),
+    side: BorderSide(color: Colors.amber),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(8),
     ),
   ),
-  child: const Text(
+  child: Text(
     "Message",
     style: TextStyle(
       fontSize: 12,
@@ -213,15 +290,15 @@ class _ProfilePageState extends State<ProfilePage> {
 
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
 
                   // Grid View of Posts
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: GridView.builder(
                       shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      physics: NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 3,
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
@@ -229,7 +306,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       itemCount: posts.isNotEmpty ? posts.length : 1,
                       itemBuilder: (context, index) {
                         if (posts.isEmpty) {
-                          return const Center(child: Text("No posts yet."));
+                          return Center(child: Text("No posts yet."));
                         }
                         return GestureDetector(
                           onTap: () {
@@ -248,26 +325,21 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                posts[index].img ?? 'assets/images/defaultprofilepic.png', // Assuming each post contains an image URL
-                                fit: BoxFit
-                                    .cover, // Ensures the image fills the container
-                                loadingBuilder:
-                                    (context, child, loadingProgress) {
-                                  if (loadingProgress == null) {
-                                    return child; // Image loaded
-                                  }
-                                  return const Center(
-                                    child:
-                                        CircularProgressIndicator(), // Show loader while image loads
-                                  );
-                                },
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(Icons.broken_image,
-                                      color:
-                                          Colors.grey); // Handle broken images
-                                },
-                              ),
+                              child: posts[index].img != null && posts[index].img!.isNotEmpty
+                                  ? Image.network(
+                                      posts[index].img!,
+                                      fit: BoxFit.cover,
+                                      loadingBuilder: (context, child, loadingProgress) {
+                                        if (loadingProgress == null) return child;
+                                        return const Center(child: CircularProgressIndicator());
+                                      },
+                                    )
+                                  : Container(
+                                      color: Colors.grey[200],
+                                      child: const Center(
+                                        child: Icon(Icons.image, size: 48, color: Colors.grey),
+                                      ),
+                                    ),
                             ),
                           ),
                         );

@@ -64,29 +64,30 @@ void initState() {
                 horizontal: 16,
               ).copyWith(right: 0),
               child: GestureDetector(
-                onTap: () {
-                  String clickedUserId = widget.post.user.id; //getting the regular id. not firebase id
-                  print("clickedUserId: $clickedUserId");
-
-                  if (loggedInUserId != null && clickedUserId == loggedInUserId
-                   ) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProfilePage(myuserId: clickedUserId), //regular id
-                      ),
-                    );
-                   } 
-                   else {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            PublicProfilePage(userId: clickedUserId),
-                      ),
-                    );
-                  }
-                },
+                onTap: () async {
+  String clickedUserId = widget.post.user.id;
+  
+  // Load the user ID if not already loaded
+  if (loggedInUserId == null) {
+    loggedInUserId = await getLoggedInUserId();
+  }
+  
+  if (loggedInUserId != null && clickedUserId == loggedInUserId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfilePage(myuserId: clickedUserId),
+      ),
+    );
+  } else {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PublicProfilePage(userId: clickedUserId),
+      ),
+    );
+  }
+},
              
                 child: Row(
                   children: [
@@ -156,7 +157,7 @@ void initState() {
   try {
     await likePost(widget.post.id, loggedInUserId!);
   } catch (e) {
-    print("Failed to like post on double tap: $e");
+    // Handle error silently
   }
 }
 
@@ -190,7 +191,7 @@ void initState() {
   try {
     await likePost(widget.post.id, loggedInUserId!);
   } catch (e) {
-    print("Failed to like post: $e");
+    // Handle error silently
     // Revert the like state on failure
     setState(() {
       if (alreadyLiked) {

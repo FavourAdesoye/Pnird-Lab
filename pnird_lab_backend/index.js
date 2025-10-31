@@ -5,6 +5,7 @@ const path = require("path");
 const pdfParse = require("pdf-parse");  
 const { HNSWLib } = require("@langchain/community/vectorstores/hnswlib");
 const { FaissStore } = require("@langchain/community/vectorstores/faiss");
+// Use official Ollama bindings package
 const { OllamaEmbeddings } = require("@langchain/ollama");
 const { Ollama } = require("@langchain/ollama");
 const { MemoryVectorStore } = require("langchain/vectorstores/memory");
@@ -75,7 +76,20 @@ async function setupQA() {
   const indexPath = path.join(__dirname, "pnird_index"); // directory to store FAISS index
 
   // ---- Embeddings ----
-  const embeddings = new OllamaEmbeddings({
+  class SafeOllamaEmbeddings extends OllamaEmbeddings {
+    async embedQuery(text) {
+      const arr = [String(text ?? "")];
+      const vectors = await super.embedDocuments(arr);
+      return vectors[0];
+    }
+    async embedDocuments(texts) {
+      const coerced = (texts || []).map((t) => String(t ?? ""));
+      return await super.embedDocuments(coerced);
+    }
+  }
+
+  const embeddings = new SafeOllamaEmbeddings({
+    baseUrl: process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434",
     model: "nomic-embed-text",
   });
 
@@ -105,13 +119,13 @@ async function setupQA() {
   // ---- LLM ----
   let modelName = "llama3:instruct";
   try {
-    const llmTest = new Ollama({ model: modelName });
+    const llmTest = new Ollama({ baseUrl: process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434", model: modelName });
     await llmTest.invoke("test"); // sanity check
   } catch (err) {
     console.warn(`⚠️ Model ${modelName} not available, falling back to llama3.`);
     modelName = "llama3";
   }
-  const llm = new Ollama({ model: modelName });
+  const llm = new Ollama({ baseUrl: process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434", model: modelName });
 
   // ---- Prompt ----
   const prompt = ChatPromptTemplate.fromTemplate(`
@@ -146,19 +160,25 @@ setupQA().catch(err => {
 // Endpoint
 app.post("/ask", async (req, res) => {
   try {
-    const question = req.body.question;
-    if (!question) {
+    const raw = req.body?.question;
+    if (raw === undefined || raw === null) {
       return res.status(400).json({ answer: "No question provided" });
     }
+    // Coerce to a plain string to satisfy embeddings API requirements
+    const question = typeof raw === "string" ? raw : JSON.stringify(raw);
 
     if (!qa) {
       return res.status(503).json({ answer: "QA system not initialized yet. Try again later." });
     }
 
-    const response = await qa.invoke({ input: question });
-    res.json({ answer: response.answer });
+    // Invoke the QA chain with the question directly
+    const response = await qa.invoke({ input: String(question) });
+    
+    // Return the answer from the response
+    const answer = response.answer || response.text || "I apologize, but I couldn't generate a response.";
+    res.json({ answer: answer });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ answer: "Error processing question" });
+    console.error("Error in /ask endpoint:", err);
+    res.status(500).json({ answer: `Error processing question: ${err.message}` });
   }
 });

@@ -1,158 +1,303 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:flutter/material.dart';
-import 'package:pnirdlab/widgets/user_avatar.dart';
-
-class ChatsPage extends StatelessWidget {
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pnirdlab/pages/message_page.dart';
+import 'package:pnirdlab/pages/notification_page.dart';
+import 'package:pnirdlab/pages/api_test_page.dart';
+class ChatsPage extends StatefulWidget {
   const ChatsPage({super.key});
+
   @override
+  State<ChatsPage> createState() => _ChatsPageState();
+}
+
+class _ChatsPageState extends State<ChatsPage> {
+  late Future<List<dynamic>> _chatUsersFuture;
+  late String userId;
+  bool isAdminUser = false;
+  String? currentUserProfilePicture;
+  int _selectedTabIndex = 0;
+
+  Future<List<dynamic>> fetchChatUsers() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final firebaseId = prefs.getString('firebaseId') ?? '';
+      final mongoUserId = prefs.getString('userId') ?? '';
+      isAdminUser = prefs.getBool('isAdmin') ?? false;
+
+      print('Firebase ID: $firebaseId');
+      print('MongoDB User ID: $mongoUserId');
+
+      if (firebaseId.isEmpty) {
+        throw Exception("User not logged in. Please log in again.");
+      }
+
+      // Use a more flexible API URL - you may need to update this based on your deployment
+      final baseUrl = 'http://10.0.2.2:3000'; // For Android emulator
+      // For iOS simulator use: 'http://localhost:3000'
+      // For production use your actual server URL
+      
+      final url = "$baseUrl/api/messages/chats/$firebaseId";
+      print('Fetching from URL: $url');
+      
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('Parsed data: $data');
+        return data;
+      } else {
+        throw Exception("Failed to load chat users: ${response.statusCode} - ${response.body}");
+      }
+    } catch (e) {
+      print('Error fetching chat users: $e');
+      throw Exception("Network error: $e");
+    }
+  }
+
+  Future<void> fetchCurrentUserProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final mongoUserId = prefs.getString('userId');
+    
+    if (mongoUserId != null) {
+      try {
+        final response = await http.get(
+          Uri.parse("http://localhost:3000/api/users/id/$mongoUserId"),
+        );
+        
+        if (response.statusCode == 200) {
+          final userData = jsonDecode(response.body);
+          setState(() {
+            currentUserProfilePicture = userData['profilePicture'];
+          });
+        }
+      } catch (e) {
+        // Handle error silently
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _chatUsersFuture = fetchChatUsers();
+    fetchCurrentUserProfile();
+  }
+
+ @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.amber,
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              Padding(
-                  padding: const EdgeInsets.only(top: 60, left: 5, right: 20),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            icon: const Icon(
-                              Icons.arrow_back_ios,
-                              color: Colors.white,
-                            )),
-                        UserAvatar(
-                          filename: 'drKeen.jpg',
-                        ),
-                      ]))
-            ],
+      backgroundColor: const Color.fromARGB(255, 11, 11, 11),
+      appBar: AppBar(
+        backgroundColor: Colors.amber,
+        elevation: 0,
+        title: Text("Chats"),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bug_report, color: Colors.black),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ApiTestPage()),
+              );
+            },
+            tooltip: 'Debug API',
           ),
-          Positioned(
-              top: 110,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                padding: const EdgeInsets.only(top: 15, left: 25, right: 25),
-                decoration: BoxDecoration(
-                    color: Color.fromARGB(255, 21, 21, 21),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(40),
-                      topRight: Radius.circular(40),
-                    )),
-                child: Column(children: [
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextButton(
-                          style: ButtonStyle(
-                              backgroundColor:
-                                  WidgetStateProperty.all(Colors.amber),
-                              padding: WidgetStateProperty.all(
-                                  EdgeInsets.only(right: 20, left: 20)),
-                              foregroundColor:
-                                  WidgetStateProperty.all(Colors.white),
-                              shape: WidgetStateProperty.all(
-                                  RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(50.0),
-                                      side: BorderSide(color: Colors.red)))),
-                          onPressed: () {},
-                          child: Text(
-                            "Messages",
-                            style: TextStyle(fontSize: 18),
-                          ),
-                        ),
-                        TextButton(
-                          style: ButtonStyle(
-                              backgroundColor: WidgetStateProperty.all(
-                                  Color.fromARGB(255, 52, 52, 52)),
-                              padding: WidgetStateProperty.all(
-                                  EdgeInsets.only(right: 20, left: 20)),
-                              foregroundColor:
-                                  WidgetStateProperty.all(Colors.amber),
-                              shape: WidgetStateProperty.all(
-                                  RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(50.0),
-                              ))),
-                          onPressed: () {},
-                          child: Text(
-                            "Notifications",
-                            style: TextStyle(fontSize: 18),
-                          ),
-                        )
-                      ]),
-                  Expanded(
-                      child: ListView(
-                    padding: EdgeInsets.only(left: 10, top: 25),
-                    children: [
-                      Container(
-                          padding: EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(255, 52, 52, 52),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  const UserAvatar(filename: 'drKeen.jpg'),
-                                  SizedBox(
-                                    width: 15,
-                                  ),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: const [
-                                      Text(
-                                        "Alexis Morris",
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: 15),
-                                      ),
-                                      SizedBox(
-                                        height: 5,
-                                      ),
-                                      Text(
-                                        "Hello Dr. keen",
-                                        style: TextStyle(
-                                            color: Color.fromARGB(
-                                                255, 169, 169, 169)),
-                                      )
-                                    ],
-                                  )
-                                ],
-                              ),
-                              Column(children: const [
-                                Text(
-                                  '16:35',
-                                  style: TextStyle(fontSize: 10),
-                                ),
-                                SizedBox(
-                                  height: 15,
-                                ),
-                                CircleAvatar(
-                                  radius: 7,
-                                  backgroundColor: Colors.amber,
-                                  child: Text(
-                                    '1',
-                                    style: TextStyle(
-                                        fontSize: 10, color: Colors.white),
-                                  ),
-                                )
-                              ])
-                            ],
-                          ))
-                    ],
-                  ))
-                ]),
-              ))
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: CircleAvatar(
+              radius: 20,
+              backgroundImage: (currentUserProfilePicture != null && currentUserProfilePicture!.isNotEmpty)
+                  ? NetworkImage(currentUserProfilePicture!)
+                  : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
+              onBackgroundImageError: (exception, stackTrace) {
+                // Handle image loading error silently
+              },
+            ),
+          )
         ],
       ),
+      body: Container(
+        decoration: const BoxDecoration(
+          color: Colors.black,
+        ),
+        child: Column(
+          children: [
+            // Tabs
+            Container(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _tabButton("Messages", 0),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _tabButton("Notifications", 1),
+                  ),
+                ],
+              ),
+            ),
+            // Content based on selected tab
+            Expanded(
+              child: _selectedTabIndex == 0 ? _buildMessagesTab() : _buildNotificationsTab(),
+            ),
+          ],
+        ),
+      ),
     );
+  }
+
+  Widget _tabButton(String label, int tabIndex) {
+    bool isActive = _selectedTabIndex == tabIndex;
+    return TextButton(
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.all(
+          isActive ? Colors.yellow : Colors.grey[800],
+        ),
+        padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
+        foregroundColor: WidgetStateProperty.all(
+          isActive ? Colors.black : Colors.white,
+        ),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        ),
+      ),
+      onPressed: () {
+        setState(() {
+          _selectedTabIndex = tabIndex;
+        });
+      },
+      child: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  Widget _buildMessagesTab() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: FutureBuilder<List<dynamic>>(
+        future: _chatUsersFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.yellow),
+              ),
+            );
+          } else if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, color: Colors.red, size: 64),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Error: ${snapshot.error}",
+                    style: const TextStyle(color: Colors.red, fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _chatUsersFuture = fetchChatUsers();
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.yellow,
+                      foregroundColor: Colors.black,
+                    ),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.chat_bubble_outline, color: Colors.grey, size: 64),
+                  SizedBox(height: 16),
+                  Text(
+                    "No chats yet",
+                    style: TextStyle(color: Colors.grey, fontSize: 18),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    "Start a conversation with someone!",
+                    style: TextStyle(color: Colors.grey, fontSize: 14),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final chatUsers = snapshot.data!;
+          return ListView.builder(
+            itemCount: chatUsers.length,
+            itemBuilder: (context, index) {
+              final user = chatUsers[index];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[900],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.yellow.withOpacity(0.3)),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16),
+                  leading: CircleAvatar(
+                    radius: 25,
+                    backgroundImage: (user['profilePicture'] != null && user['profilePicture'] != '')
+                        ? NetworkImage(user['profilePicture'])
+                        : const AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
+                    onBackgroundImageError: (exception, stackTrace) {
+                      // Handle image loading error silently
+                    },
+                  ),
+                  title: Text(
+                    user['username'] ?? 'Unknown User',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    "Tap to message",
+                    style: TextStyle(color: Colors.grey[400]),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.yellow, size: 16),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MessagePage(
+                          recipientId: user['_id'],
+                          recipientName: user['username'],
+                          isAdmin: isAdminUser,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildNotificationsTab() {
+    return NotificationsPage();
   }
 }

@@ -1,25 +1,13 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:pnirdlab/pages/about_us.dart';
 
-class Chathome extends StatelessWidget {
+class Chathome extends StatefulWidget {
   const Chathome({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: ChatPage(),
-    );
-  }
-}
-
-class ChatPage extends StatefulWidget {
-  const ChatPage({super.key});
-
-  @override
-  State<ChatPage> createState() => _ChatPageState();
+  State<Chathome> createState() => _ChatPageState();
 }
 
 class Message {
@@ -34,7 +22,7 @@ class Message {
   });
 }
 
-class _ChatPageState extends State<ChatPage> {
+class _ChatPageState extends State<Chathome> {
   final List<Message> _messages = [];
   final TextEditingController _textController = TextEditingController();
   bool _isLoading = false;
@@ -52,10 +40,7 @@ class _ChatPageState extends State<ChatPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const AboutUsPage()),
-            );
+            Navigator.pop(context);
           },
         ),
       ),
@@ -150,8 +135,23 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> _getChatResponse(String userMessage) async {
     try {
+      // Use the correct base URL depending on the platform
+      String baseUrl;
+      if (kIsWeb) {
+        baseUrl = 'http://localhost:3000';
+      } else if (defaultTargetPlatform == TargetPlatform.android) {
+        // Android emulator uses 10.0.2.2 to reach host machine's localhost
+        baseUrl = 'http://10.0.2.2:3000';
+      } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+        // iOS simulator can use localhost
+        baseUrl = 'http://localhost:3000';
+      } else {
+        // Desktop or other platforms
+        baseUrl = 'http://localhost:3000';
+      }
+      
       final response = await http.post(
-        Uri.parse('http://localhost:3000/chat'),
+        Uri.parse('$baseUrl/ask'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'question': userMessage}),
       );
@@ -160,33 +160,49 @@ class _ChatPageState extends State<ChatPage> {
         final data = jsonDecode(response.body);
         final botMessage = data['answer'] ?? 'Sorry, I could not process your request.';
         
-        setState(() {
-          _messages.add(Message(
-            text: botMessage,
-            isUser: false,
-            timestamp: DateTime.now(),
-          ));
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _messages.add(Message(
+              text: botMessage,
+              isUser: false,
+              timestamp: DateTime.now(),
+            ));
+            _isLoading = false;
+          });
+        }
       } else {
+        if (mounted) {
+          setState(() {
+            _messages.add(Message(
+              text: 'Sorry, I encountered an error. Please try again.',
+              isUser: false,
+              timestamp: DateTime.now(),
+            ));
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      print('Chatbot error: $e');
+      if (mounted) {
         setState(() {
+          String errorMessage;
+          if (e.toString().contains('timeout')) {
+            errorMessage = 'Request timed out. Please check your connection and try again.';
+          } else if (e.toString().contains('SocketException')) {
+            errorMessage = 'Cannot connect to server. Make sure the backend is running on port 3000.';
+          } else {
+            errorMessage = 'Sorry, I encountered an error: ${e.toString()}';
+          }
+          
           _messages.add(Message(
-            text: 'Sorry, I encountered an error. Please try again.',
+            text: errorMessage,
             isUser: false,
             timestamp: DateTime.now(),
           ));
           _isLoading = false;
         });
       }
-    } catch (e) {
-      setState(() {
-        _messages.add(Message(
-          text: 'Sorry, I encountered an error. Please try again.',
-          isUser: false,
-          timestamp: DateTime.now(),
-        ));
-        _isLoading = false;
-      });
     }
   }
 }
