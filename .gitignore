@@ -22,7 +22,6 @@ pnird_lab_backend/uploads/
 
 # IDE
 .vscode/
-<<<<<<< HEAD
 .idea/
 
 # OS
@@ -58,7 +57,8 @@ jspm_packages/
 
 # Yarn Integrity file
 .yarn-integrity
-=======
-pnird_lab_flutter/windows
-node_modules
->>>>>>> f5423575 (finalized game and chatbot features)
+
+# Additional ignores
+pnird_lab_flutter/windows/
+node_modules/
+*.zip
