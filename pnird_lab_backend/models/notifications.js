@@ -8,6 +8,8 @@ const NotificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
+    // Note: "study" and "event" are deprecated - use BroadcastNotification instead
+    // Kept here for backward compatibility with old notifications in database
     enum: ["like", "comment", "new_post", "message", "study", "event"],
     required: true,
   },
@@ -30,5 +32,10 @@ const NotificationSchema = new mongoose.Schema({
   },
   
 },{timestamps: true});
+
+// Indexes for performance
+NotificationSchema.index({ userId: 1, createdAt: -1 });
+NotificationSchema.index({ userId: 1, isRead: 1 });
+NotificationSchema.index({ type: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Notification", NotificationSchema);

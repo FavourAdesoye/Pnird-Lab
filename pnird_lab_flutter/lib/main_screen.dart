@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pnirdlab/pages/chats_page.dart';
 import 'package:pnirdlab/pages/events_page.dart';
 import 'package:pnirdlab/pages/about_us.dart';
 import 'package:pnirdlab/pages/games/gamehome.dart';
 import 'package:pnirdlab/pages/optimized_home.dart';
 import 'package:pnirdlab/pages/studies.dart';
+import 'package:pnirdlab/pages/current_user_profile_page.dart';
 import 'package:pnirdlab/services/auth.dart';
 import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
 import 'package:pnirdlab/providers/theme_provider.dart';
@@ -70,15 +72,19 @@ class _MainScreenPageState extends State<MainScreenPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final iconColor = isDark ? Colors.white : Colors.black87;
+    
     return Scaffold(
       // Drawer menu
       drawer: Drawer(
-        backgroundColor: Colors.black,
+        backgroundColor: Theme.of(context).drawerTheme.backgroundColor,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
+            DrawerHeader(
+              decoration: const BoxDecoration(
                 color: Colors.yellow,
               ),
               child: Text(
@@ -91,17 +97,26 @@ class _MainScreenPageState extends State<MainScreenPage> {
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.person, color: Colors.white),
-              title: const Text('Profile', style: TextStyle(color: Colors.white)),
-              onTap: () {
+              leading: Icon(Icons.person, color: iconColor),
+              title: Text('Profile', style: TextStyle(color: textColor)),
+              onTap: () async {
                 Navigator.pop(context);
-                // Navigate to profile page
-                // You'll need to get the current user ID here
+                // Navigate to current user's profile
+                final prefs = await SharedPreferences.getInstance();
+                final mongoUserId = prefs.getString('userId');
+                if (mongoUserId != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProfilePage(myuserId: mongoUserId),
+                    ),
+                  );
+                }
               },
             ),
             ListTile(
-              leading: const Icon(Icons.message, color: Colors.white),
-              title: const Text('Messages', style: TextStyle(color: Colors.white)),
+              leading: Icon(Icons.message, color: iconColor),
+              title: Text('Messages', style: TextStyle(color: textColor)),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -111,8 +126,8 @@ class _MainScreenPageState extends State<MainScreenPage> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.people, color: Colors.white),
-              title: const Text('Team Members', style: TextStyle(color: Colors.white)),
+              leading: Icon(Icons.people, color: iconColor),
+              title: Text('Team Members', style: TextStyle(color: textColor)),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -122,8 +137,8 @@ class _MainScreenPageState extends State<MainScreenPage> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.settings, color: Colors.white),
-              title: const Text('Settings', style: TextStyle(color: Colors.white)),
+              leading: Icon(Icons.settings, color: iconColor),
+              title: Text('Settings', style: TextStyle(color: textColor)),
               onTap: () {
                 Navigator.pop(context);
                 // Navigate to settings page
@@ -132,10 +147,10 @@ class _MainScreenPageState extends State<MainScreenPage> {
             Consumer<ThemeProvider>(
               builder: (context, themeProvider, child) {
                 return SwitchListTile(
-                  title: const Text('Dark Mode', style: TextStyle(color: Colors.white)),
+                  title: Text('Dark Mode', style: TextStyle(color: textColor)),
                   subtitle: Text(
                     themeProvider.isDarkMode ? 'Enabled' : 'Disabled',
-                    style: const TextStyle(color: Colors.grey),
+                    style: TextStyle(color: isDark ? Colors.grey : Colors.grey[600]),
                   ),
                   value: themeProvider.isDarkMode,
                   onChanged: (bool value) {
@@ -146,7 +161,7 @@ class _MainScreenPageState extends State<MainScreenPage> {
                 );
               },
             ),
-            const Divider(color: Colors.grey),
+            Divider(color: isDark ? Colors.grey : Colors.grey[300]),
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
@@ -168,7 +183,8 @@ class _MainScreenPageState extends State<MainScreenPage> {
       ),
       //App Bar widget
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         toolbarHeight: 100,
         //Logo
         leading: Container(
@@ -183,24 +199,37 @@ class _MainScreenPageState extends State<MainScreenPage> {
           child: TextField(
             decoration: InputDecoration(
               hintText: "Search...",
-              hintStyle: const TextStyle(color: Colors.white),
-              prefixIcon: const Icon(Icons.search, color: Colors.white),
+              hintStyle: TextStyle(
+                color: isDark ? Colors.white70 : Colors.grey[600],
+              ),
+              prefixIcon: Icon(
+                Icons.search,
+                color: isDark ? Colors.white70 : Colors.grey[600],
+              ),
               enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25),
-                  borderSide:
-                      const BorderSide(color: Colors.yellow, width: 2.0)),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.yellow : Colors.black87,
+                    width: 2.0,
+                  )),
+              filled: true,
+              fillColor: isDark ? Colors.grey[900] : Colors.white,
               contentPadding: const EdgeInsets.symmetric(vertical: 0),
             ),
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+            ),
           ),
         ),
 
         //message and menu
         actions: [
           IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.email,
-                color: Color.fromARGB(255, 237, 230, 230),
+                color: isDark 
+                  ? const Color.fromARGB(255, 237, 230, 230)
+                  : Colors.black87,
                 size: 30.0,
               ),
               onPressed: () {
@@ -211,9 +240,9 @@ class _MainScreenPageState extends State<MainScreenPage> {
               }),
           Builder(
             builder: (context) => IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.menu,
-                color: Colors.white,
+                color: isDark ? Colors.white : Colors.black87,
                 size: 30.0,
               ),
               onPressed: () => Scaffold.of(context).openDrawer(),
@@ -230,9 +259,9 @@ class _MainScreenPageState extends State<MainScreenPage> {
         type: BottomNavigationBarType.fixed,
         currentIndex: currentIndex,
         onTap: (index) => setState(() => currentIndex = index),
-        backgroundColor: Colors.black,
-        selectedItemColor: Colors.yellow,
-        unselectedItemColor: Colors.white,
+        backgroundColor: Theme.of(context).bottomNavigationBarTheme.backgroundColor,
+        selectedItemColor: Theme.of(context).bottomNavigationBarTheme.selectedItemColor,
+        unselectedItemColor: Theme.of(context).bottomNavigationBarTheme.unselectedItemColor,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(

@@ -21,7 +21,7 @@ class EventDetailPage extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.black,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -45,7 +45,7 @@ class EventDetailPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              "Event Date: ${formattedDateTime(DateTime.parse(event["dateofevent"]))}",
+              "Event Date: ${formattedDateTime(DateTime.parse(event["dateofevent"]).toLocal())}",
               style: const TextStyle(
                 fontSize: 16,
                 color: Color.fromARGB(255, 255, 255, 255),

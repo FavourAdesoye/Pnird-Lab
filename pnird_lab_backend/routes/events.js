@@ -2,6 +2,8 @@ const router = require("express").Router();
 const EventsModel = require("../models/events");
 const cloudinary = require("../utils/cloudinary");
 const upload = require("../utils/multer");
+const BroadcastNotification = require("../models/broadcast_notifications");
+const User = require("../models/User");
 
 //create a new event with an image upload
 router.post("/createevent", upload.single("image"), async (req, res) => {
@@ -44,6 +46,44 @@ router.post("/createevent", upload.single("image"), async (req, res) => {
   
       // Save to database
       const savedEvent = await newEvent.save();
+      
+      // Get creator info for broadcast - try to get from request or find a staff user
+      let creatorId = req.body.userId || req.body.creatorId;
+      if (!creatorId) {
+        // Try to find a staff user to use as sender
+        const staffUser = await User.findOne({ role: "staff" });
+        creatorId = staffUser ? staffUser._id : null;
+      }
+      
+      // Create ONE broadcast notification instead of N individual notifications
+      try {
+        const broadcast = new BroadcastNotification({
+          type: "event",
+          referenceId: savedEvent._id,
+          title: titlepost,
+          message: `A new event "${titlepost}" has been posted.`,
+          senderId: creatorId || undefined,
+        });
+        await broadcast.save();
+        
+        // Emit Socket.IO broadcast to all connected users
+        const io = req.app.get('io');
+        if (io) {
+          io.emit("new_broadcast", {
+            _id: broadcast._id.toString(),
+            type: "event",
+            referenceId: savedEvent._id.toString(),
+            title: titlepost,
+            message: `A new event "${titlepost}" has been posted.`,
+            senderId: creatorId ? creatorId.toString() : null,
+            createdAt: broadcast.createdAt ? new Date(broadcast.createdAt).toISOString() : new Date().toISOString(),
+          });
+        }
+      } catch (broadcastError) {
+        console.error("Error creating event broadcast:", broadcastError);
+        // Don't fail the request if broadcast fails
+      }
+      
       res.status(201).json(savedEvent);
     } catch (err) {
       console.error(err);

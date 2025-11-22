@@ -30,7 +30,7 @@ class Reply {
       username: json['username'],
       comment: json['comment'],
       profilePicture: profilePicture,
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: DateTime.parse(json['createdAt']).toLocal(),
     );
   }
 }
@@ -79,7 +79,7 @@ class Comment {
       username: json['username'],
       comment: json['comment'],
       profilePicture: profilePicture,
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: DateTime.parse(json['createdAt']).toLocal(),
       replies: replies,
     );
   }

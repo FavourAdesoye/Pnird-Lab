@@ -215,13 +215,14 @@ class Auth {
     return prefs.getBool('is_logged_in') ?? false;
   }
 
-  static Future<void> saveLoginState(String userId, String username, String role, String profilePicture) async {
+  static Future<void> saveLoginState(String userId, String username, String role, String profilePicture, String firebaseUID) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_logged_in', true);
     await prefs.setString('userId', userId);
     await prefs.setString('username', username);
     await prefs.setString('role', role);
     await prefs.setString('profile_picture', profilePicture);
+    await prefs.setString('firebaseId', firebaseUID);
   }
 
   static Future<Map<String, String?>> getStoredUserData() async {

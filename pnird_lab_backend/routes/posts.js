@@ -3,6 +3,7 @@ const Post = require("../models/Post");
 const cloudinary = require("../utils/cloudinary");
 const upload = require("../utils/multer");
 const User = require("../models/User");
+const Notification = require("../models/notifications");
 //create a post with an image upload
 
 router.post('/upload', upload.single('image'), async (req, res) => {
@@ -49,15 +50,54 @@ router.post('/upload', upload.single('image'), async (req, res) => {
 //like a post / dislike 
 router.put("/:id/like", async(req,res)=>{
     try{
-        const post = await Post.findById(req.params.id);
-        if (!post.likes.includes(req.body.userId)){
-            await post.updateOne({$push:{likes:req.body.userId}});
+        const post = await Post.findById(req.params.id).populate('userId');
+        const likerId = req.body.userId;
+        const postAuthorId = post.userId._id || post.userId;
+        
+        if (!post.likes.includes(likerId)){
+            await post.updateOne({$push:{likes:likerId}});
+            
+            // Create notification for post author (don't notify if user likes their own post)
+            if (postAuthorId.toString() !== likerId) {
+                const liker = await User.findById(likerId);
+                const likerName = liker ? liker.username : "Someone";
+                
+                const notif = new Notification({
+                    userId: postAuthorId,
+                    type: "like",
+                    senderId: likerId,
+                    message: `${likerName} liked your post.`,
+                    referenceId: post._id,
+                });
+                await notif.save();
+                
+                // Emit Socket.IO notification if io is available
+                const io = req.app.get('io');
+                if (io) {
+                    const connectedUsers = req.app.get('connectedUsers');
+                    const authorSocketId = connectedUsers ? connectedUsers.get(postAuthorId.toString()) : null;
+                    if (authorSocketId) {
+                        io.to(authorSocketId).emit("new_notification", {
+                            _id: notif._id.toString(),
+                            userId: postAuthorId.toString(),
+                            type: "like",
+                            senderId: likerId.toString(),
+                            message: `${likerName} liked your post.`,
+                            referenceId: post._id.toString(),
+                            isRead: false,
+                            createdAt: notif.createdAt ? new Date(notif.createdAt).toISOString() : new Date().toISOString(),
+                        });
+                    }
+                }
+            }
+            
             res.status(200).json("The post has been liked")
         }else{
-            await post.updateOne({$pull:{likes:req.body.userId}});
+            await post.updateOne({$pull:{likes:likerId}});
             res.status(200).json("The post has been disliked");
         }
     }catch(err){
+        console.error("Error in like route:", err);
         res.status(500).json(err);
     }
 });
@@ -123,8 +163,5 @@ router.get("/user/id/:id", async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 });
-
-module.exports = router;
-
 
 module.exports = router;

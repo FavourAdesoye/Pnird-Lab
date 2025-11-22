@@ -8,20 +8,20 @@ const Notification = require("../models/notifications");
 // Create a new message
 router.post("/", async (req, res) => {
   try {
-    const senderId = await User.findById(req.body.senderId);
-    const recipientId = await User.findById(req.body.recipientId);
+    const senderId = req.body.senderId;
+    const recipientId = req.body.recipientId;
     const message = req.body.message;
-    // const { senderId, recipientId, text } = req.body;
+    
     if (senderId === recipientId) {
         return res.status(403).json({ message: "Users cannot message themselves." });
     }
 
     const newMessage = new Message({ senderId, recipientId, message });
     const saved = await newMessage.save();
-    const sender = await User.findOne(senderId);
-    print("Sender ID:", senderId);
-    const senderName = sender.username;
-    print("Sender Name:", senderName);
+    const sender = await User.findById(senderId);
+    console.log("Sender ID:", senderId);
+    const senderName = sender ? sender.username : "Unknown";
+    console.log("Sender Name:", senderName);
     // Notify the recipient
 
         const notif = new Notification({
@@ -38,22 +38,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-//Get all the messages the user has snet
-router.get("/:userId", async (req, res) => {
-  try {
-    const messages = await Message.find({
-      $or: [
-        { senderId: req.params.userId },
-        { recipientId: req.params.userId }
-      ]
-    }).sort({ createdAt: 1 });
-    res.json(messages);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get unique chat users for a user
+// Get unique chat users for a user (MUST be before /:userId route)
 router.get("/chats/:firebaseUID", async (req, res) => {
     try {
       // Step 1: Find the actual user from Firebase UID
@@ -86,6 +71,20 @@ router.get("/chats/:firebaseUID", async (req, res) => {
       res.status(500).json({ error: err.message });
     }
   });
-  
+
+//Get all the messages the user has sent (MUST be after /chats/:firebaseUID route)
+router.get("/:userId", async (req, res) => {
+  try {
+    const messages = await Message.find({
+      $or: [
+        { senderId: req.params.userId },
+        { recipientId: req.params.userId }
+      ]
+    }).sort({ timestamp: 1 }); // Sort by timestamp (oldest first)
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
   
 module.exports = router;

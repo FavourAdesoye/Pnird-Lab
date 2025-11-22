@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/auth.dart';
 import '../../widgets/enhanced_text_form_field.dart';
 import '../../widgets/auth_button.dart';
@@ -30,12 +31,16 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
         final data = result.data!;
         final role = data['role'] as String;
         
+        // Get Firebase UID from current user
+        final firebaseUID = FirebaseAuth.instance.currentUser?.uid ?? '';
+        
         // Save login state
         await Auth.saveLoginState(
           data['userId'] as String,
           data['username'] as String,
           role,
           data['profilePicture'] as String? ?? '',
+          firebaseUID,
         );
 
         // Redirect based on user role

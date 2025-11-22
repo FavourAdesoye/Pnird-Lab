@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pnirdlab/pages/message_page.dart';
 import 'package:pnirdlab/pages/notification_page.dart';
 import 'package:pnirdlab/pages/api_test_page.dart';
+import 'package:pnirdlab/pages/current_user_profile_page.dart';
+import 'package:pnirdlab/services/api_service.dart';
 class ChatsPage extends StatefulWidget {
   const ChatsPage({super.key});
 
@@ -22,9 +25,20 @@ class _ChatsPageState extends State<ChatsPage> {
   Future<List<dynamic>> fetchChatUsers() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final firebaseId = prefs.getString('firebaseId') ?? '';
+      String firebaseId = prefs.getString('firebaseId') ?? '';
       final mongoUserId = prefs.getString('userId') ?? '';
       isAdminUser = prefs.getBool('isAdmin') ?? false;
+
+      // Fallback: Get firebaseId from Firebase Auth if not stored
+      if (firebaseId.isEmpty) {
+        final currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser != null) {
+          firebaseId = currentUser.uid;
+          // Save it for future use
+          await prefs.setString('firebaseId', firebaseId);
+          print('Retrieved Firebase ID from Firebase Auth: $firebaseId');
+        }
+      }
 
       print('Firebase ID: $firebaseId');
       print('MongoDB User ID: $mongoUserId');
@@ -33,17 +47,13 @@ class _ChatsPageState extends State<ChatsPage> {
         throw Exception("User not logged in. Please log in again.");
       }
 
-      // Use a more flexible API URL - you may need to update this based on your deployment
-      final baseUrl = 'http://10.0.2.2:3000'; // For Android emulator
-      // For iOS simulator use: 'http://localhost:3000'
-      // For production use your actual server URL
-      
-      final url = "$baseUrl/api/messages/chats/$firebaseId";
+      // Use centralized API service for consistent platform handling
+      final url = "${ApiService.baseUrl}/messages/chats/$firebaseId";
       print('Fetching from URL: $url');
       
       final response = await http.get(
         Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
+        headers: ApiService.headers,
       );
 
       print('Response status: ${response.statusCode}');
@@ -53,6 +63,10 @@ class _ChatsPageState extends State<ChatsPage> {
         final data = jsonDecode(response.body);
         print('Parsed data: $data');
         return data;
+      } else if (response.statusCode == 404) {
+        // User not found in database - return empty list instead of error
+        print('User not found in database, returning empty chat list');
+        return [];
       } else {
         throw Exception("Failed to load chat users: ${response.statusCode} - ${response.body}");
       }
@@ -69,7 +83,7 @@ class _ChatsPageState extends State<ChatsPage> {
     if (mongoUserId != null) {
       try {
         final response = await http.get(
-          Uri.parse("http://localhost:3000/api/users/id/$mongoUserId"),
+          Uri.parse("${ApiService.baseUrl}/users/id/$mongoUserId"),
         );
         
         if (response.statusCode == 200) {
@@ -93,19 +107,20 @@ class _ChatsPageState extends State<ChatsPage> {
 
  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 11, 11, 11),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.amber,
+        backgroundColor: isDark ? Colors.amber : Colors.amber,
         elevation: 0,
-        title: Text("Chats"),
+        title: Text("Chats", style: TextStyle(color: isDark ? Colors.black : Colors.black)),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Colors.black),
+          icon: Icon(Icons.arrow_back_ios, color: isDark ? Colors.black : Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.bug_report, color: Colors.black),
+            icon: Icon(Icons.bug_report, color: isDark ? Colors.black : Colors.black),
             onPressed: () {
               Navigator.push(
                 context,
@@ -116,21 +131,36 @@ class _ChatsPageState extends State<ChatsPage> {
           ),
           Padding(
             padding: const EdgeInsets.only(right: 12.0),
-            child: CircleAvatar(
-              radius: 20,
-              backgroundImage: (currentUserProfilePicture != null && currentUserProfilePicture!.isNotEmpty)
-                  ? NetworkImage(currentUserProfilePicture!)
-                  : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
-              onBackgroundImageError: (exception, stackTrace) {
-                // Handle image loading error silently
+            child: GestureDetector(
+              onTap: () async {
+                // Navigate to current user's profile
+                final prefs = await SharedPreferences.getInstance();
+                final mongoUserId = prefs.getString('userId');
+                if (mongoUserId != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProfilePage(myuserId: mongoUserId),
+                    ),
+                  );
+                }
               },
+              child: CircleAvatar(
+                radius: 20,
+                backgroundImage: (currentUserProfilePicture != null && currentUserProfilePicture!.isNotEmpty)
+                    ? NetworkImage(currentUserProfilePicture!)
+                    : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
+                onBackgroundImageError: (exception, stackTrace) {
+                  // Handle image loading error silently
+                },
+              ),
             ),
           )
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          color: Colors.black,
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
         ),
         child: Column(
           children: [
@@ -160,15 +190,20 @@ class _ChatsPageState extends State<ChatsPage> {
   }
 
   Widget _tabButton(String label, int tabIndex) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     bool isActive = _selectedTabIndex == tabIndex;
     return TextButton(
       style: ButtonStyle(
         backgroundColor: WidgetStateProperty.all(
-          isActive ? Colors.yellow : Colors.grey[800],
+          isActive 
+            ? Colors.yellow 
+            : (isDark ? Colors.grey[800] : Colors.grey[300]),
         ),
         padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
         foregroundColor: WidgetStateProperty.all(
-          isActive ? Colors.black : Colors.white,
+          isActive 
+            ? Colors.black 
+            : (isDark ? Colors.white : Colors.black87),
         ),
         shape: WidgetStateProperty.all(
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
@@ -249,12 +284,23 @@ class _ChatsPageState extends State<ChatsPage> {
             itemCount: chatUsers.length,
             itemBuilder: (context, index) {
               final user = chatUsers[index];
+              final isDark = Theme.of(context).brightness == Brightness.dark;
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
-                  color: Colors.grey[900],
+                  color: isDark ? Colors.grey[900] : Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.yellow.withOpacity(0.3)),
+                  border: Border.all(
+                    color: Colors.yellow.withValues(alpha: isDark ? 0.3 : 0.5),
+                    width: isDark ? 1 : 1.5,
+                  ),
+                  boxShadow: isDark ? null : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
@@ -269,13 +315,22 @@ class _ChatsPageState extends State<ChatsPage> {
                   ),
                   title: Text(
                     user['username'] ?? 'Unknown User',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   subtitle: Text(
                     "Tap to message",
-                    style: TextStyle(color: Colors.grey[400]),
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
                   ),
-                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.yellow, size: 16),
+                  trailing: Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.yellow,
+                    size: 16,
+                  ),
                   onTap: () {
                     Navigator.push(
                       context,

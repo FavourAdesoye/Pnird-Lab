@@ -18,7 +18,7 @@ class OptimizedPostCard extends StatefulWidget {
 }
 
 String formattedDateTime(DateTime dateTime) {
-  return DateFormat('yyyy-MM-dd HH:mm a').format(dateTime);
+  return DateFormat('yyyy-MM-dd hh:mm a').format(dateTime);
 }
 
 class _OptimizedPostCardState extends State<OptimizedPostCard> {

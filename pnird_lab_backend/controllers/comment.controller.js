@@ -3,6 +3,7 @@ const Comment = require("../models/comment.js")
 const User = require("../models/User");
 const Post = require("../models/Post");
 const Study = require("../models/studies.js");
+const Notification = require("../models/notifications");
 
 const createComment = async (req, res) => {
     const { entityId, entityType } = req.params;
@@ -43,6 +44,47 @@ const createComment = async (req, res) => {
         if (entityType === "post") {
             entity.comments.push(createdComment._id);
             await entity.save();
+            
+            // Create notification for post author (don't notify if user comments on their own post)
+            const populatedPost = await Post.findById(entityId).populate('userId');
+            const postAuthorId = populatedPost.userId._id || populatedPost.userId;
+            
+            if (postAuthorId.toString() !== user._id.toString()) {
+                const commenterName = user.username || "Someone";
+                
+                const notif = new Notification({
+                    userId: postAuthorId,
+                    type: "comment",
+                    senderId: user._id,
+                    message: `${commenterName} commented on your post.`,
+                    referenceId: entityId,
+                });
+                await notif.save();
+                
+                // Emit Socket.IO notification
+                try {
+                    const io = req.app ? req.app.get('io') : null;
+                    if (io) {
+                        const connectedUsers = req.app.get('connectedUsers');
+                        const authorSocketId = connectedUsers ? connectedUsers.get(postAuthorId.toString()) : null;
+                        if (authorSocketId) {
+                            io.to(authorSocketId).emit("new_notification", {
+                                _id: notif._id.toString(),
+                                userId: postAuthorId.toString(),
+                                type: "comment",
+                                senderId: user._id.toString(),
+                                message: `${commenterName} commented on your post.`,
+                                referenceId: entityId.toString(),
+                                isRead: false,
+                                createdAt: notif.createdAt ? new Date(notif.createdAt).toISOString() : new Date().toISOString(),
+                            });
+                        }
+                    }
+                } catch (socketError) {
+                    console.error("Error emitting notification:", socketError);
+                    // Don't fail the request if Socket.IO fails
+                }
+            }
         } else if (entityType === "study") {
             entity.comments.push(createdComment._id);
             await entity.save();
