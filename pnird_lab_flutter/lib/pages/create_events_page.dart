@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pnirdlab/pages/events_page.dart';
+import 'package:intl/intl.dart';
 
 
 class CreateEventPage extends StatefulWidget {
@@ -15,15 +16,85 @@ class CreateEventPage extends StatefulWidget {
 
 class _CreateEventPageState extends State<CreateEventPage> {
   final _formKey = GlobalKey<FormState>();
+  final _dateController = TextEditingController();
+  final _timeController = TextEditingController();
   String _title = '';
   String _description = '';
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
   String _dateOfEvent = '';
   String _timeOfEvent = '';
-  String _month = '';
   String _location = '';
   String? _uploadedImageUrl;
   String? _errorMessage;
   bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _dateController.dispose();
+    _timeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).colorScheme.primary, // Yellow
+              onPrimary: Theme.of(context).colorScheme.onPrimary, // Black
+              surface: Theme.of(context).colorScheme.surface,
+              onSurface: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _dateController.text = DateFormat('yyyy-MM-dd').format(picked);
+        _dateOfEvent = _dateController.text;
+      });
+    }
+  }
+
+  Future<void> _selectTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).colorScheme.primary, // Yellow
+              onPrimary: Theme.of(context).colorScheme.onPrimary, // Black
+              surface: Theme.of(context).colorScheme.surface,
+              onSurface: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedTime) {
+      setState(() {
+        _selectedTime = picked;
+        // Format time in 12-hour format (e.g., "4:00 PM")
+        final hour = picked.hourOfPeriod == 0 ? 12 : picked.hourOfPeriod;
+        final minute = picked.minute.toString().padLeft(2, '0');
+        final period = picked.period == DayPeriod.am ? 'AM' : 'PM';
+        _timeController.text = '$hour:$minute $period';
+        _timeOfEvent = _timeController.text;
+      });
+    }
+  }
 
   Future<void> _pickImageAndUpload() async {
     setState(() => _isLoading = true);
@@ -96,7 +167,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
           'image_url': _uploadedImageUrl,
           'dateofevent': _dateOfEvent,
           'timeofevent': _timeOfEvent,
-          'month': _month,
+          // Month will be auto-derived from dateofevent on the backend
           'location': _location,
         }),
       );
@@ -142,18 +213,56 @@ class _CreateEventPageState extends State<CreateEventPage> {
                         decoration: const InputDecoration(labelText: 'Description'),
                         onSaved: (value) => _description = value!,
                       ),
-                      TextFormField( //Future improvement: Use a date picker
-                        decoration: const InputDecoration(labelText: 'Date (e.g. 2024-04-01)'),
-                        onSaved: (value) => _dateOfEvent = value!,
-                      ),
+                      const SizedBox(height: 8),
+                      // Date Picker Field
                       TextFormField(
-                        decoration: const InputDecoration(labelText: 'Time (e.g. 4:00 PM)'),
-                        onSaved: (value) => _timeOfEvent = value!,
+                        controller: _dateController,
+                        decoration: InputDecoration(
+                          labelText: 'Date',
+                          hintText: 'Select event date',
+                          suffixIcon: Icon(Icons.calendar_today, color: Theme.of(context).colorScheme.primary),
+                        ),
+                        readOnly: true,
+                        onTap: _selectDate,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select a date';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) {
+                          if (_selectedDate != null) {
+                            _dateOfEvent = DateFormat('yyyy-MM-dd').format(_selectedDate!);
+                          }
+                        },
                       ),
+                      const SizedBox(height: 8),
+                      // Time Picker Field
                       TextFormField(
-                        decoration: const InputDecoration(labelText: 'Month'),
-                        onSaved: (value) => _month = value!,
+                        controller: _timeController,
+                        decoration: InputDecoration(
+                          labelText: 'Time',
+                          hintText: 'Select event time',
+                          suffixIcon: Icon(Icons.access_time, color: Theme.of(context).colorScheme.primary),
+                        ),
+                        readOnly: true,
+                        onTap: _selectTime,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select a time';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) {
+                          if (_selectedTime != null) {
+                            final hour = _selectedTime!.hourOfPeriod == 0 ? 12 : _selectedTime!.hourOfPeriod;
+                            final minute = _selectedTime!.minute.toString().padLeft(2, '0');
+                            final period = _selectedTime!.period == DayPeriod.am ? 'AM' : 'PM';
+                            _timeOfEvent = '$hour:$minute $period';
+                          }
+                        },
                       ),
+                      const SizedBox(height: 8),
                       TextFormField(
                         decoration: const InputDecoration(labelText: 'Location'),
                         onSaved: (value) => _location = value!,

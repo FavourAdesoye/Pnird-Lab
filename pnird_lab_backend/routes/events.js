@@ -15,6 +15,10 @@ router.post("/createevent", upload.single("image"), async (req, res) => {
         return res.status(400).json({ message: "Missing required fields" });
       }
   
+      if (!dateofevent) {
+        return res.status(400).json({ message: "Date of event is required" });
+      }
+  
       let finalImageUrl;
   
       if (image_url) {
@@ -33,14 +37,29 @@ router.post("/createevent", upload.single("image"), async (req, res) => {
         return res.status(400).json({ message: "No image provided" });
       }
   
-      // Create new study
+      // Always derive month from dateofevent
+      const eventDate = new Date(dateofevent);
+      if (isNaN(eventDate.getTime())) {
+        return res.status(400).json({ message: "Invalid date format" });
+      }
+      
+      const monthNames = ["January", "February", "March", "April", "May", "June",
+                         "July", "August", "September", "October", "November", "December"];
+      const eventMonth = monthNames[eventDate.getMonth()];
+  
+      // Create new event
+      // Use default if timeofevent is empty or not provided
+      const eventTime = (timeofevent && timeofevent.trim() !== '') 
+        ? timeofevent 
+        : undefined; // undefined will use the model's default
+      
       const newEvent = new EventsModel({
         titlepost,
         description,
         image_url: finalImageUrl,
         dateofevent,
-        timeofevent,
-        month,
+        timeofevent: eventTime,
+        month: eventMonth,
         location
       });
   
@@ -94,7 +113,7 @@ router.post("/createevent", upload.single("image"), async (req, res) => {
 // Fetch all studies
 router.get('/events', async (req, res) => {
     try {
-        const events = await EventsModel.find();
+        const events = await EventsModel.find().sort({ createdAt: -1 }); // Newest first
         res.status(200).json(events);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching events', error: error.message });
@@ -105,7 +124,7 @@ router.get('/events', async (req, res) => {
 router.get('/event/:month', async (req, res) => {
     const {month} = req.params
     try {
-        const events = await EventsModel.find({month});
+        const events = await EventsModel.find({month}).sort({ createdAt: -1 }); // Newest first
         if (!events) {
             return ({ message: 'No events for this month' });
         }
@@ -119,6 +138,13 @@ router.get('/event/:month', async (req, res) => {
 router.put('/event/:id', async (req, res) => {
     const { id } = req.params;
   try {
+    // If dateofevent is being updated and month is not provided, derive month from date
+    if (req.body.dateofevent && !req.body.month) {
+      const eventDate = new Date(req.body.dateofevent);
+      const monthNames = ["January", "February", "March", "April", "May", "June",
+                         "July", "August", "September", "October", "November", "December"];
+      req.body.month = monthNames[eventDate.getMonth()];
+    }
     const updatedEvent = await EventsModel.findByIdAndUpdate(id, req.body, { new: true });
     res.json(updatedEvent);
   } catch (error) {

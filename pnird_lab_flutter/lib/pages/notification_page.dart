@@ -711,7 +711,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                         ),
                                     ];
                                   },
-                                ),
+),
                   onTap: () {
                                   _markAsRead(notif['_id'], index);
                                   _navigateToNotification(notif);

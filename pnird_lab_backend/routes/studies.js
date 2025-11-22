@@ -96,7 +96,7 @@ router.post("/createstudy", upload.single("image"), async (req, res) => {
 // Fetch all studies
 router.get('/', async (req, res) => {
     try {
-        const studies = await StudiesModel.find();
+        const studies = await StudiesModel.find().sort({ createdAt: -1 }); // Newest first
         res.status(200).json(studies);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching studies', error: error.message });

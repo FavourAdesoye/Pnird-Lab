@@ -63,7 +63,14 @@ class _EventsPageState extends State<EventsPage> {
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        final List<dynamic> events = json.decode(response.body);
+        // Sort by createdAt descending (newest first)
+        events.sort((a, b) {
+          final dateA = a['createdAt'] != null ? DateTime.parse(a['createdAt']) : DateTime(1970);
+          final dateB = b['createdAt'] != null ? DateTime.parse(b['createdAt']) : DateTime(1970);
+          return dateB.compareTo(dateA); // Descending order (newest first)
+        });
+        return events;
       }
     } catch (e) {
       print("Error: $e");

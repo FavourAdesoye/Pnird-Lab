@@ -37,6 +37,8 @@ class _StudiesPageState extends State<StudiesPage> {
   Future<void> _fetchStudies() async {
     try {
       final studies = await StudiesApi.fetchStudies();
+      // Sort by createdAt descending (newest first) - backend should already sort, but ensure it here too
+      studies.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       setState(() {
         _studies = studies;
         _isLoading = false;
@@ -103,7 +105,7 @@ class _StudiesPageState extends State<StudiesPage> {
 
                 if (newStudy != null) {
                   setState(() {
-                    _studies.add(newStudy); // Append the new study to the list
+                    _studies.insert(0, newStudy); // Insert new study at the top (newest first)
                   });
                 }
               },
