@@ -13,7 +13,7 @@ class CommentCard extends StatelessWidget {
   const CommentCard({super.key, required this.comment, required this.onReply});
 
   String formattedDateTime(DateTime dateTime) {
-    return DateFormat('yyyy-MM-dd HH:mm a').format(dateTime);
+    return DateFormat('yyyy-MM-dd hh:mm a').format(dateTime);
   }
 
   Future<String?> _getUserProfilePicture(String username) async {

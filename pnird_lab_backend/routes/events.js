@@ -2,6 +2,8 @@ const router = require("express").Router();
 const EventsModel = require("../models/events");
 const cloudinary = require("../utils/cloudinary");
 const upload = require("../utils/multer");
+const BroadcastNotification = require("../models/broadcast_notifications");
+const User = require("../models/User");
 
 //create a new event with an image upload
 router.post("/createevent", upload.single("image"), async (req, res) => {
@@ -11,6 +13,10 @@ router.post("/createevent", upload.single("image"), async (req, res) => {
       // Validate required fields
       if (!description || !titlepost) {
         return res.status(400).json({ message: "Missing required fields" });
+      }
+  
+      if (!dateofevent) {
+        return res.status(400).json({ message: "Date of event is required" });
       }
   
       let finalImageUrl;
@@ -31,19 +37,72 @@ router.post("/createevent", upload.single("image"), async (req, res) => {
         return res.status(400).json({ message: "No image provided" });
       }
   
-      // Create new study
+      // Always derive month from dateofevent
+      const eventDate = new Date(dateofevent);
+      if (isNaN(eventDate.getTime())) {
+        return res.status(400).json({ message: "Invalid date format" });
+      }
+      
+      const monthNames = ["January", "February", "March", "April", "May", "June",
+                         "July", "August", "September", "October", "November", "December"];
+      const eventMonth = monthNames[eventDate.getMonth()];
+  
+      // Create new event
+      // Use default if timeofevent is empty or not provided
+      const eventTime = (timeofevent && timeofevent.trim() !== '') 
+        ? timeofevent 
+        : undefined; // undefined will use the model's default
+      
       const newEvent = new EventsModel({
         titlepost,
         description,
         image_url: finalImageUrl,
         dateofevent,
-        timeofevent,
-        month,
+        timeofevent: eventTime,
+        month: eventMonth,
         location
       });
   
       // Save to database
       const savedEvent = await newEvent.save();
+      
+      // Get creator info for broadcast - try to get from request or find a staff user
+      let creatorId = req.body.userId || req.body.creatorId;
+      if (!creatorId) {
+        // Try to find a staff user to use as sender
+        const staffUser = await User.findOne({ role: "staff" });
+        creatorId = staffUser ? staffUser._id : null;
+      }
+      
+      // Create ONE broadcast notification instead of N individual notifications
+      try {
+        const broadcast = new BroadcastNotification({
+          type: "event",
+          referenceId: savedEvent._id,
+          title: titlepost,
+          message: `A new event "${titlepost}" has been posted.`,
+          senderId: creatorId || undefined,
+        });
+        await broadcast.save();
+        
+        // Emit Socket.IO broadcast to all connected users
+        const io = req.app.get('io');
+        if (io) {
+          io.emit("new_broadcast", {
+            _id: broadcast._id.toString(),
+            type: "event",
+            referenceId: savedEvent._id.toString(),
+            title: titlepost,
+            message: `A new event "${titlepost}" has been posted.`,
+            senderId: creatorId ? creatorId.toString() : null,
+            createdAt: broadcast.createdAt ? new Date(broadcast.createdAt).toISOString() : new Date().toISOString(),
+          });
+        }
+      } catch (broadcastError) {
+        console.error("Error creating event broadcast:", broadcastError);
+        // Don't fail the request if broadcast fails
+      }
+      
       res.status(201).json(savedEvent);
     } catch (err) {
       console.error(err);
@@ -54,7 +113,7 @@ router.post("/createevent", upload.single("image"), async (req, res) => {
 // Fetch all studies
 router.get('/events', async (req, res) => {
     try {
-        const events = await EventsModel.find();
+        const events = await EventsModel.find().sort({ createdAt: -1 }); // Newest first
         res.status(200).json(events);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching events', error: error.message });
@@ -65,7 +124,7 @@ router.get('/events', async (req, res) => {
 router.get('/event/:month', async (req, res) => {
     const {month} = req.params
     try {
-        const events = await EventsModel.find({month});
+        const events = await EventsModel.find({month}).sort({ createdAt: -1 }); // Newest first
         if (!events) {
             return ({ message: 'No events for this month' });
         }
@@ -79,6 +138,13 @@ router.get('/event/:month', async (req, res) => {
 router.put('/event/:id', async (req, res) => {
     const { id } = req.params;
   try {
+    // If dateofevent is being updated and month is not provided, derive month from date
+    if (req.body.dateofevent && !req.body.month) {
+      const eventDate = new Date(req.body.dateofevent);
+      const monthNames = ["January", "February", "March", "April", "May", "June",
+                         "July", "August", "September", "October", "November", "December"];
+      req.body.month = monthNames[eventDate.getMonth()];
+    }
     const updatedEvent = await EventsModel.findByIdAndUpdate(id, req.body, { new: true });
     res.json(updatedEvent);
   } catch (error) {

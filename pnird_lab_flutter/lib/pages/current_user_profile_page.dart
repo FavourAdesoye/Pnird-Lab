@@ -7,6 +7,7 @@ import 'package:pnirdlab/pages/post_detail_page.dart';
 import 'package:pnirdlab/pages/edit_profile_screen.dart';
 import 'package:pnirdlab/pages/create_post_screen.dart';
 import 'package:pnirdlab/pages/chats_page.dart';
+import 'package:pnirdlab/pages/message_page.dart';
 import 'package:pnirdlab/services/auth.dart';
 import 'package:pnirdlab/services/api_service.dart';
 import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
@@ -77,18 +78,26 @@ class _ProfilePageState extends State<ProfilePage> {
   // Load userId from local storage
   Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    userId = prefs.getString('userId'); // Retrieve userId saved during login
+    loggedInUserId = prefs.getString('userId'); // Store logged-in user ID for comparison
     firebaseId = prefs.getString('firebaseId');
-    if (userId != null && userId!.isNotEmpty) {
+    
+    // Use the provided myuserId parameter, or fall back to logged-in user's ID
+    final targetUserId = widget.myuserId.isNotEmpty ? widget.myuserId : loggedInUserId;
+    
+    if (targetUserId != null && targetUserId.isNotEmpty) {
       setState(() {
-        userId = userId;
-        loggedInUserId = userId;
+        userId = targetUserId;
       });
-      // Fetch user details and posts from the backend
-      await fetchProfileData(userId!);
-      await fetchUserPosts(userId!);
+      // Fetch user details and posts from the backend for the target user
+      await fetchProfileData(targetUserId);
+      await fetchUserPosts(targetUserId);
     } else {
       // Handle case where no user ID is found
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User ID not found')),
+        );
+      }
     }
   }
 
@@ -211,83 +220,99 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   SizedBox(height: 10),
 
-                  // Buttons
+                  // Buttons - Show different buttons based on whether viewing own profile or other user's profile
                   Wrap(
                     spacing: 8,
-  runSpacing: 8,
+                    runSpacing: 8,
                     children: [
-                     ElevatedButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) =>  ProfileEditScreen(userId: userId!)),
-    );
-  },
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Colors.white,
-    foregroundColor: Colors.amber,
-    side: BorderSide(color: Colors.amber),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-    ),
-  ),
-  child: Text(
-    "Edit Profile",
-    style: TextStyle(
-      fontSize: 12,
-      fontWeight: FontWeight.bold,
-    ),
-  ),
-),
-
+                      // Only show Edit Profile and Create Post if viewing own profile
+                      if (userId == loggedInUserId) ...[
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => ProfileEditScreen(userId: userId!)),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.amber,
+                            side: BorderSide(color: Colors.amber),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            "Edit Profile",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => CreatePostScreen(userId: userId!)),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.amber,
+                            side: BorderSide(color: Colors.amber),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            "Create Post",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                      // Message button - show for both own profile and other users
                       ElevatedButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => CreatePostScreen(userId: userId!,)),
-    );
-  },
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Colors.white,
-    foregroundColor: Colors.amber,
-    side: BorderSide(color: Colors.amber),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-    ),
-  ),
-  child: Text(
-    "Create Post",
-    style: TextStyle(
-      fontSize: 12,
-      fontWeight: FontWeight.bold,
-    ),
-  ),
-),
-
-                      ElevatedButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => ChatsPage()),
-    );
-  },
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Colors.white,
-    foregroundColor: Colors.amber,
-    side: BorderSide(color: Colors.amber),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-    ),
-  ),
-  child: Text(
-    "Message",
-    style: TextStyle(
-      fontSize: 12,
-      fontWeight: FontWeight.bold,
-    ),
-  ),
-),
-
+                        onPressed: () {
+                          if (userId == loggedInUserId) {
+                            // If viewing own profile, go to chats page
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => ChatsPage()),
+                            );
+                          } else {
+                            // If viewing other user's profile, go directly to message page with that user
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MessagePage(
+                                  recipientId: userId!,
+                                  recipientName: username ?? 'User',
+                                  isAdmin: false,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.amber,
+                          side: BorderSide(color: Colors.amber),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          userId == loggedInUserId ? "Messages" : "Message",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   SizedBox(height: 20),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pnirdlab/pages/events_detail_page.dart';
 import 'package:pnirdlab/pages/create_events_page.dart';
 class EventsPage extends StatefulWidget {
@@ -36,12 +37,22 @@ class _EventsPageState extends State<EventsPage> {
   List<dynamic> allEvents = []; // Store all events
 
   bool isLoading = true;
+  bool _isStaff = false; // Track if user is staff/admin
 
   @override
   void initState() {
     super.initState();
+    _checkUserRole();
     // Fetch events for the default month
     fetchAllEvents();
+  }
+
+  Future<void> _checkUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('role') ?? '';
+    setState(() {
+      _isStaff = role == 'staff';
+    });
   }
 
   Future<List<dynamic>> fetchEvents(String url) async {
@@ -52,7 +63,14 @@ class _EventsPageState extends State<EventsPage> {
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        final List<dynamic> events = json.decode(response.body);
+        // Sort by createdAt descending (newest first)
+        events.sort((a, b) {
+          final dateA = a['createdAt'] != null ? DateTime.parse(a['createdAt']) : DateTime(1970);
+          final dateB = b['createdAt'] != null ? DateTime.parse(b['createdAt']) : DateTime(1970);
+          return dateB.compareTo(dateA); // Descending order (newest first)
+        });
+        return events;
       }
     } catch (e) {
       print("Error: $e");
@@ -114,7 +132,7 @@ class _EventsPageState extends State<EventsPage> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
-          backgroundColor: Colors.black,
+          backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
@@ -245,7 +263,7 @@ class _EventsPageState extends State<EventsPage> {
                                           const SizedBox(height: 8),
                                           Text(
                                             formattedDateTime(DateTime.parse(
-                                                event["dateofevent"])),
+                                                event["dateofevent"]).toLocal()),
                                             style: const TextStyle(
                                               fontSize: 12,
                                               color: Colors.grey,
@@ -318,7 +336,7 @@ class _EventsPageState extends State<EventsPage> {
                                           ),
                                           subtitle: Text(
                                             formattedDateTime(DateTime.parse(
-                                                event["dateofevent"])),
+                                                event["dateofevent"]).toLocal()),
                                             style:
                                                 TextStyle(color: Colors.grey),
                                           ),
@@ -333,16 +351,19 @@ class _EventsPageState extends State<EventsPage> {
             ],
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-        heroTag: 'events_fab',
-        onPressed: () async {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => CreateEventPage()),
-          );
-        },
-        tooltip: 'Create New Study',
-        child: Icon(Icons.add),
-      ),);
+        floatingActionButton: _isStaff
+            ? FloatingActionButton(
+                heroTag: 'events_fab',
+                onPressed: () async {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CreateEventPage()),
+                  );
+                },
+                tooltip: 'Create New Event',
+                child: const Icon(Icons.add),
+              )
+            : null,
+    );
   }
 }

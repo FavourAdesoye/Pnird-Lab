@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../model/study_model.dart';
 import '../services/studies_service.dart';
 import 'package:pnirdlab/pages/studies_details.dart';
@@ -16,16 +17,28 @@ class _StudiesPageState extends State<StudiesPage> {
   List<Study> _studies = []; // Maintain the studies list
   bool _isLoading = true; // Track loading state
   String _errorMessage = ''; // Track error messages
+  bool _isStaff = false; // Track if user is staff/admin
 
   @override
   void initState() {
     super.initState();
+    _checkUserRole();
     _fetchStudies(); // Fetch studies on page load
+  }
+
+  Future<void> _checkUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('role') ?? '';
+    setState(() {
+      _isStaff = role == 'staff';
+    });
   }
 
   Future<void> _fetchStudies() async {
     try {
       final studies = await StudiesApi.fetchStudies();
+      // Sort by createdAt descending (newest first) - backend should already sort, but ensure it here too
+      studies.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       setState(() {
         _studies = studies;
         _isLoading = false;
@@ -81,23 +94,25 @@ class _StudiesPageState extends State<StudiesPage> {
                         );
                       },
                     ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'studies_fab',
-        onPressed: () async {
-          final newStudy = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const NewStudyPage()),
-          );
+      floatingActionButton: _isStaff
+          ? FloatingActionButton(
+              heroTag: 'studies_fab',
+              onPressed: () async {
+                final newStudy = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const NewStudyPage()),
+                );
 
-          if (newStudy != null) {
-            setState(() {
-              _studies.add(newStudy); // Append the new study to the list
-            });
-          }
-        },
-        tooltip: 'Create New Study',
-        child: const Icon(Icons.add),
-      ),
+                if (newStudy != null) {
+                  setState(() {
+                    _studies.insert(0, newStudy); // Insert new study at the top (newest first)
+                  });
+                }
+              },
+              tooltip: 'Create New Study',
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 }

@@ -39,7 +39,12 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true
-    }
+    },
+    seenBroadcasts: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "BroadcastNotification",
+        default: []
+    }]
 },
 {timestamps: true}
 );

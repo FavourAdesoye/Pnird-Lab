@@ -24,7 +24,7 @@ const eventSchema = new mongoose.Schema({
         type: String,
         required:true
     },
-    timeofEvent:{
+    timeofevent:{
         type: String,
         default: "No time specified"
     },

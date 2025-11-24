@@ -29,47 +29,53 @@ class AppTheme {
   static const Color accentPurple = Color(0xFF805AD5);
   static const Color accentPink = Color(0xFFD53F8C);
 
-  // Light Theme
+  // Light Theme - Improved
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
     primarySwatch: Colors.amber,
     primaryColor: primaryYellow,
-    scaffoldBackgroundColor: Colors.grey[50],
+    scaffoldBackgroundColor: const Color(0xFFF5F5F5), // Soft off-white
     appBarTheme: const AppBarTheme(
-      backgroundColor: primaryBlack,
-      foregroundColor: primaryWhite,
+      backgroundColor: primaryYellow, // Yellow app bar in light mode
+      foregroundColor: primaryBlack, // Black text/icons on yellow
       elevation: 0,
       centerTitle: false,
+      iconTheme: IconThemeData(color: primaryBlack),
     ),
     colorScheme: const ColorScheme.light(
       primary: primaryYellow,
       secondary: accentBlue,
-      surface: primaryWhite,
-      background: Colors.grey,
+      surface: Color(0xFFFFFFFF), // Pure white for cards
+      background: Color(0xFFF5F5F5), // Soft grey background
       error: errorRed,
       onPrimary: primaryBlack,
       onSecondary: primaryWhite,
-      onSurface: primaryBlack,
-      onBackground: primaryBlack,
+      onSurface: Color(0xFF1A1A1A), // Dark text on light surface
+      onBackground: Color(0xFF1A1A1A), // Dark text on light background
       onError: primaryWhite,
+      surfaceVariant: Color(0xFFF0F0F0), // Lighter variant for subtle backgrounds
     ),
     textTheme: const TextTheme(
-      headlineLarge: TextStyle(color: primaryBlack, fontWeight: FontWeight.bold),
-      headlineMedium: TextStyle(color: primaryBlack, fontWeight: FontWeight.bold),
-      headlineSmall: TextStyle(color: primaryBlack, fontWeight: FontWeight.bold),
-      titleLarge: TextStyle(color: primaryBlack, fontWeight: FontWeight.w600),
-      titleMedium: TextStyle(color: primaryBlack, fontWeight: FontWeight.w600),
-      titleSmall: TextStyle(color: primaryBlack, fontWeight: FontWeight.w600),
-      bodyLarge: TextStyle(color: primaryBlack),
-      bodyMedium: TextStyle(color: primaryBlack),
-      bodySmall: TextStyle(color: textMuted),
+      headlineLarge: TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.bold, fontSize: 32),
+      headlineMedium: TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.bold, fontSize: 28),
+      headlineSmall: TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.bold, fontSize: 24),
+      titleLarge: TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.w600, fontSize: 22),
+      titleMedium: TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.w600, fontSize: 18),
+      titleSmall: TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.w600, fontSize: 16),
+      bodyLarge: TextStyle(color: Color(0xFF2D2D2D), fontSize: 16),
+      bodyMedium: TextStyle(color: Color(0xFF2D2D2D), fontSize: 14),
+      bodySmall: TextStyle(color: Color(0xFF666666), fontSize: 12),
+      labelLarge: TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.w500),
+      labelMedium: TextStyle(color: Color(0xFF666666), fontSize: 12),
+      labelSmall: TextStyle(color: Color(0xFF999999), fontSize: 10),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryYellow,
         foregroundColor: primaryBlack,
         elevation: 2,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
@@ -78,18 +84,46 @@ class AppTheme {
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: primaryYellow, width: 2),
+        borderSide: const BorderSide(color: Color(0xFFE0E0E0), width: 1),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: primaryYellow, width: 2),
+        borderSide: const BorderSide(color: Color(0xFFE0E0E0), width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
         borderSide: const BorderSide(color: primaryYellow, width: 2),
       ),
       filled: true,
-      fillColor: Colors.grey[100],
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    ),
+    cardTheme: CardThemeData(
+      color: Colors.white,
+      elevation: 2,
+      shadowColor: Colors.black.withOpacity(0.1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
+    listTileTheme: const ListTileThemeData(
+      textColor: Color(0xFF1A1A1A),
+      iconColor: Color(0xFF666666),
+    ),
+    dividerTheme: DividerThemeData(
+      color: Colors.grey[300],
+      thickness: 1,
+      space: 1,
+    ),
+    drawerTheme: const DrawerThemeData(
+      backgroundColor: Color(0xFFFFFFFF),
+    ),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: Color(0xFFFFFFFF),
+      selectedItemColor: primaryYellow,
+      unselectedItemColor: Color(0xFF666666),
+      elevation: 8,
+      type: BottomNavigationBarType.fixed,
     ),
   );
 
@@ -164,6 +198,13 @@ class AppTheme {
     ),
     drawerTheme: const DrawerThemeData(
       backgroundColor: primaryBlack,
+    ),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: primaryBlack,
+      selectedItemColor: primaryYellow, // Yellow for active tabs in dark mode
+      unselectedItemColor: Colors.white,
+      elevation: 8,
+      type: BottomNavigationBarType.fixed,
     ),
   );
 

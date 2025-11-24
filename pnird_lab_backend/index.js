@@ -1,20 +1,11 @@
 const { EventEmitter } = require("events");
 EventEmitter.defaultMaxListeners = 20; // or higher if needed
-const fs = require("fs");
-const path = require("path");
-const pdfParse = require("pdf-parse");  
-const { HNSWLib } = require("@langchain/community/vectorstores/hnswlib");
-const { FaissStore } = require("@langchain/community/vectorstores/faiss");
-// Use official Ollama bindings package
-const { OllamaEmbeddings } = require("@langchain/ollama");
-const { Ollama } = require("@langchain/ollama");
-const { MemoryVectorStore } = require("langchain/vectorstores/memory");
-const { ChatPromptTemplate } = require("@langchain/core/prompts");
-const { createStuffDocumentsChain } = require("langchain/chains/combine_documents");
-const { createRetrievalChain } = require("langchain/chains/retrieval");
 const error =  require("console");
 const express = require("express");
+const { createServer } = require("http");
+const { Server } = require("socket.io");
 const app = express();
+const httpServer = createServer(app);
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const { default: helmet } = require("helmet");
@@ -27,6 +18,12 @@ const cors = require('cors');
 const bodyParser = require("body-parser"); 
 const eventRoute = require("./routes/events");
 const studyRoute = require("./routes/studies")
+const messageRoute = require("./routes/message");
+const notificationRoute = require("./routes/notifications");
+const searchRoute = require("./routes/search");
+const Message = require("./models/messages");
+const User = require("./models/User");
+const Notification = require("./models/notifications");
 const admin = require("firebase-admin")
 dotenv.config();
 
@@ -54,13 +51,115 @@ app.use("/api/auth", authRoute);
 app.use("/api/comments", commentRoute);
 app.use("/api/studies", studyRoute);
 app.use("/api/events", eventRoute);
+app.use("/api/messages", messageRoute);
+app.use("/api/notifications", notificationRoute);
+app.use("/api/search", searchRoute);
 
 
 app.get("/", (req,res)=>{
     res.send("welcome to pnirdlab")
 });
-app.listen(Port, ()=>{
-    console.log(`Backend server is runninnng on port ${Port}!`);
+
+// Initialize Socket.IO
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*", // In production, specify your Flutter app's origin
+    methods: ["GET", "POST"]
+  }
+});
+
+// Store connected users
+const connectedUsers = new Map();
+
+// Make io and connectedUsers accessible to routes
+app.set('io', io);
+app.set('connectedUsers', connectedUsers);
+
+// Socket.IO connection handling
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
+
+  // Register user when they connect
+  socket.on("register", (userId) => {
+    connectedUsers.set(userId, socket.id);
+    socket.userId = userId;
+    console.log(`User ${userId} registered with socket ${socket.id}`);
+  });
+
+  // Handle sending messages
+  socket.on("send_message", async (data) => {
+    try {
+      const { senderId, recipientId, message } = data;
+      
+      // Save message to database
+      const newMessage = new Message({ senderId, recipientId, message });
+      const saved = await newMessage.save();
+      
+      // Get sender info for notification
+      const sender = await User.findById(senderId);
+      const senderName = sender ? sender.username : "Unknown";
+      
+      // Create notification
+      const notif = new Notification({
+        userId: recipientId,
+        type: "message",
+        senderId: senderId,
+        message: `${senderName} sent you a message.`,
+        referenceId: saved._id,
+      });
+      await notif.save();
+      
+      // Convert timestamp to ISO string for consistent formatting
+      const timestampISO = saved.timestamp ? new Date(saved.timestamp).toISOString() : new Date().toISOString();
+      
+      // Send message to recipient if they're connected
+      const recipientSocketId = connectedUsers.get(recipientId);
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit("receive_message", {
+          senderId,
+          message,
+          timestamp: timestampISO,
+        });
+        
+        // Send real-time notification
+        io.to(recipientSocketId).emit("new_notification", {
+          _id: notif._id.toString(),
+          userId: recipientId,
+          type: "message",
+          senderId: senderId,
+          message: `${senderName} sent you a message.`,
+          referenceId: saved._id.toString(),
+          isRead: false,
+          createdAt: notif.createdAt ? new Date(notif.createdAt).toISOString() : new Date().toISOString(),
+        });
+      }
+      
+      // Also send confirmation back to sender with correct timestamp
+      socket.emit("message_sent", {
+        messageId: saved._id,
+        timestamp: timestampISO,
+        message: message, // Include message for UI update
+      });
+    } catch (err) {
+      console.error("Error sending message:", err);
+      socket.emit("error", { message: "Failed to send message" });
+    }
+  });
+
+  // Handle disconnection
+  socket.on("disconnect", () => {
+    if (socket.userId) {
+      connectedUsers.delete(socket.userId);
+      console.log(`User ${socket.userId} disconnected`);
+    }
+    console.log("Client disconnected:", socket.id);
+  });
+});
+
+// Start server with Socket.IO
+httpServer.listen(Port, ()=>{
+    console.log(`Backend server is running on port ${Port}!`);
+    console.log(`Socket.IO server is ready!`);
 });
 
 
@@ -69,116 +168,3 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json()); 
 app.use('/uploads', express.static('uploads')) 
 app.use(express.json());
-
-let qa;
-
-async function setupQA() {
-  const indexPath = path.join(__dirname, "pnird_index"); // directory to store FAISS index
-
-  // ---- Embeddings ----
-  class SafeOllamaEmbeddings extends OllamaEmbeddings {
-    async embedQuery(text) {
-      const arr = [String(text ?? "")];
-      const vectors = await super.embedDocuments(arr);
-      return vectors[0];
-    }
-    async embedDocuments(texts) {
-      const coerced = (texts || []).map((t) => String(t ?? ""));
-      return await super.embedDocuments(coerced);
-    }
-  }
-
-  const embeddings = new SafeOllamaEmbeddings({
-    baseUrl: process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434",
-    model: "nomic-embed-text",
-  });
-
-  let vectorStore;
-
-  if (fs.existsSync(indexPath)) {
-    console.log("📂 Loading existing FAISS index...");
-    vectorStore = await FaissStore.load(indexPath, embeddings);
-  } else {
-    console.log("📄 Processing PDF and creating new index...");
-    const dataBuffer = fs.readFileSync(path.join(__dirname, "pnird.pdf"));
-    const pdfData = await pdfParse(dataBuffer);
-
-    const { RecursiveCharacterTextSplitter } = await import("langchain/text_splitter");
-    const splitter = new RecursiveCharacterTextSplitter({
-      chunkSize: 300,
-      chunkOverlap: 50,
-    });
-
-    const docs = await splitter.createDocuments([pdfData.text]);
-
-    vectorStore = await FaissStore.fromDocuments(docs, embeddings);
-    await vectorStore.save(indexPath); // persist to disk
-    console.log("✅ New FAISS index saved.");
-  }
-
-  // ---- LLM ----
-  let modelName = "llama3:instruct";
-  try {
-    const llmTest = new Ollama({ baseUrl: process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434", model: modelName });
-    await llmTest.invoke("test"); // sanity check
-  } catch (err) {
-    console.warn(`⚠️ Model ${modelName} not available, falling back to llama3.`);
-    modelName = "llama3";
-  }
-  const llm = new Ollama({ baseUrl: process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434", model: modelName });
-
-  // ---- Prompt ----
-  const prompt = ChatPromptTemplate.fromTemplate(`
-Answer the question based only on the provided context.
-
-If the question asks for names, list ALL names clearly in bullet points. 
-If the question asks about purpose, projects, or research, summarize those from the context.
-
-Context:
-{context}
-
-Question: {input}
-`);
-
-  const combineDocsChain = await createStuffDocumentsChain({
-    llm,
-    prompt,
-  });
-
-  qa = await createRetrievalChain({
-    retriever: vectorStore.asRetriever(),
-    combineDocsChain,
-  });
-
-  console.log("✅ QA system ready");
-}
-
-setupQA().catch(err => {
-  console.error("Failed to initialize QA:", err);
-});
-
-// Endpoint
-app.post("/ask", async (req, res) => {
-  try {
-    const raw = req.body?.question;
-    if (raw === undefined || raw === null) {
-      return res.status(400).json({ answer: "No question provided" });
-    }
-    // Coerce to a plain string to satisfy embeddings API requirements
-    const question = typeof raw === "string" ? raw : JSON.stringify(raw);
-
-    if (!qa) {
-      return res.status(503).json({ answer: "QA system not initialized yet. Try again later." });
-    }
-
-    // Invoke the QA chain with the question directly
-    const response = await qa.invoke({ input: String(question) });
-    
-    // Return the answer from the response
-    const answer = response.answer || response.text || "I apologize, but I couldn't generate a response.";
-    res.json({ answer: answer });
-  } catch (err) {
-    console.error("Error in /ask endpoint:", err);
-    res.status(500).json({ answer: `Error processing question: ${err.message}` });
-  }
-});
