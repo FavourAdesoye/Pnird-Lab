@@ -65,9 +65,8 @@ class _OptimizedPostCardState extends State<OptimizedPostCard> {
                 children: [
                   CircleAvatar(
                     radius: 20,
-                    backgroundImage: (widget.post.user.profilePicture != null && 
-                                    widget.post.user.profilePicture!.isNotEmpty)
-                        ? NetworkImage(widget.post.user.profilePicture!)
+                    backgroundImage: widget.post.user.profilePicture.isNotEmpty
+                        ? NetworkImage(widget.post.user.profilePicture)
                         : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
                   ),
                   const SizedBox(width: 12),

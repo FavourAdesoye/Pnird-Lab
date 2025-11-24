@@ -1,7 +1,5 @@
 // import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../../services/auth.dart';
 import '../../widgets/enhanced_text_form_field.dart';
 import '../../widgets/auth_button.dart';
