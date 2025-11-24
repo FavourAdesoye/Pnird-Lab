@@ -4,7 +4,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:pnirdlab/model/team_member.dart';
 import 'package:pnirdlab/services/team_service.dart';
 import 'package:pnirdlab/pages/cv_viewer_page.dart';
-import 'package:pnirdlab/pages/chatbot/main_chatbot.dart';
 
 class AboutUsPage extends StatefulWidget {
   const AboutUsPage({super.key});
@@ -218,40 +217,6 @@ class _AboutUsPageState extends State<AboutUsPage> {
           ),
           
           const SizedBox(height: 20),
-          
-          // Chat with AI button
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.yellow,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.yellow.withOpacity(0.3)),
-            ),
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const Chathome()),
-                );
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.chat_bubble, color: Colors.black, size: 24),
-                  SizedBox(width: 12),
-                  Text(
-                    'Chat with AI',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
     );
