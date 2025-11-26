@@ -21,6 +21,7 @@ const studyRoute = require("./routes/studies")
 const messageRoute = require("./routes/message");
 const notificationRoute = require("./routes/notifications");
 const searchRoute = require("./routes/search");
+const chatbotRoute = require("./routes/chatbot");
 const Message = require("./models/messages");
 const User = require("./models/User");
 const Notification = require("./models/notifications");
@@ -54,6 +55,7 @@ app.use("/api/events", eventRoute);
 app.use("/api/messages", messageRoute);
 app.use("/api/notifications", notificationRoute);
 app.use("/api/search", searchRoute);
+app.use("/api/chatbot", chatbotRoute);
 
 
 app.get("/", (req,res)=>{

@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:pnirdlab/model/team_member.dart';
 import 'package:pnirdlab/services/team_service.dart';
 import 'package:pnirdlab/pages/cv_viewer_page.dart';
+import 'package:pnirdlab/pages/chatbot/main_chatbot.dart';
 
 class AboutUsPage extends StatefulWidget {
   const AboutUsPage({super.key});
@@ -34,6 +35,19 @@ class _AboutUsPageState extends State<AboutUsPage> {
           },
         ),
         title: const Text('About Us'),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const Chathome()),
+          );
+        },
+        backgroundColor: Colors.yellow,
+        child: const Icon(
+          Icons.chat_bubble,
+          color: Colors.black,
+        ),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.only(
