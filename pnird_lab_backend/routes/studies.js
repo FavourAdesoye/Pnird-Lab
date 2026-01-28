@@ -12,7 +12,7 @@ const User = require("../models/User");
 
 router.post("/createstudy", upload.single("image"), async (req, res) => {
     try {
-      const { description, titlepost, image_url, allowScheduling, allowComments } = req.body;
+      const { description, titlepost, image_url, allowScheduling, allowComments, formLink } = req.body;
   
       // Validate required fields
       if (!description || !titlepost) {
@@ -44,6 +44,7 @@ router.post("/createstudy", upload.single("image"), async (req, res) => {
         image_url: finalImageUrl,
         allowScheduling: allowScheduling || false,
         allowComments: allowComments || false,
+        formLink: formLink || null,
       });
   
       // Save to database
@@ -119,11 +120,11 @@ router.get('/:id', async (req, res) => {
 // Update a study
 router.put('/:id', async (req, res) => {
     try {
-        const {date_time, image_url, description, titlepost } = req.body;
+        const {date_time, image_url, description, titlepost, formLink } = req.body;
 
         const updatedStudy = await StudiesModel.findByIdAndUpdate(
             req.params.id,
-            {date_time, image_url, description, titlepost },
+            {date_time, image_url, description, titlepost, formLink },
             { new: true } // Return the updated document
         );
 

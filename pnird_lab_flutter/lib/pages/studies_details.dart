@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../model/study_model.dart'; // Import your Study model
+import 'form_viewer_page.dart';
 
 class StudyDetailsPage extends StatelessWidget {
   final Study study;
@@ -74,6 +75,34 @@ class StudyDetailsPage extends StatelessWidget {
                   color: Colors.grey[600],
                 ),
               ),
+              const SizedBox(height: 24),
+
+              // Form Link Button (only show if formLink exists)
+              if (study.formLink != null && study.formLink!.isNotEmpty)
+                Center(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FormViewerPage(
+                            formUrl: study.formLink!,
+                            studyTitle: study.titlePost,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.assignment),
+                    label: const Text('Fill Out Survey'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      textStyle: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
               const SizedBox(height: 16),
             ],
           ),

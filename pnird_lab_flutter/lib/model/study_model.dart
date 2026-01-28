@@ -5,6 +5,7 @@ class Study {
   final String titlePost;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? formLink; // Optional form link for Google/Microsoft Forms
 
   Study({
     required this.id,
@@ -13,6 +14,7 @@ class Study {
     required this.titlePost,
     required this.createdAt,
     required this.updatedAt,
+    this.formLink,
   });
 
   // Factory constructor to create a Study from JSON
@@ -24,6 +26,7 @@ class Study {
       titlePost: json['titlepost'],
       createdAt: DateTime.parse(json['createdAt']).toLocal(),
       updatedAt: DateTime.parse(json['updatedAt']).toLocal(),
+      formLink: json['formLink'],
     );
   }
 
@@ -35,6 +38,7 @@ class Study {
       'titlepost': titlePost,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'formLink': formLink,
     };
   }
 }

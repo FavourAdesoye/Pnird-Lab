@@ -29,6 +29,10 @@ const StudiesSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Comment", // Reference to the Comment model
      }],
+    formLink: {
+        type: String,
+        required: false, // Optional field for Google/Microsoft Forms
+    },
 
 },
 
