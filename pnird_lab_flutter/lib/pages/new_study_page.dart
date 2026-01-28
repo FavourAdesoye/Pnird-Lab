@@ -23,8 +23,7 @@ class _NewStudyPageState extends State<NewStudyPage> {
   String? _uploadedImageUrl; // Store the uploaded image URL
   String? _errorMessage;
   File? _selectedFile;
-  bool _allowScheduling = false;
-  bool _allowComments = false;
+  String? _formLink; // Optional form link for Google/Microsoft Forms
 
   // Pick image method
   Future<void> _pickImageAndUpload() async {
@@ -130,7 +129,7 @@ class _NewStudyPageState extends State<NewStudyPage> {
             'titlepost': _title,
             'description': _description,
             'image_url': _uploadedImageUrl, // Cloudinary URL
-            'allowComments': _allowComments
+            'formLink': _formLink, // Optional form link
           }),
         );
         print("Title: $_title, Description: $_description");
@@ -197,23 +196,14 @@ class _NewStudyPageState extends State<NewStudyPage> {
                       ],
                     ),
                   ),
-                SwitchListTile(
-                  title: const Text('Allow Scheduling'),
-                  value: _allowScheduling,
-                  onChanged: (value) {
-                    setState(() {
-                      _allowScheduling = value;
-                    });
-                  },
-                ),
-                SwitchListTile(
-                  title: const Text('Allow Comments'),
-                  value: _allowComments,
-                  onChanged: (value) {
-                    setState(() {
-                      _allowComments = value;
-                    });
-                  },
+                const SizedBox(height: 20),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Form Link (Optional)',
+                    hintText: 'Google Forms or Microsoft Forms URL',
+                    helperText: 'Participants can use this form to schedule or register',
+                  ),
+                  onSaved: (value) => _formLink = value,
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
