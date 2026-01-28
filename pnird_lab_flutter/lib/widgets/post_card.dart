@@ -9,6 +9,10 @@ import '../services/like_service.dart';
 import 'package:pnirdlab/pages/current_user_profile_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pnirdlab/pages/public_profile_page.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 class PostCard extends StatefulWidget {
   final Post post;
@@ -46,6 +50,42 @@ void initState() {
   Future<void> loadUserId() async {
     loggedInUserId = await getLoggedInUserId();
     setState(() {}); // Rebuild widget after fetching ID
+  }
+
+  Future<void> sharePost() async {
+    try {
+      // If there's no image, just share the description
+      if (widget.post.img == null || widget.post.img!.isEmpty) {
+        final text = widget.post.description ?? 'Check out this post!';
+        await Share.share(text);
+        return;
+      }
+
+      // Download the image
+      final response = await http.get(Uri.parse(widget.post.img!));
+      if (response.statusCode != 200) {
+        throw Exception('Failed to download image');
+      }
+
+      // Save to temporary directory
+      final tempDir = await getTemporaryDirectory();
+      final fileName = 'post_${widget.post.id}.jpg';
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsBytes(response.bodyBytes);
+
+      // Share the image with text
+      final text = widget.post.description ?? 'Check out this post!';
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: text,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to share post: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -217,7 +257,13 @@ void initState() {
                       ),
                   icon: const Icon(
                     Icons.comment_outlined,
+
                   )),
+              IconButton(
+                onPressed: sharePost,
+                icon: const Icon(
+                  Icons.share_outlined,
+                )),
             ],
           ),
           //Number of Likes and Comments and Description
