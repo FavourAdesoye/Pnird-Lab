@@ -1,53 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:pnirdlab/pages/games/gamehome.dart';
 import "package:pnirdlab/pages/games/flappybrain/flappyhome.dart";
-import '../studies.dart';
 import 'chess/gameboard.dart';
 
 class Pickgame extends StatelessWidget {
   const Pickgame({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return _Pickgame();
-  }
-}
-
-class _Pickgame extends StatefulWidget {
-  @override
-  _Pickgamepage createState() => _Pickgamepage();
-}
-
-class _Pickgamepage extends State<_Pickgame> {
-  int currentIndex = 4; // Default to the Game page in the navigation bar
-  final List<Widget> _screens = [
-    const Placeholder(
-      child: Center(child: Text('Home Page')), // Placeholder for Home
-    ),
-    const StudiesPage(),
-    const Placeholder(
-      child: Center(child: Text('Events Page')), // Placeholder for Events
-    ),
-    const Placeholder(
-      child: Center(child: Text('About Us Page')), // Placeholder for About Us
-    ),
-    const Pickgamepage(), // The "Brain Train" screen
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: IndexedStack(
-        index: currentIndex,
-        children: _screens,
-      ),
-    );
-  }
-}
-
-class Pickgamepage extends StatelessWidget {
-  const Pickgamepage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -64,21 +20,9 @@ class Pickgamepage extends StatelessWidget {
           icon: const Icon(Icons.arrow_back_outlined),
           color: Colors.white,
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const Gamehome()),
-            );
+            Navigator.pop(context); // Properly exit back to previous screen
           },
         ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: const Icon(Icons.arrow_forward_outlined),
-            color: Colors.white,
-          )
-        ],
       ),
       body: Container(
         decoration: const BoxDecoration(),

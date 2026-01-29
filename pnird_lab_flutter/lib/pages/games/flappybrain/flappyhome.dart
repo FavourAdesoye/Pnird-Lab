@@ -169,10 +169,7 @@ class _HomepageState extends State<Homepage> {
             TextButton(
               onPressed: () {
                 Navigator.pop(context); // Close dialog
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const Gamehome()),
-                ); // Go to Gamehome
+                Navigator.pop(context); // Go back to game selection
               },
               child: const Text("Exit"),
             ),
@@ -194,10 +191,7 @@ class _HomepageState extends State<Homepage> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             // Navigate back to Pickgame
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const Pickgame()),
-            );
+            Navigator.pop(context);
           },
         ),
       ),

@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:pnirdlab/components/allowbutton.dart';
 import 'package:pnirdlab/pages/games/pickgame.dart';
-import 'package:pnirdlab/pages/studies.dart';
 
 class Gamehome extends StatelessWidget {
   final File? image;
@@ -11,45 +10,24 @@ class Gamehome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(debugShowCheckedModeBanner: false,  home: _GamePage());
-  }
-}
-
-class _GamePage extends StatefulWidget {
-  const _GamePage();
-
-  @override
-  GameHomePage createState() => GameHomePage();
-}
-
-class GameHomePage extends State<_GamePage> {
-  late final File? image;
-
-  int currentIndex = 4; // Default to the Game page in the navigation bar
-  final List<Widget> _screens = [
-    // Replace these placeholders with actual pages as needed
-    const Placeholder(
-      child: Center(child: Text('Home Page')), // Placeholder for Home
-    ),
-    const StudiesPage(),
-    const Placeholder(
-      child: Center(child: Text('Events Page')), // Placeholder for Events
-    ),
-    const Placeholder(
-      child: Center(child: Text('About Us Page')), // Placeholder for About Us
-    ),
-    const GamehomeContent(), // The "Brain Train" screen
-  ];
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: IndexedStack(
-        // Preserve widget state when navigating
-        index: currentIndex,
-        children: _screens,
+      appBar: AppBar(
+        title: const Text(
+          "Brain Train",
+          style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+        backgroundColor: const Color.fromARGB(255, 245, 207, 40),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_outlined),
+          color: Colors.white,
+          onPressed: () {
+            Navigator.pop(context); // Properly exit back to previous screen
+          },
+        ),
       ),
+      backgroundColor: Colors.black,
+      body: const GamehomeContent(),
     );
   }
 }

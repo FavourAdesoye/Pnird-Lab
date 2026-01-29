@@ -482,11 +482,8 @@ class _GameBoardState extends State<Gameboard> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const Pickgame()),
-                );
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Go back to game selection
               },
               child: const Text("OK"),
             ),
@@ -502,17 +499,14 @@ class _GameBoardState extends State<Gameboard> {
 
     return Scaffold( 
        appBar: AppBar(
-        title: const Text("Flappy Brain", style: TextStyle(color: Colors.white)),
+        title: const Text("Chess", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.black, 
         iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             // Navigate back to Pickgame
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const Pickgame()),
-            );
+            Navigator.pop(context);
           },
         ),
       ),
