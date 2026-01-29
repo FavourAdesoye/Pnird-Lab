@@ -114,8 +114,10 @@ router.get("/:id", async(req,res)=> {
 // Get all posts
 router.get("/", async (req, res) => {
     try {
-      const posts = await Post.find().populate('userId', 'username email profilePicture')// Sort by creation date, newest first
-      .populate("comments"); // <-- add this!
+      const posts = await Post.find()
+      .sort({ createdAt: -1 }) // Sort by creation date, newest first
+      .populate('userId', 'username email profilePicture')
+      .populate("comments");
       res.status(200).json(posts);
     } catch (err) {
       res.status(500).json(err);
@@ -153,7 +155,10 @@ router.get("/user/:userId", async (req, res) => {
 // GET posts by regular MongoDB userId
 router.get("/user/id/:id", async (req, res) => {
     try {
-      const posts = await Post.find({ userId: req.params.id }).populate('userId').populate('comments');
+      const posts = await Post.find({ userId: req.params.id })
+      .sort({ createdAt: -1 }) // Sort by creation date, newest first
+      .populate('userId')
+      .populate('comments');
       if (!posts) {
             return res.status(404).json({ message: "No posts found for this user" });
         }

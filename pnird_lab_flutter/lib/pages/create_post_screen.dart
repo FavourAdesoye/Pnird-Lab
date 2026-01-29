@@ -21,7 +21,6 @@ class CreatePostScreen extends StatefulWidget {
 class _CreatePostScreenState extends State<CreatePostScreen> {
  
   final _description = TextEditingController();
-  File? _selectedFile;
   String? _errorMessage;
   String? _uploadedImageUrl; // Store the uploaded image URL
 
@@ -41,7 +40,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       // Pick the file
       final result = await FilePicker.platform.pickFiles(
         type: FileType.image,
-        allowedExtensions: ImageProcessor.allowedFormats,
       );
 
       if (result == null || result.files.isEmpty) return; // No file selected
@@ -57,6 +55,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         });
         return;
       }
+
+      // Clear error message after successful validation
+      setState(() {
+        _errorMessage = null;
+      });
 
       // Process image (resize, compress, convert to JPEG)
       final processedFile = await ImageProcessor.processPostImage(originalFile);
@@ -105,34 +108,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     }
   }
 
-  Future<void> _pickFileForMobile() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        withData: false,
-      );
-
-      if (result != null &&
-          result.files.isNotEmpty &&
-          result.files.single.path != null) {
-        final filePath = result.files.single.path!;
-
-        // Validate file type before using it
-        checkFileType(filePath); // Check file type here
-
-        setState(() {
-          _selectedFile = File(filePath);
-        });
-        print('File selected: $filePath');
-      } else {
-        throw Exception('No file selected or path is unavailable.');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error selecting file: $e')),
-      );
-    }
-  }
   Future<void>_createPost() async{
     print('Creating post button clicked...');
     try{
@@ -171,7 +146,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Profile')),
+      appBar: AppBar(
+        title: const Text('Create Post', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -184,19 +163,30 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 backgroundColor: Colors.grey[300],
                 backgroundImage: _uploadedImageUrl == null ? null : Image.network(_uploadedImageUrl!, fit: BoxFit.cover).image,
                 child: _uploadedImageUrl == null
-                    ? const Icon(Icons.camera_alt, color: Colors.white)
+                    ? const Icon(Icons.camera_alt, color: Colors.grey, size: 40)
                     : null,
               ),
             ),
             const SizedBox(height: 20),
-            TextButton(
+            ElevatedButton.icon(
               onPressed: _pickImageAndUpload,
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+              icon: const Icon(Icons.add_photo_alternate),
+              label: const Text('Add a photo'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFFCC00),
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
               ),
-              child: const Text('Add a photo', style: TextStyle(color: Colors.white)),
             ),
+            if (_errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             
        
             const SizedBox(height: 20),

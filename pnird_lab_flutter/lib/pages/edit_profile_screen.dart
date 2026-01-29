@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import '../services/file_utils.dart';
 import '../services/api_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pnirdlab/services/post_service.dart';
+import 'package:pnirdlab/utils/image_processor.dart';
 
 
 
@@ -21,7 +21,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
  
   final _bio = TextEditingController();
   final _username = TextEditingController();
-  File? _selectedFile;
   String? _errorMessage;
   String? _uploadedImageUrl; // Store the uploaded image URL
 
@@ -29,18 +28,29 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 Future<void> updateUserProfile(userId, bio, username, profilePicture) async {
   final url = '${ApiService.baseUrl}/users/${widget.userId}';
 
+  // Only include fields that have values (not empty)
+  final Map<String, dynamic> updateData = {
+    'userId': widget.userId,
+  };
+
+  if (bio != null && bio.isNotEmpty) {
+    updateData['bio'] = bio;
+  }
+  
+  if (username != null && username.isNotEmpty) {
+    updateData['username'] = username;
+  }
+  
+  if (profilePicture != null && profilePicture.isNotEmpty) {
+    updateData['profilePicture'] = profilePicture;
+  }
+
   final response = await http.put(
     Uri.parse(url),
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer your-token-here',  // If you use authentication tokens
     },
-    body: jsonEncode({
-      'userId': widget.userId,
-      'bio': bio,
-      'username': username,
-      'profilePicture': profilePicture,  // Include photo URL if available
-    }),
+    body: jsonEncode(updateData),
   );
 
   if (response.statusCode == 200) {
@@ -93,12 +103,38 @@ Future<void> updateUserProfile(userId, bio, username, profilePicture) async {
       // Pick the file
       final result = await FilePicker.platform.pickFiles(
         type: FileType.image,
-        withData: true, // Ensures we get the file bytes
       );
 
       if (result == null || result.files.isEmpty) return; // No file selected
-      final fileBytes = result.files.first.bytes!;
-      final fileName = result.files.first.name;
+      
+      final filePath = result.files.first.path!;
+      final originalFile = File(filePath);
+      
+      // Validate image
+      final isValid = await ImageProcessor.validateImage(originalFile);
+      if (!isValid) {
+        setState(() {
+          _errorMessage = 'Invalid image. Please select a JPG, PNG, or WebP image under 2MB.';
+        });
+        return;
+      }
+
+      // Clear error message after successful validation
+      setState(() {
+        _errorMessage = null;
+      });
+
+      // Process image (resize, compress, convert to JPEG)
+      final processedFile = await ImageProcessor.processPostImage(originalFile);
+      if (processedFile == null) {
+        setState(() {
+          _errorMessage = 'Failed to process image. Please try again.';
+        });
+        return;
+      }
+
+      final fileBytes = await processedFile.readAsBytes();
+      final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
       // Create a multipart request for the file
       final request = http.MultipartRequest('POST', Uri.parse(uploadUrl));
@@ -135,35 +171,6 @@ Future<void> updateUserProfile(userId, bio, username, profilePicture) async {
     }
   }
 
-  Future<void> _pickFileForMobile() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        withData: false,
-      );
-
-      if (result != null &&
-          result.files.isNotEmpty &&
-          result.files.single.path != null) {
-        final filePath = result.files.single.path!;
-
-        // Validate file type before using it
-        checkFileType(filePath); // Check file type here
-
-        setState(() {
-          _selectedFile = File(filePath);
-        });
-        print('File selected: $filePath');
-      } else {
-        throw Exception('No file selected or path is unavailable.');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error selecting file: $e')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -185,14 +192,25 @@ Future<void> updateUserProfile(userId, bio, username, profilePicture) async {
               ),
             ),
             const SizedBox(height: 20),
-            TextButton(
+            ElevatedButton.icon(
               onPressed: _pickImageAndUpload,
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+              icon: const Icon(Icons.add_photo_alternate),
+              label: const Text('Add a photo'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFFCC00),
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
               ),
-              child: const Text('Add a photo', style: TextStyle(color: Colors.white)),
             ),
+            if (_errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             
        
             const SizedBox(height: 20),
@@ -217,9 +235,10 @@ Future<void> updateUserProfile(userId, bio, username, profilePicture) async {
                 filled: true,
                 fillColor: Colors.black.withOpacity(0.5),
                 border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.email, color: Colors.white),
+                prefixIcon: const Icon(Icons.description, color: Colors.white),
               ),
               style: const TextStyle(color: Colors.white),
+              maxLines: 3,
             ),
             const SizedBox(height: 40),
             ElevatedButton(
