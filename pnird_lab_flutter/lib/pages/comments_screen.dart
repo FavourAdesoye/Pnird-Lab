@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pnirdlab/widgets/comment_card.dart';
 import 'package:pnirdlab/services/comment_service.dart';
+import 'package:pnirdlab/services/api_service.dart';
 import 'package:pnirdlab/model/comment_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -38,7 +39,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
     if (mongoUserId != null) {
       try {
         final response = await http.get(
-          Uri.parse("http://localhost:3000/api/users/id/$mongoUserId"),
+          Uri.parse("${ApiService.baseUrl}/users/id/$mongoUserId"),
         );
         
         if (response.statusCode == 200) {

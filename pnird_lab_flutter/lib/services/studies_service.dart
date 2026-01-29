@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../model/study_model.dart'; // Import your Study model
+import 'api_service.dart';
 
 class StudiesApi {
-  static const String baseUrl =
-      "http://localhost:3000/api/studies"; // Replace with your backend URL
+  static String get baseUrl => "${ApiService.baseUrl}/studies";
 
   // Fetch all studies
   static Future<List<Study>> fetchStudies() async {

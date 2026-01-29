@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 
 class ApiTestPage extends StatefulWidget {
   const ApiTestPage({super.key});
@@ -29,9 +30,7 @@ class _ApiTestPageState extends State<ApiTestPage> {
 
       // Test different API URLs
       final urls = [
-        'http://10.0.2.2:3000/api/messages/chats/$firebaseId',
-        'http://localhost:3000/api/messages/chats/$firebaseId',
-        'http://127.0.0.1:3000/api/messages/chats/$firebaseId',
+        '${ApiService.baseUrl}/messages/chats/$firebaseId',
       ];
 
       for (String url in urls) {

@@ -2,11 +2,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../model/post_model.dart';
+import 'api_service.dart';
 
 Future<List<Post>> getPosts() async {
   List<Post> posts = [];
 
-  var url = Uri.parse('http://localhost:3000/api/posts');
+  var url = Uri.parse('${ApiService.baseUrl}/posts');
 
   try {
     final res = await http.get(url);
@@ -44,7 +45,7 @@ Future<List<Post>> getPosts() async {
 
 //get post2 fetches user post based on user id. not firebase id
 class PostService2 {
-  static const String apiUrl = 'http://localhost:3000/api/posts/user/id/';
+  static String get apiUrl => '${ApiService.baseUrl}/posts/user/id/';
 
   Future<List<Post>> fetchUserPosts(String userId) async {
     print("Fetching posts for User ID: $userId");

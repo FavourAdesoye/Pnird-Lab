@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pnirdlab/services/api_service.dart';
 import 'package:pnirdlab/pages/events_detail_page.dart';
 import 'package:pnirdlab/pages/create_events_page.dart';
 class EventsPage extends StatefulWidget {
@@ -87,7 +88,7 @@ class _EventsPageState extends State<EventsPage> {
   }
 
   Future<void> fetchAllEvents() async {
-    final url = 'http://localhost:3000/api/events/events/';
+    final url = '${ApiService.baseUrl}/events/events/';
     final data = await fetchEvents(url);
     setState(() {
       allEvents = data;
@@ -103,7 +104,7 @@ class _EventsPageState extends State<EventsPage> {
       });
     } else {
       // Fetch events for the specific month
-      final url = 'http://localhost:3000/api/events/event/$month';
+      final url = '${ApiService.baseUrl}/events/event/$month';
       final data = await fetchEvents(url);
       setState(() {
         events = data;

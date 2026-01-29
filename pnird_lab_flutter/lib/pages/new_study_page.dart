@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 // For selecting images
 import '../model/study_model.dart';
+import '../services/api_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/file_utils.dart';
 
@@ -123,7 +124,7 @@ class _NewStudyPageState extends State<NewStudyPage> {
         }
 
         final response = await http.post(
-          Uri.parse('http://localhost:3000/api/studies/createstudy'),
+          Uri.parse('${ApiService.baseUrl}/studies/createstudy'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             'titlepost': _title,

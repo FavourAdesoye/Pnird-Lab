@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/file_utils.dart';
+import '../services/api_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pnirdlab/model/post_model.dart';
 import 'package:pnirdlab/utils/image_processor.dart';
@@ -139,7 +140,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         throw Exception("Description or image is empty");
       }
       final response = await http.post(
-        Uri.parse('http://localhost:3000/api/posts/upload'),
+        Uri.parse('${ApiService.baseUrl}/posts/upload'),
         headers: {
           'Content-Type': 'application/json',
         },

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/file_utils.dart';
+import '../services/api_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pnirdlab/services/post_service.dart';
 
@@ -26,7 +27,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
 
 Future<void> updateUserProfile(userId, bio, username, profilePicture) async {
-  final url = 'http://localhost:3000/api/users/${widget.userId}';  // Replace with your backend URL
+  final url = '${ApiService.baseUrl}/users/${widget.userId}';
 
   final response = await http.put(
     Uri.parse(url),

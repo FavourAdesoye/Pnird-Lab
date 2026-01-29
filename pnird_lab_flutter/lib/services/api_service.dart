@@ -3,11 +3,14 @@ import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, Tar
 
 class ApiService {
   static String get baseUrl {
-    if (dotenv.env['API_BASE_URL'] != null) {
-      return dotenv.env['API_BASE_URL']!;
+    // If .env has API_BASE_URL set and not empty, use it (for physical device testing)
+    final envUrl = dotenv.env['API_BASE_URL'];
+    if (envUrl != null && envUrl.isNotEmpty) {
+      return envUrl;
     }
     
     // Platform-specific URL handling using defaultTargetPlatform (safer than Platform)
+    // Use these defaults for simulators/emulators
     if (kIsWeb) {
       return 'http://localhost:3000/api';
     }
@@ -17,8 +20,8 @@ class ApiService {
         // Android emulator uses 10.0.2.2 to access host machine
         return 'http://10.0.2.2:3000/api';
       case TargetPlatform.iOS:
-        // iOS simulator can use localhost
-        return 'http://localhost:3000/api';
+        // iOS simulator uses 127.0.0.1 (localhost can have DNS resolution issues)
+        return 'http://127.0.0.1:3000/api';
       default:
         // macOS, Windows, Linux, or other platforms
         return 'http://localhost:3000/api';
@@ -26,8 +29,10 @@ class ApiService {
   }
   
   static String get socketUrl {
-    if (dotenv.env['SOCKET_URL'] != null) {
-      return dotenv.env['SOCKET_URL']!;
+    // If .env has SOCKET_URL set and not empty, use it (for physical device testing)
+    final envUrl = dotenv.env['SOCKET_URL'];
+    if (envUrl != null && envUrl.isNotEmpty) {
+      return envUrl;
     }
     
     // Same platform-specific logic for socket
@@ -39,7 +44,7 @@ class ApiService {
       case TargetPlatform.android:
         return 'http://10.0.2.2:3000';
       case TargetPlatform.iOS:
-        return 'http://localhost:3000';
+        return 'http://127.0.0.1:3000';
       default:
         return 'http://localhost:3000';
     }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:pnirdlab/services/api_service.dart';
 import 'package:pnirdlab/pages/events_page.dart';
 import 'package:intl/intl.dart';
 
@@ -159,7 +160,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:3000/api/events/createevent'),
+        Uri.parse('${ApiService.baseUrl}/events/createevent'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'titlepost': _title,

@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../model/comment_model.dart';
+import 'api_service.dart';
 
 class CommentService {
-  static const String apiUrl =
-      'http://localhost:3000/api/comments'; // Replace with your API URL
+  static String get apiUrl => '${ApiService.baseUrl}/comments';
 
   // Helper method to generate the URL for fetching comments based on entity type and ID
   String _getCommentsUrl(String entityType, String entityId) {

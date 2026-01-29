@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:pnirdlab/model/comment_model.dart';
+import 'package:pnirdlab/services/api_service.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -19,7 +20,7 @@ class CommentCard extends StatelessWidget {
   Future<String?> _getUserProfilePicture(String username) async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/users/username/$username'),
+        Uri.parse('${ApiService.baseUrl}/users/username/$username'),
       );
       
       if (response.statusCode == 200) {
