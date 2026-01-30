@@ -7,8 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:pnirdlab/main_screen.dart';
 import 'package:pnirdlab/pages/loginpages/staff_signup.dart';
 import 'package:pnirdlab/pages/loginpages/staff_login.dart';
-import 'package:pnirdlab/pages/loginpages/student_login.dart';
-import 'package:pnirdlab/pages/loginpages/student_signup.dart';
+import 'package:pnirdlab/pages/loginpages/community_login.dart';
+import 'package:pnirdlab/pages/loginpages/community_signup.dart';
 import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
 import 'package:pnirdlab/pages/loginpages/email_verification_page.dart';
 import 'package:pnirdlab/pages/loginpages/email_test_page.dart';
@@ -158,8 +158,8 @@ class MyApp extends StatelessWidget {
             themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
             home: isLoggedIn ? MainScreenPage() : ChooseAccountTypePage(),
             routes: {
-              '/student_signup': (context) => StudentSignUpPage(),
-              '/student_login': (context) => StudentLoginPage(),
+              '/community_signup': (context) => CommunitySignUpPage(),
+              '/community_login': (context) => CommunityLoginPage(),
               '/staff_login': (context) => StaffLoginPage(),
               '/staff_signup': (context) => StaffSignUpPage(),
               '/email_verification': (context) => EmailVerificationPage(email: ''),

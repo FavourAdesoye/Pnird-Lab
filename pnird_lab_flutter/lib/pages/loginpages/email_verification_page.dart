@@ -154,12 +154,13 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 40),
             // Email verification icon
             Icon(
               Icons.mark_email_unread_outlined,
@@ -416,8 +417,10 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                 ],
               ),
             ),
+            const SizedBox(height: 40),
           ],
         ),
+      ),
       ),
     );
   }

@@ -18,13 +18,7 @@ class Gamehome extends StatelessWidget {
         ),
         centerTitle: true,
         backgroundColor: const Color.fromARGB(255, 245, 207, 40),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_outlined),
-          color: Colors.white,
-          onPressed: () {
-            Navigator.pop(context); // Properly exit back to previous screen
-          },
-        ),
+        automaticallyImplyLeading: false, // Remove back button since this is a main nav screen
       ),
       backgroundColor: Colors.black,
       body: const GamehomeContent(),

@@ -52,12 +52,21 @@ void initState() {
     setState(() {}); // Rebuild widget after fetching ID
   }
 
-  Future<void> sharePost() async {
+  Future<void> sharePost(BuildContext context) async {
     try {
+      // Get the position for iOS share sheet
+      final box = context.findRenderObject() as RenderBox?;
+      final sharePositionOrigin = box != null
+          ? box.localToGlobal(Offset.zero) & box.size
+          : null;
+
       // If there's no image, just share the description
       if (widget.post.img == null || widget.post.img!.isEmpty) {
         final text = widget.post.description ?? 'Check out this post!';
-        await Share.share(text);
+        await Share.share(
+          text,
+          sharePositionOrigin: sharePositionOrigin,
+        );
         return;
       }
 
@@ -78,6 +87,7 @@ void initState() {
       await Share.shareXFiles(
         [XFile(file.path)],
         text: text,
+        sharePositionOrigin: sharePositionOrigin,
       );
     } catch (e) {
       if (mounted) {
@@ -259,11 +269,16 @@ void initState() {
                     Icons.comment_outlined,
 
                   )),
-              IconButton(
-                onPressed: sharePost,
-                icon: const Icon(
-                  Icons.share_outlined,
-                )),
+              Builder(
+                builder: (BuildContext context) {
+                  return IconButton(
+                    onPressed: () => sharePost(context),
+                    icon: const Icon(
+                      Icons.share_outlined,
+                    ),
+                  );
+                },
+              ),
             ],
           ),
           //Number of Likes and Comments and Description

@@ -11,6 +11,19 @@ router.post('/upload', upload.single('image'), async (req, res) => {
       const { img, userId, description } = req.body;
       console.log('Request body:', req.body);  // Log the incoming body
       console.log('Uploaded file:', req.file);
+      
+      // Check if user is staff (only staff can create posts)
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (user.role !== 'staff') {
+        return res.status(403).json({ 
+          message: "Only staff members can create posts. Community members can view and comment on posts." 
+        });
+      }
+      
       // Upload image to Cloudinary
       let finalImageUrl;
   

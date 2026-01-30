@@ -16,12 +16,29 @@ router.post("/", async (req, res) => {
         return res.status(403).json({ message: "Users cannot message themselves." });
     }
 
+    // Check roles to enforce messaging rules
+    const sender = await User.findById(senderId);
+    const recipient = await User.findById(recipientId);
+    
+    if (!sender || !recipient) {
+      return res.status(404).json({ message: "Sender or recipient not found." });
+    }
+    
+    console.log("Sender ID:", senderId);
+    console.log("Sender Name:", sender.username);
+    console.log("Sender Role:", sender.role);
+    console.log("Recipient Role:", recipient.role);
+    
+    // Community members can only message staff
+    if (sender.role === 'community' && recipient.role !== 'staff') {
+      return res.status(403).json({ 
+        message: "Community members can only message staff members." 
+      });
+    }
+
     const newMessage = new Message({ senderId, recipientId, message });
     const saved = await newMessage.save();
-    const sender = await User.findById(senderId);
-    console.log("Sender ID:", senderId);
-    const senderName = sender ? sender.username : "Unknown";
-    console.log("Sender Name:", senderName);
+    const senderName = sender.username;
     // Notify the recipient
 
         const notif = new Notification({

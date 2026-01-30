@@ -8,7 +8,7 @@ router.post("/register", async(req, res) => {
     email: req.body.email,
     password: req.body.password || 'default_password',
     profilePicture: req.body.profilePicture || '',
-    role: req.body.role || 'student',
+    role: req.body.role || 'community',
     firebaseUID: req.body.firebaseUID || '',
     isAdmin: req.body.isAdmin || false
    });
@@ -46,7 +46,7 @@ router.post("/login", async(req, res) => {
             id: user._id,
             username: user.username,
             email: user.email,
-            role: user.role || (user.isAdmin ? 'staff' : 'student')
+            role: user.role || (user.isAdmin ? 'staff' : 'community')
         }
     });
    } catch(err){

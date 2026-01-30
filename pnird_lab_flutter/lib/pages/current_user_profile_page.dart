@@ -25,6 +25,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String? username = "Loading...";
   String? bio = "Loading bio...";
   String? profilepic = "";
+  String? userRole; // Add role
   int postCount = 0;
   List<Post> posts = [];
 
@@ -80,6 +81,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final prefs = await SharedPreferences.getInstance();
     loggedInUserId = prefs.getString('userId'); // Store logged-in user ID for comparison
     firebaseId = prefs.getString('firebaseId');
+    userRole = prefs.getString('role'); // Load user role
     
     // Use the provided myuserId parameter, or fall back to logged-in user's ID
     final targetUserId = widget.myuserId.isNotEmpty ? widget.myuserId : loggedInUserId;
@@ -182,9 +184,11 @@ class _ProfilePageState extends State<ProfilePage> {
       body: userId == null
           ? Center(child: Text("User not logged in."))
           : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
+              child: Center(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                   // Profile Picture
                   CircleAvatar(
                     radius: 50,
@@ -213,12 +217,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   SizedBox(height: 10),
 
-                  // Post Count
-                  Text(
-                    postCount == 1 ? "$postCount Post" : "$postCount Posts",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
+                  // Post Count - Only show for staff members
+                  if (userRole == 'staff')
+                    Text(
+                      postCount == 1 ? "$postCount Post" : "$postCount Posts",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  if (userRole == 'staff')
+                    SizedBox(height: 10),
 
                   // Buttons - Show different buttons based on whether viewing own profile or other user's profile
                   Wrap(
@@ -250,29 +256,31 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ),
                         ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => CreatePostScreen(userId: userId!)),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.amber,
-                            side: BorderSide(color: Colors.amber),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                        // Only show Create Post button for staff
+                        if (userRole == 'staff')
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => CreatePostScreen(userId: userId!)),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.amber,
+                              side: BorderSide(color: Colors.amber),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              "Create Post",
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                          child: Text(
-                            "Create Post",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
                       ],
                       // Message button - show for both own profile and other users
                       ElevatedButton(
@@ -317,10 +325,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   SizedBox(height: 20),
 
-                  // Grid View of Posts
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: GridView.builder(
+                  // Grid View of Posts - Only show for staff members
+                  if (userRole == 'staff')
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: GridView.builder(
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -372,6 +381,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 ],
+              ),
               ),
             ),
     );

@@ -175,11 +175,12 @@ Future<void> updateUserProfile(userId, bio, username, profilePicture) async {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Edit Profile')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
             GestureDetector(
               onTap: _pickImageAndUpload,
               child: CircleAvatar(
@@ -244,18 +245,18 @@ Future<void> updateUserProfile(userId, bio, username, profilePicture) async {
             ElevatedButton(
               onPressed: () {
                 String bio = _bio.text;
-String username = _username.text;
-                updateUserProfile(widget.userId, bio, username, _uploadedImageUrl?? '');
-
+                String username = _username.text;
+                updateUserProfile(widget.userId, bio, username, _uploadedImageUrl ?? '');
               },
               style: ElevatedButton.styleFrom(
-           
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 60),
               ),
               child: const Text('Next'),
             ),
+            const SizedBox(height: 40), // Bottom padding for keyboard
           ],
         ),
+      ),
       ),
       backgroundColor: Colors.black,
     );

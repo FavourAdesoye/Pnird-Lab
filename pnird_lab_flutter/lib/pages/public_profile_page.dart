@@ -3,7 +3,8 @@ import 'package:pnirdlab/model/post_model.dart';
 import 'package:pnirdlab/services/user_service.dart';
 import 'package:pnirdlab/services/post_service.dart';
 import 'package:pnirdlab/pages/post_detail_page.dart';
-import 'package:pnirdlab/pages/chats_page.dart';
+import 'package:pnirdlab/pages/message_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PublicProfilePage extends StatefulWidget {
   final String userId;
@@ -18,6 +19,8 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
   String? username = "Loading...";
   String? bio = "Loading bio...";
   String? profilepic = "";
+  String? profileOwnerRole; // Role of the profile being viewed
+  String? currentUserRole; // Role of logged-in user
   List<Post> posts = [];
   int postCount = 0;
   bool isLoading = true;
@@ -25,7 +28,15 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
   @override
   void initState() {
     super.initState();
+    loadCurrentUserRole();
     fetchPublicProfileData(widget.userId);
+  }
+
+  Future<void> loadCurrentUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      currentUserRole = prefs.getString('role');
+    });
   }
 
   Future<void> fetchPublicProfileData(String userId) async {
@@ -37,6 +48,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
         username = user.username;
         bio = user.bio;
         profilepic = user.profilePicture;
+        profileOwnerRole = user.role; // Get the profile owner's role
         posts = userPosts;
         postCount = posts.length;
         isLoading = false;
@@ -47,6 +59,18 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
     }
   }
 
+  // Check if current user can message this profile
+  bool canMessage() {
+    // Staff can message anyone
+    if (currentUserRole == 'staff') return true;
+    
+    // Community members can only message staff
+    if (currentUserRole == 'community' && profileOwnerRole == 'staff') return true;
+    
+    // Otherwise, no messaging allowed
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,9 +78,11 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
+              child: Center(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                   CircleAvatar(
                     radius: 50,
                     backgroundImage: (profilepic != null && profilepic!.isNotEmpty)
@@ -77,38 +103,50 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                     ),
                   ),
     
-                  Text(
-                    postCount == 1 ? "$postCount Post" : "$postCount Posts",
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-       onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ChatsPage()),
-                );
-              },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.amber,
-        textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        side: const BorderSide(color: Colors.amber), // Optional: outline
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+                  // Only show post count for staff members
+                  if (profileOwnerRole == 'staff')
+                    Text(
+                      postCount == 1 ? "$postCount Post" : "$postCount Posts",
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  // Only show Message button if user can message this profile
+                  if (canMessage())
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+         onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MessagePage(
+                        recipientId: widget.userId,
+                        recipientName: username ?? "User",
+                        isAdmin: profileOwnerRole == 'staff',
+                      ),
+                    ),
+                  );
+                },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.amber,
+          textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          side: const BorderSide(color: Colors.amber),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
+        child: const Text("Message"),
       ),
-      child: const Text("Message"),
-    ),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: posts.isEmpty
-                        ? const Text("No posts yet.")
-                        : GridView.builder(
+                      ],
+                    ),
+                  // Only show posts section for staff members
+                  if (profileOwnerRole == 'staff')
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: posts.isEmpty
+                          ? const Text("No posts yet.")
+                          : GridView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -149,6 +187,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                           ),
                   ),
                 ],
+              ),
               ),
             ),
     );

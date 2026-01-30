@@ -27,7 +27,6 @@ class _AboutUsPageState extends State<AboutUsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -120,7 +119,6 @@ class _AboutUsPageState extends State<AboutUsPage> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
             ),
           ),
           const SizedBox(height: 20),
@@ -163,7 +161,6 @@ class _AboutUsPageState extends State<AboutUsPage> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
             ),
           ),
           const SizedBox(height: 20),
@@ -200,7 +197,6 @@ class _AboutUsPageState extends State<AboutUsPage> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
             ),
           ),
           const SizedBox(height: 20),
@@ -241,7 +237,7 @@ class _AboutUsPageState extends State<AboutUsPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.yellow.withOpacity(0.3)),
       ),
@@ -267,7 +263,6 @@ class _AboutUsPageState extends State<AboutUsPage> {
             content,
             style: const TextStyle(
               fontSize: 16,
-              color: Colors.white,
               height: 1.5,
             ),
           ),
@@ -283,7 +278,7 @@ class _AboutUsPageState extends State<AboutUsPage> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.grey[900],
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.yellow.withOpacity(0.3)),
         ),
@@ -303,7 +298,6 @@ class _AboutUsPageState extends State<AboutUsPage> {
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
@@ -348,7 +342,7 @@ class _AboutUsPageState extends State<AboutUsPage> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey[900],
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.yellow.withOpacity(0.3)),
         ),
@@ -365,7 +359,6 @@ class _AboutUsPageState extends State<AboutUsPage> {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -436,7 +429,6 @@ class _AboutUsPageState extends State<AboutUsPage> {
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -466,7 +458,6 @@ class _AboutUsPageState extends State<AboutUsPage> {
                       member.bio,
                       style: const TextStyle(
                         fontSize: 15,
-                        color: Colors.white,
                         height: 1.4,
                       ),
                       textAlign: TextAlign.center,
@@ -534,7 +525,6 @@ class _AboutUsPageState extends State<AboutUsPage> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -544,7 +534,7 @@ class _AboutUsPageState extends State<AboutUsPage> {
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.grey[800],
+                            color: Theme.of(context).cardColor.withOpacity(0.5),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: Colors.yellow.withOpacity(0.3)),
                           ),
@@ -564,7 +554,6 @@ class _AboutUsPageState extends State<AboutUsPage> {
                                     Text(
                                       publication.title,
                                       style: const TextStyle(
-                                        color: Colors.white,
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
                                         height: 1.3,
@@ -636,7 +625,6 @@ class _AboutUsPageState extends State<AboutUsPage> {
           Text(
             label,
             style: const TextStyle(
-              color: Colors.white,
               fontSize: 12,
             ),
           ),
@@ -671,10 +659,8 @@ class _AboutUsPageState extends State<AboutUsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
         title: const Text(
           'Email Not Available',
-          style: TextStyle(color: Colors.white),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -682,13 +668,12 @@ class _AboutUsPageState extends State<AboutUsPage> {
           children: [
             const Text(
               'Unable to open email app. You can copy the email address:',
-              style: TextStyle(color: Colors.white),
             ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey[800],
+                color: Theme.of(context).cardColor.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.yellow.withOpacity(0.3)),
               ),

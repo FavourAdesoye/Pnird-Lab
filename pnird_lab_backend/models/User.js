@@ -29,7 +29,7 @@ const UserSchema = new mongoose.Schema({
     role: {
         type: String,
         required: true,
-        enum: ["staff", "student"]
+        enum: ["staff", "community"]
     },
 
     cloudinary_id:{

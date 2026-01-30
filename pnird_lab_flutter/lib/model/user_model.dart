@@ -6,6 +6,7 @@ class User {
   final String firebaseUID;
   String profilePicture;
   bool? isAdmin;
+  String? role;
 
   User({
     required this.id,
@@ -15,6 +16,7 @@ class User {
     required this.firebaseUID,
     this.profilePicture = '',
     this.isAdmin,
+    this.role,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -28,6 +30,7 @@ class User {
       isAdmin: json['isAdmin'] == null
           ? null
           : json['isAdmin'] as bool, // Ensure proper boolean parsing
+      role: json['role'] as String?,
     );
   }
 }

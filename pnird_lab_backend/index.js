@@ -26,7 +26,17 @@ const Message = require("./models/messages");
 const User = require("./models/User");
 const Notification = require("./models/notifications");
 const admin = require("firebase-admin")
+const serviceAccount = require("./pnird-lab-firebase-adminsdk-avod6-157fc3b4bb.json");
+
 dotenv.config();
+
+// Initialize Firebase Admin
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+  console.log('✅ Firebase Admin initialized');
+}
 
 const Port = process.env.PORT || 3000; 
 

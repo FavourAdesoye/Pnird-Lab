@@ -133,9 +133,9 @@ router.post('/register', async(req,res) => {
     }
 
     // Validate role
-    if (!['staff', 'student'].includes(role)) {
+    if (!['staff', 'community'].includes(role)) {
       return res.status(400).json({ 
-        message: 'Invalid role. Must be either "staff" or "student"' 
+        message: 'Invalid role. Must be either "staff" or "community"' 
       });
     }
 
@@ -268,9 +268,9 @@ router.get('/:firebaseUID', async (req, res) => {
     res.status(200).json({ message: 'Welcome, Admin!' });
   });
 
-// Student Route: Only accessible by users with student role
-  router.get('/student-data', firebaseAuthMiddleware, checkRole('student'), (req, res) => {
-    res.status(200).json({ message: 'Welcome, Student!' });
+// Community Route: Only accessible by users with community role
+  router.get('/community-data', firebaseAuthMiddleware, checkRole('community'), (req, res) => {
+    res.status(200).json({ message: 'Welcome, Community Member!' });
   }); 
 
   // Route to retrieve user role

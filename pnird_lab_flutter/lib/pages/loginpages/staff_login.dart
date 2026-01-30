@@ -53,7 +53,7 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
               backgroundColor: Colors.red,
             ),
           );
-          Navigator.pushNamed(context, '/student_login');
+          Navigator.pushNamed(context, '/community_login');
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

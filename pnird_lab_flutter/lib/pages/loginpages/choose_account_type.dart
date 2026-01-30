@@ -46,8 +46,8 @@ class _ChooseAccountTypePageState extends State<ChooseAccountTypePage> {
   String selectedAccountType = '';
 
   void navigateToSignUp() {
-    if (selectedAccountType == 'Student') {
-      Navigator.pushNamed(context, '/student_signup');
+    if (selectedAccountType == 'Community') {
+      Navigator.pushNamed(context, '/community_signup');
     } else if (selectedAccountType == 'Staff') {
       Navigator.pushNamed(context, '/staff_signup');
     }
@@ -124,9 +124,9 @@ class _ChooseAccountTypePageState extends State<ChooseAccountTypePage> {
                   ),
                   const SizedBox(height: 40),
                   AccountTypeButton(
-                    label: 'Student',
+                    label: 'Community',
                     onPressed: () {
-                      handleAccountTypeSelection('Student');
+                      handleAccountTypeSelection('Community');
                     },
                   ),
                   const SizedBox(height: 40),
