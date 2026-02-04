@@ -212,9 +212,9 @@ class _AboutUsPageState extends State<AboutUsPage> {
           
           _buildContactCard(
             'Visit Our Lab',
-            '123 Research Avenue, Science District',
+            '1 Hayden Dr, Petersburg, Virginia 23803, United States',
             Icons.location_on,
-            () => _launchMaps('123 Research Avenue, Science District'),
+            () => _launchMaps('1 Hayden Dr, Petersburg, Virginia 23803, United States'),
           ),
           
           const SizedBox(height: 16),

@@ -495,7 +495,7 @@ class _GameBoardState extends State<Gameboard> {
 
   @override
   Widget build(BuildContext context) {
-    double boardSize = MediaQuery.of(context).size.width * 0.5;
+    double boardSize = MediaQuery.of(context).size.width * 0.8;
 
     return Scaffold( 
        appBar: AppBar(
