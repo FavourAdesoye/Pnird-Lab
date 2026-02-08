@@ -193,16 +193,24 @@ flutter run --debug  # Enable debug logging
 ### Android
 - Minimum SDK: 21
 - Target SDK: 33
-- Package: `com.example.flutternativesplash`
+- Package: `com.pnirdlab.app`
 
 ### iOS
 - Minimum iOS: 11.0
-- Bundle ID: `com.example.flutternativesplash`
+- Bundle ID: `com.pnirdlab.app`
 - Requires Xcode 12+
 
 ### Web
 - Responsive design for various screen sizes
 - Firebase web configuration included
+
+## 🔧 Firebase Config Regeneration
+Only needed when you change app IDs or Firebase project settings.
+```bash
+dart pub global activate flutterfire_cli
+firebase login
+flutterfire configure
+```
 
 ## 🤝 Contributing
 

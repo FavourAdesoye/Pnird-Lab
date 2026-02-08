@@ -96,6 +96,15 @@ cd pnird_lab_flutter
 flutter run  # Hot reload enabled
 ```
 
+### Firebase CLI (only when regenerating config)
+If you need to regenerate Firebase configuration files (`google-services.json`, `GoogleService-Info.plist`, `lib/firebase_options.dart`),
+install the Firebase CLI and FlutterFire CLI locally, then run:
+```bash
+dart pub global activate flutterfire_cli
+firebase login
+flutterfire configure
+```
+
 ### Database
 - MongoDB collections: users, posts, comments, studies, events, messages, notifications
 - Use MongoDB Compass for database management
