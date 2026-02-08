@@ -262,3 +262,5 @@ app.use((err, _req, res, _next) => {
 httpServer.listen(port, () => {
   console.log(`Backend server running on port ${port}`);
 });
+
+app.use(express.json());
