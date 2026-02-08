@@ -2,10 +2,22 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
 class ApiService {
+  static String? _safeEnv(String key) {
+    try {
+      final value = dotenv.env[key];
+      if (value == null || value.isEmpty) {
+        return null;
+      }
+      return value;
+    } catch (_) {
+      return null;
+    }
+  }
+
   static String get baseUrl {
     // If .env has API_BASE_URL set and not empty, use it (for physical device testing)
-    final envUrl = dotenv.env['API_BASE_URL'];
-    if (envUrl != null && envUrl.isNotEmpty) {
+    final envUrl = _safeEnv('API_BASE_URL');
+    if (envUrl != null) {
       return envUrl;
     }
     
@@ -30,8 +42,8 @@ class ApiService {
   
   static String get socketUrl {
     // If .env has SOCKET_URL set and not empty, use it (for physical device testing)
-    final envUrl = dotenv.env['SOCKET_URL'];
-    if (envUrl != null && envUrl.isNotEmpty) {
+    final envUrl = _safeEnv('SOCKET_URL');
+    if (envUrl != null) {
       return envUrl;
     }
     

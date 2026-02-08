@@ -4,6 +4,7 @@ pnird_lab_flutter/.env
 
 # Firebase credentials (keep these secure!)
 pnird_lab_backend/pnird-lab-firebase-adminsdk-avod6-157fc3b4bb.json
+pnird_lab_backend/*firebase-adminsdk*.json
 pnird_lab_backend/firebase.js
 
 # Node.js

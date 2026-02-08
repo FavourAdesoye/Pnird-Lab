@@ -6,20 +6,21 @@ const admin = require("firebase-admin");
 
 
 const firebaseAuthMiddleware = async (req, res, next) => {
-  const authToken = req.headers.authorization;
+  const authorization = req.headers.authorization || "";
+  const token = authorization.startsWith("Bearer ")
+    ? authorization.slice(7).trim()
+    : authorization.trim();
 
-  if (!authToken) {
+  if (!token) {
     return res.status(401).json({ message: "No token provided." });
   }
 
   try {
-    // Verify the Firebase token
-    const decodedToken = await admin.auth().verifyIdToken(authToken);
-    req.user = decodedToken; // Populate req.user with decoded token info
-
-    next();
-  } catch (error) {
-    res.status(403).json({ message: "Failed to authenticate token." });
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    req.user = decodedToken;
+    return next();
+  } catch (_error) {
+    return res.status(403).json({ message: "Failed to authenticate token." });
   }
 };
 

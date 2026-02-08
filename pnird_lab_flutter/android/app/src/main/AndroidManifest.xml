@@ -7,11 +7,11 @@
    <uses-permission android:name = "android.permission.READ_CALENDAR"/>
    <uses-permission android:name = "android.permission.WRITE_CALENDAR"/>
     <application
-        android:label="flutternativesplash" 
+        android:label="PNIRD Lab"
         android:name = "${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
-            android:name="com.example.flutternativesplash.MainActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""
