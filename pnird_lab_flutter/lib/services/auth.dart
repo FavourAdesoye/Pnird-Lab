@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -58,12 +59,17 @@ class Auth {
       // First, create Firebase account and send verification email
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
+
+      final firebaseUser = userCredential.user;
+      if (firebaseUser == null) {
+        return AuthResult.error('Registration failed. Please try again.');
+      }
       
       // Send email verification immediately
-      await userCredential.user!.sendEmailVerification();
+      await firebaseUser.sendEmailVerification();
       
       // Get Firebase UID
-      String firebaseUID = userCredential.user!.uid;
+      String firebaseUID = firebaseUser.uid;
 
       // Now register with backend
       var response = await http.post(
@@ -82,14 +88,16 @@ class Auth {
         return AuthResult.success(data);
       } else {
         // If backend registration fails, delete Firebase account
-        await userCredential.user!.delete();
-        final errorData = json.decode(response.body);
+        await firebaseUser.delete();
+        final errorData = response.body.isNotEmpty ? json.decode(response.body) : <String, dynamic>{};
         return AuthResult.error(errorData['message'] ?? 'Registration failed');
       }
     } on FirebaseAuthException catch (e) {
       return AuthResult.error(_getFirebaseErrorMessage(e));
+    } on TimeoutException {
+      return AuthResult.error('Connection timed out. Please try again.');
     } catch (e) {
-      return AuthResult.error('An unexpected error occurred: $e');
+      return AuthResult.error('Registration failed. Please try again.');
     }
   }
 
@@ -104,14 +112,18 @@ class Auth {
       // Authenticate with Firebase
       UserCredential userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
+      final firebaseUser = userCredential.user;
+      if (firebaseUser == null) {
+        return AuthResult.error('Login failed. Please try again.');
+      }
       debugPrint('✅ Firebase sign in successful');
       
       // Retrieve Firebase UID
-      String firebaseUID = userCredential.user!.uid;
+      String firebaseUID = firebaseUser.uid;
       debugPrint('🔐 Firebase UID: $firebaseUID');
 
       // Check if email is verified
-      if (!userCredential.user!.emailVerified) {
+      if (!firebaseUser.emailVerified) {
         debugPrint('❌ Email not verified');
         return AuthResult.error('Please verify your email before logging in. Check your inbox for a verification email.');
       }
@@ -134,14 +146,14 @@ class Auth {
       
       debugPrint('🔗 About to make HTTP request...');
       
-      var response = await http.post(
+      final response = await http.post(
         Uri.parse(endpoint),
         headers: ApiService.headers,
         body: json.encode({'uid': firebaseUID}),
       ).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          throw Exception('Request timeout: Could not reach backend');
+          throw TimeoutException('Request timeout: Could not reach backend');
         },
       );
       
@@ -154,12 +166,14 @@ class Auth {
         debugPrint('✅ Login successful, user data received');
         return AuthResult.success(data);
       } else {
-        final errorData = json.decode(response.body);
+        final errorData = response.body.isNotEmpty ? json.decode(response.body) : <String, dynamic>{};
         debugPrint('❌ Backend error: ${errorData['message']}');
         return AuthResult.error(errorData['message'] ?? 'Login failed');
       }
     } on FirebaseAuthException catch (e) {
       return AuthResult.error(_getFirebaseErrorMessage(e));
+    } on TimeoutException {
+      return AuthResult.error('Could not connect to backend server. Please check your internet connection.');
     } catch (e) {
       debugPrint('❌ Login error: $e');
       
@@ -169,11 +183,7 @@ class Auth {
       }
       
       // Handle timeout or connection errors
-      if (e.toString().contains('timeout') || e.toString().contains('Could not reach backend')) {
-        return AuthResult.error('Could not connect to backend server. Please check your internet connection.');
-      }
-      
-      return AuthResult.error('An unexpected error occurred: $e');
+      return AuthResult.error('Login failed. Please try again.');
     }
   }
 
@@ -206,7 +216,7 @@ class Auth {
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
     } catch (e) {
-      print('Error during logout: $e');
+      debugPrint('Error during logout: $e');
     }
   }
 
@@ -246,7 +256,7 @@ class Auth {
       await user.sendEmailVerification();
       return AuthResult.success({'message': 'Verification email sent'});
     } catch (e) {
-      return AuthResult.error('Failed to send verification email: $e');
+      return AuthResult.error('Failed to send verification email. Please try again.');
     }
   }
 
@@ -284,7 +294,7 @@ class Auth {
     } on FirebaseAuthException catch (e) {
       return AuthResult.error(_getFirebaseErrorMessage(e));
     } catch (e) {
-      return AuthResult.error('An unexpected error occurred: $e');
+      return AuthResult.error('Could not resend verification email right now.');
     }
   }
 

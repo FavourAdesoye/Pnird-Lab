@@ -1,4 +1,4 @@
-package com.example.flutternativesplash
+package com.pnirdlab.app
 
 import io.flutter.embedding.android.FlutterActivity 
 

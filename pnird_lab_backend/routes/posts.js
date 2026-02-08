@@ -9,8 +9,9 @@ const Notification = require("../models/notifications");
 router.post('/upload', upload.single('image'), async (req, res) => {
     try {
       const { img, userId, description } = req.body;
-      console.log('Request body:', req.body);  // Log the incoming body
-      console.log('Uploaded file:', req.file);
+      if (!userId || !description) {
+        return res.status(400).json({ message: "userId and description are required" });
+      }
       
       // Check if user is staff (only staff can create posts)
       const user = await User.findById(userId);
@@ -26,6 +27,7 @@ router.post('/upload', upload.single('image'), async (req, res) => {
       
       // Upload image to Cloudinary
       let finalImageUrl;
+      let cloudinaryPublicId = null;
   
       if (img) {
         // Web: Use the provided Cloudinary URL
@@ -34,6 +36,7 @@ router.post('/upload', upload.single('image'), async (req, res) => {
         // Mobile: Upload file to Cloudinary
         const result = await cloudinary.uploader.upload(req.file.path);
         finalImageUrl = result.secure_url;
+        cloudinaryPublicId = result.public_id;
   
         // Optional: Clean up the uploaded file from the server
         const fs = require("fs");
@@ -47,17 +50,17 @@ router.post('/upload', upload.single('image'), async (req, res) => {
         userId,
         description,
         img: finalImageUrl, // Store the URL of the uploaded image
-        cloudinary_id: req.file ? result.public_id : null, // Only set if image was uploaded to Cloudinary
+        cloudinary_id: cloudinaryPublicId,
         likes: req.body.likes || [],
         createdAt: new Date(),
         updatedAt: new Date()
       });
       await post.save();
-      res.json(post);
+      res.status(201).json(post);
     }  
       catch(err){
-        console.error("Error details:", err);
-        res.status(500).json({ error: err.message });
+        console.error("Error details:", err.message);
+        res.status(500).json({ message: "Failed to create post" });
   }
 });
 //like a post / dislike 
@@ -111,7 +114,7 @@ router.put("/:id/like", async(req,res)=>{
         }
     }catch(err){
         console.error("Error in like route:", err);
-        res.status(500).json(err);
+        res.status(500).json({ message: "Failed to update like" });
     }
 });
 //get a post
@@ -120,7 +123,7 @@ router.get("/:id", async(req,res)=> {
         const post = await Post.findById(req.params.id);
         res.status(200).json(post);
     }catch(err){
-        res.status(500).json(err);
+        res.status(500).json({ message: "Failed to fetch post" });
     }
 });
 
@@ -133,7 +136,7 @@ router.get("/", async (req, res) => {
       .populate("comments");
       res.status(200).json(posts);
     } catch (err) {
-      res.status(500).json(err);
+      res.status(500).json({ message: "Failed to fetch posts" });
     }
   });
 //

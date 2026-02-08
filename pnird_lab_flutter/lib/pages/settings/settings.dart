@@ -1,6 +1,7 @@
  import 'package:flutter/material.dart';
 import 'package:pnirdlab/pages/current_user_profile_page.dart';
 import 'package:pnirdlab/pages/edit_profile_screen.dart';
+import 'package:pnirdlab/pages/settings/privacy.dart';
 import 'package:pnirdlab/services/auth.dart';
 
 class Setting extends StatelessWidget {
@@ -86,6 +87,17 @@ class SettingPageUI extends State<_SettingPage> {
                     const SnackBar(content: Text('Account deleted.')),
                   );
                 },
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.privacy_tip_outlined),
+            title: const Text('Privacy Policy'),
+            trailing: const Icon(Icons.arrow_forward_ios),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PrivacyPage()),
               );
             },
           ),

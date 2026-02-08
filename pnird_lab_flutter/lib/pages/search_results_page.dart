@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/search_service.dart';
+import '../services/app_exception.dart';
 import '../services/post_service.dart';
 import '../pages/post_detail_page.dart';
 import '../pages/studies_details.dart';
@@ -48,13 +49,17 @@ class _SearchResultsPageState extends State<SearchResultsPage>
 
     try {
       final results = await SearchService.search(widget.query);
+      if (!mounted) return;
       setState(() {
         _results = results;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = e is AppException
+            ? e.message
+            : 'Could not load search results. Please try again.';
         _isLoading = false;
       });
     }
@@ -94,7 +99,13 @@ class _SearchResultsPageState extends State<SearchResultsPage>
                       Icon(Icons.error_outline,
                           size: 64, color: Theme.of(context).colorScheme.error),
                       const SizedBox(height: 16),
-                      Text(_errorMessage),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          _errorMessage,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: _performSearch,
@@ -629,4 +640,3 @@ class _SearchResultsPageState extends State<SearchResultsPage>
     );
   }
 }
-

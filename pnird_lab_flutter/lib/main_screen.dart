@@ -13,6 +13,7 @@ import 'package:pnirdlab/services/auth.dart';
 import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
 import 'package:pnirdlab/providers/theme_provider.dart';
 import 'package:pnirdlab/pages/search_results_page.dart';
+import 'package:pnirdlab/pages/settings/settings.dart';
 import 'package:pnirdlab/services/search_service.dart';
 
 class MainScreenPage extends StatefulWidget {
@@ -40,6 +41,7 @@ class _MainScreenPageState extends State<MainScreenPage> {
   bool _showSuggestions = false;
   Timer? _debounceTimer;
   OverlayEntry? _overlayEntry;
+  DateTime? _lastSuggestionWarningAt;
 
   Future<void> _logout() async {
     // Show confirmation dialog
@@ -144,13 +146,24 @@ class _MainScreenPageState extends State<MainScreenPage> {
         }
       }
     } catch (e) {
-      // Silently handle errors
       if (mounted) {
         setState(() {
           _suggestions = [];
           _showSuggestions = false;
         });
         _removeOverlay();
+        final now = DateTime.now();
+        if (_lastSuggestionWarningAt == null ||
+            now.difference(_lastSuggestionWarningAt!).inSeconds > 20) {
+          _lastSuggestionWarningAt = now;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Search suggestions are temporarily unavailable.'),
+              behavior: SnackBarBehavior.floating,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       }
     }
   }
@@ -202,7 +215,10 @@ class _MainScreenPageState extends State<MainScreenPage> {
       ),
     );
 
-    Overlay.of(context).insert(_overlayEntry!);
+    final overlay = Overlay.of(context);
+    if (overlay.mounted) {
+      overlay.insert(_overlayEntry!);
+    }
   }
 
   void _removeOverlay() {
@@ -211,8 +227,8 @@ class _MainScreenPageState extends State<MainScreenPage> {
   }
 
   Widget _buildSuggestionItem(Map<String, dynamic> suggestion) {
-    final type = suggestion['type'] as String;
-    final text = suggestion['text'] as String;
+    final type = suggestion['type']?.toString() ?? 'unknown';
+    final text = suggestion['text']?.toString() ?? 'Untitled result';
     
     IconData icon;
     Color iconColor;
@@ -350,9 +366,15 @@ class _MainScreenPageState extends State<MainScreenPage> {
             ListTile(
               leading: Icon(Icons.settings, color: iconColor),
               title: Text('Settings', style: TextStyle(color: textColor)),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                // Navigate to settings page
+                final prefs = await SharedPreferences.getInstance();
+                final mongoUserId = prefs.getString('userId') ?? '';
+                if (!mounted) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Setting(userId: mongoUserId)),
+                );
               },
             ),
             Consumer<ThemeProvider>(

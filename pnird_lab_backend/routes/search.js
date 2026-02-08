@@ -4,6 +4,10 @@ const StudiesModel = require("../models/studies");
 const EventsModel = require("../models/events");
 const User = require("../models/User");
 
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 // Unified search endpoint
 router.get("/", async (req, res) => {
   try {
@@ -14,6 +18,10 @@ router.get("/", async (req, res) => {
     }
 
     const searchQuery = q.trim();
+    if (searchQuery.length > 100) {
+      return res.status(400).json({ message: "Search query is too long" });
+    }
+    const safeRegex = new RegExp(escapeRegex(searchQuery), "i");
     const searchType = type || 'all';
 
     const results = {
@@ -27,7 +35,7 @@ router.get("/", async (req, res) => {
     if (searchType === 'all' || searchType === 'posts') {
       results.posts = await Post.find({
         $or: [
-          { description: { $regex: searchQuery, $options: 'i' } }
+          { description: safeRegex }
         ]
       })
       .populate('userId', 'username profilePicture')
@@ -40,8 +48,8 @@ router.get("/", async (req, res) => {
     if (searchType === 'all' || searchType === 'studies') {
       results.studies = await StudiesModel.find({
         $or: [
-          { titlePost: { $regex: searchQuery, $options: 'i' } },
-          { description: { $regex: searchQuery, $options: 'i' } }
+          { titlePost: safeRegex },
+          { description: safeRegex }
         ]
       })
       .sort({ createdAt: -1 })
@@ -53,9 +61,9 @@ router.get("/", async (req, res) => {
     if (searchType === 'all' || searchType === 'events') {
       results.events = await EventsModel.find({
         $or: [
-          { titlepost: { $regex: searchQuery, $options: 'i' } },
-          { description: { $regex: searchQuery, $options: 'i' } },
-          { location: { $regex: searchQuery, $options: 'i' } }
+          { titlepost: safeRegex },
+          { description: safeRegex },
+          { location: safeRegex }
         ]
       })
       .sort({ createdAt: -1 })
@@ -67,8 +75,8 @@ router.get("/", async (req, res) => {
     if (searchType === 'all' || searchType === 'users') {
       results.users = await User.find({
         $or: [
-          { username: { $regex: searchQuery, $options: 'i' } },
-          { email: { $regex: searchQuery, $options: 'i' } }
+          { username: safeRegex },
+          { email: safeRegex }
         ]
       })
       .select('username email profilePicture role')
@@ -110,7 +118,7 @@ router.get("/", async (req, res) => {
     res.status(200).json(results);
   } catch (error) {
     console.error("Search error:", error);
-    res.status(500).json({ message: "Error performing search", error: error.message });
+    res.status(500).json({ message: "Error performing search" });
   }
 });
 
@@ -124,13 +132,17 @@ router.get("/suggestions", async (req, res) => {
     }
 
     const searchQuery = q.trim();
+    if (searchQuery.length > 100) {
+      return res.status(200).json({ suggestions: [] });
+    }
+    const safeRegex = new RegExp(escapeRegex(searchQuery), "i");
     const suggestions = [];
 
     // Get quick suggestions from each category (limited to 3-5 each for performance)
     try {
       // Post suggestions (just titles/descriptions)
       const postSuggestions = await Post.find({
-        description: { $regex: searchQuery, $options: 'i' }
+        description: safeRegex
       })
       .select('description _id')
       .limit(3)
@@ -147,8 +159,8 @@ router.get("/suggestions", async (req, res) => {
       // Study suggestions
       const studySuggestions = await StudiesModel.find({
         $or: [
-          { titlePost: { $regex: searchQuery, $options: 'i' } },
-          { description: { $regex: searchQuery, $options: 'i' } }
+          { titlePost: safeRegex },
+          { description: safeRegex }
         ]
       })
       .select('titlePost description _id')
@@ -166,8 +178,8 @@ router.get("/suggestions", async (req, res) => {
       // Event suggestions
       const eventSuggestions = await EventsModel.find({
         $or: [
-          { titlepost: { $regex: searchQuery, $options: 'i' } },
-          { location: { $regex: searchQuery, $options: 'i' } }
+          { titlepost: safeRegex },
+          { location: safeRegex }
         ]
       })
       .select('titlepost location _id')
@@ -185,8 +197,8 @@ router.get("/suggestions", async (req, res) => {
       // User suggestions
       const userSuggestions = await User.find({
         $or: [
-          { username: { $regex: searchQuery, $options: 'i' } },
-          { email: { $regex: searchQuery, $options: 'i' } }
+          { username: safeRegex },
+          { email: safeRegex }
         ]
       })
       .select('username email _id')
@@ -213,4 +225,3 @@ router.get("/suggestions", async (req, res) => {
 });
 
 module.exports = router;
-
