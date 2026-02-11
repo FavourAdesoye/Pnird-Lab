@@ -264,3 +264,4 @@ httpServer.listen(port, () => {
 });
 
 app.use(express.json());
+app.use(express.json());
