@@ -203,9 +203,9 @@ class _AboutUsPageState extends State<AboutUsPage> {
           
           _buildContactCard(
             'Email Us',
-            'info@pnirdlab.com',
+            'pnirdlab@gmail.com',
             Icons.email,
-            () => _launchEmail('info@pnirdlab.com'),
+            () => _launchEmail('pnirdlab@gmail.com'),
           ),
           
           const SizedBox(height: 16),
@@ -221,14 +221,14 @@ class _AboutUsPageState extends State<AboutUsPage> {
           
           _buildContactCard(
             'Call Us',
-            '+1 (555) 123-4567',
+            '+1 (804) 524-5145',
             Icons.phone,
-            () => _launchPhone('+15551234567'),
+            () => _launchPhone('+18045245145'),
           ),
           
           const SizedBox(height: 20),
         ],
-      ),
+      ), 
     );
   }
 

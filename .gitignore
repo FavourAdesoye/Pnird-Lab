@@ -63,3 +63,4 @@ jspm_packages/
 pnird_lab_flutter/windows/
 node_modules/
 *.zip
+.google-services.json
