@@ -119,16 +119,6 @@ class _ChatsPageState extends State<ChatsPage> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.bug_report, color: isDark ? Colors.black : Colors.black),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ApiTestPage()),
-              );
-            },
-            tooltip: 'Debug API',
-          ),
           Padding(
             padding: const EdgeInsets.only(right: 12.0),
             child: GestureDetector(

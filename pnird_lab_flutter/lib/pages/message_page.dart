@@ -27,6 +27,8 @@ class _MessagePageState extends State<MessagePage> {
   final SocketService _socketService = SocketService();
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  static const String _receiveMessageEvent = "receive_message";
+  static const String _messageSentEvent = "message_sent";
   List<Map<String, dynamic>> messages = [];
   String? recipientUsername = "";
   String? recipientProfilePic = "";
@@ -82,12 +84,14 @@ class _MessagePageState extends State<MessagePage> {
           return timeA.compareTo(timeB);
         });
         
+        if (!mounted) return;
         setState(() {
           messages = filteredMessages;
         });
         
         // Scroll to bottom after messages load
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
           _scrollToBottom();
         });
       } else {
@@ -110,12 +114,14 @@ class _MessagePageState extends State<MessagePage> {
 
   Future<void> _initUser() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     userId = prefs.getString("userId") ?? "";
     print("User ID: $userId");
     _socketService.connect(userId);
 
-    _socketService.socket.on("receive_message", (data) {
+    _socketService.socket.on(_receiveMessageEvent, (data) {
       // Only add message if it's from the current recipient
+      if (!mounted) return;
       if (data["senderId"] == widget.recipientId) {
         setState(() {
           messages.add({
@@ -126,14 +132,16 @@ class _MessagePageState extends State<MessagePage> {
         });
         // Scroll to bottom when new message arrives
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
           _scrollToBottom();
         });
       }
     });
     
     // Listen for message_sent confirmation to update timestamp
-    _socketService.socket.on("message_sent", (data) {
+    _socketService.socket.on(_messageSentEvent, (data) {
       // Update the last message with server timestamp if available
+      if (!mounted) return;
       if (messages.isNotEmpty && data["timestamp"] != null) {
         final lastIndex = messages.length - 1;
         if (messages[lastIndex]["message"] == data["message"]) {
@@ -163,6 +171,7 @@ class _MessagePageState extends State<MessagePage> {
   try {
     
     final recipient = await UserService().fetchUserProfile(widget.recipientId);
+    if (!mounted) return;
     setState(() {
       recipientUsername = recipient.username;
       recipientProfilePic = recipient.profilePicture;
@@ -176,6 +185,7 @@ Future<void> fetchSenderUser() async {
   try {
     userId = await SharedPreferences.getInstance().then((prefs) => prefs.getString("userId") ?? "");
     final sender = await UserService().fetchUserProfile(userId);
+    if (!mounted) return;
     setState(() {
       senderUsername = sender.username;
       senderProfilePic = sender.profilePicture;
@@ -219,7 +229,12 @@ Future<void> fetchSenderUser() async {
 
   @override
   void dispose() {
+    if (_socketService.hasSocket) {
+      _socketService.socket.off(_receiveMessageEvent);
+      _socketService.socket.off(_messageSentEvent);
+    }
     _socketService.disconnect();
+    _controller.dispose();
     _scrollController.dispose();
     super.dispose();
   } 
@@ -240,11 +255,17 @@ Future<void> fetchSenderUser() async {
                 : const AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
             ),
             const SizedBox(width: 10),
-            Text('Chat with ${recipientUsername ?? widget.recipientName}',
+            Expanded(
+              child: Text(
+                'Chat with ${recipientUsername ?? widget.recipientName}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.black,
                   fontSize: 18,
-                )),
+                ),
+              ),
+            ),
           ],
         ),
       ),
