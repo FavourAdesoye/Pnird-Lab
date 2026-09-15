@@ -320,16 +320,76 @@ class Auth {
     }
   }
 
+  static Future<AuthResult> sendPasswordResetEmail(String email) async {
+    try {
+      await _ensureFirebaseInitialized();
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email.trim());
+      return AuthResult.success({
+        'message': 'If an account exists for that email, a password reset link has been sent.',
+      });
+    } on FirebaseAuthException catch (e) {
+      return AuthResult.error(_getFirebaseErrorMessage(e));
+    } catch (e) {
+      return AuthResult.error('Could not send a password reset email right now.');
+    }
+  }
+
   static Future<AuthResult> resendVerificationEmail(String email) async {
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      await _ensureFirebaseInitialized();
+      // Prefer a fresh sign-in flow; password reset also lets users regain access.
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email.trim());
       return AuthResult.success({
-        'message': 'Password reset email sent. Use this to verify your email.',
+        'message': 'Password reset email sent. Use it to regain access, then verify your email after signing in.',
       });
     } on FirebaseAuthException catch (e) {
       return AuthResult.error(_getFirebaseErrorMessage(e));
     } catch (e) {
       return AuthResult.error('Could not resend verification email right now.');
+    }
+  }
+
+  /// Deletes the signed-in user's full account via the API (Mongo + Firebase Auth).
+  static Future<AuthResult> deleteAccount() async {
+    try {
+      await _ensureFirebaseInitialized();
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        return AuthResult.error('You must be signed in to delete your account.');
+      }
+
+      // Force a fresh token so the server can verify and delete
+      final token = await user.getIdToken(true);
+      if (token == null || token.isEmpty) {
+        return AuthResult.error('Could not verify your session. Sign in again and retry.');
+      }
+
+      final response = await http.delete(
+        Uri.parse(ApiService.deleteMyAccountEndpoint),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        await SessionStorage.clearSession();
+        try {
+          await FirebaseAuth.instance.signOut();
+        } catch (_) {}
+        return AuthResult.success({'message': 'Account deleted'});
+      }
+
+      String message = 'Could not delete account. Please try again.';
+      try {
+        final body = jsonDecode(response.body);
+        if (body is Map && body['message'] is String) {
+          message = body['message'] as String;
+        }
+      } catch (_) {}
+      return AuthResult.error(message);
+    } catch (e) {
+      return AuthResult.error('Could not delete account. Check your connection and try again.');
     }
   }
 

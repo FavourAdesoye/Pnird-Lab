@@ -6,6 +6,9 @@ const User = require("../models/User");
 const Message = require("../models/messages");
 const Notification = require("../models/notifications");
 const Conversation = require("../models/conversation");
+const Post = require("../models/Post");
+const Comment = require("../models/comment");
+const cloudinary = require("../utils/cloudinary");
 const checkRole = require("../middleware/roleMiddleware");
 const firebaseAuthMiddleware = require("../middleware/firebaseAuthMiddleware");
 const { createRateLimiter } = require("../middleware/rateLimit");
@@ -243,6 +246,62 @@ router.post("/cleanup-orphaned", async (req, res) => {
   }
 });
 
+async function deleteUserContent(userId) {
+  const idStr = String(userId);
+
+  const [messages, notifications, conversations, comments] = await Promise.all([
+    Message.deleteMany({
+      $or: [{ senderId: userId }, { recipientId: userId }],
+    }),
+    Notification.deleteMany({
+      $or: [{ userId }, { senderId: userId }, { userId: idStr }, { senderId: idStr }],
+    }),
+    Conversation.deleteMany({ userId }),
+    Comment.deleteMany({ userId }),
+  ]);
+
+  // Remove this user's replies nested under other people's comments
+  await Comment.updateMany(
+    { "replies.userId": userId },
+    { $pull: { replies: { userId } } }
+  );
+
+  // Likes are stored as strings in posts.js — pull both forms
+  await Post.updateMany(
+    { likes: { $in: [userId, idStr] } },
+    { $pull: { likes: { $in: [userId, idStr] } } }
+  );
+
+  const posts = await Post.find({ userId }).select("cloudinary_id comments").lean();
+  const postIds = posts.map((p) => p._id);
+  const commentIdsOnPosts = posts.flatMap((p) => p.comments || []);
+
+  for (const post of posts) {
+    if (post.cloudinary_id) {
+      try {
+        await cloudinary.uploader.destroy(post.cloudinary_id);
+      } catch (_) {
+        // Best-effort media cleanup
+      }
+    }
+  }
+
+  if (commentIdsOnPosts.length) {
+    await Comment.deleteMany({ _id: { $in: commentIdsOnPosts } });
+  }
+  if (postIds.length) {
+    await Post.deleteMany({ _id: { $in: postIds } });
+  }
+
+  return {
+    messages: messages.deletedCount || 0,
+    notifications: notifications.deletedCount || 0,
+    conversations: conversations.deletedCount || 0,
+    comments: comments.deletedCount || 0,
+    posts: postIds.length,
+  };
+}
+
 // Authenticated user can delete their stored messages, notifications, and chatbot history
 router.delete("/me/data", firebaseAuthMiddleware, async (req, res) => {
   try {
@@ -258,7 +317,7 @@ router.delete("/me/data", firebaseAuthMiddleware, async (req, res) => {
 
     return res.status(200).json({
       message:
-        "Your messages, notifications, and chatbot history were deleted. Contact support to fully delete your account.",
+        "Your messages, notifications, and chatbot history were deleted. Use Settings → Delete Account to remove your full account.",
       deleted: {
         messages: messages.deletedCount || 0,
         notifications: notifications.deletedCount || 0,
@@ -268,6 +327,51 @@ router.delete("/me/data", firebaseAuthMiddleware, async (req, res) => {
   } catch (error) {
     console.error("User data deletion error:", error.message);
     return res.status(500).json({ message: "Failed to delete user data" });
+  }
+});
+
+// Full account deletion: app data + Firebase Auth user
+router.delete("/me/account", firebaseAuthMiddleware, async (req, res) => {
+  try {
+    const user = req.mongoUser;
+    const userId = user._id;
+    const firebaseUID = user.firebaseUID;
+
+    const deleted = await deleteUserContent(userId);
+
+    if (user.cloudinary_id) {
+      try {
+        await cloudinary.uploader.destroy(user.cloudinary_id);
+      } catch (_) {
+        // Best-effort profile image cleanup
+      }
+    }
+
+    await User.findByIdAndDelete(userId);
+
+    if (firebaseUID) {
+      try {
+        await admin.auth().deleteUser(firebaseUID);
+      } catch (firebaseError) {
+        // Mongo account is already gone; report partial success if Auth delete fails
+        console.error("Firebase account delete error:", firebaseError.message);
+        return res.status(200).json({
+          message:
+            "Your app account data was deleted, but sign-in cleanup needs support. Contact the lab if you can still log in.",
+          deleted,
+          firebaseDeleted: false,
+        });
+      }
+    }
+
+    return res.status(200).json({
+      message: "Your account and associated personal data were deleted.",
+      deleted,
+      firebaseDeleted: true,
+    });
+  } catch (error) {
+    console.error("Account deletion error:", error.message);
+    return res.status(500).json({ message: "Failed to delete account" });
   }
 });
 

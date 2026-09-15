@@ -43,21 +43,52 @@ class ChooseAccountTypePage extends StatefulWidget {
 }
 
 class _ChooseAccountTypePageState extends State<ChooseAccountTypePage> {
-  String selectedAccountType = '';
+  void _goToLogin(String accountType) {
+    if (accountType == 'Community') {
+      Navigator.pushNamed(context, '/community_login');
+    } else if (accountType == 'Staff') {
+      Navigator.pushNamed(context, '/staff_login');
+    }
+  }
 
-  void navigateToSignUp() {
-    if (selectedAccountType == 'Community') {
+  void _goToSignUp(String accountType) {
+    if (accountType == 'Community') {
       Navigator.pushNamed(context, '/community_signup');
-    } else if (selectedAccountType == 'Staff') {
+    } else if (accountType == 'Staff') {
       Navigator.pushNamed(context, '/staff_signup');
     }
   }
 
-  void handleAccountTypeSelection(String accountType) {
-    setState(() {
-      selectedAccountType = accountType;
-    });
-    navigateToSignUp(); // Navigate after setting the account type
+  Future<void> _pickAccountType({required bool forLogin}) async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.grey[900],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('Community', style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pop(ctx, 'Community'),
+            ),
+            ListTile(
+              title: const Text('Staff', style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pop(ctx, 'Staff'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (choice == null || !mounted) return;
+    if (forLogin) {
+      _goToLogin(choice);
+    } else {
+      _goToSignUp(choice);
+    }
   }
 
   @override
@@ -122,22 +153,29 @@ class _ChooseAccountTypePageState extends State<ChooseAccountTypePage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 24),
                   AccountTypeButton(
                     label: 'Community',
-                    onPressed: () {
-                      handleAccountTypeSelection('Community');
-                    },
+                    onPressed: () => _goToLogin('Community'),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 16),
                   AccountTypeButton(
                     label: 'Staff',
-                    onPressed: () {
-                      handleAccountTypeSelection('Staff');
-                    },
+                    onPressed: () => _goToLogin('Staff'),
                   ),
-                  const SizedBox(height: 20),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => _pickAccountType(forLogin: false),
+                      child: const Text(
+                        "Don't have an account? Sign up",
+                        style: TextStyle(
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

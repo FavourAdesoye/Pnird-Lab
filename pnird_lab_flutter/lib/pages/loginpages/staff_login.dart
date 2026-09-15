@@ -83,6 +83,54 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
     }
   }
 
+  Future<void> _forgotPassword() async {
+    final emailController = TextEditingController(text: _emailController.text.trim());
+    final email = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text('Reset password', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: emailController,
+          keyboardType: TextInputType.emailAddress,
+          autofocus: true,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            labelText: 'Email',
+            labelStyle: TextStyle(color: Colors.white70),
+            hintText: 'Enter the email for your account',
+            hintStyle: TextStyle(color: Colors.white54),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, emailController.text.trim()),
+            child: const Text('Send link'),
+          ),
+        ],
+      ),
+    );
+
+    if (email == null) return;
+    if (email.isEmpty || !email.contains('@')) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid email address.'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    final result = await Auth.sendPasswordResetEmail(email);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(result.message),
+        backgroundColor: result.success ? Colors.green : Colors.red,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -199,16 +247,7 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
                       const SizedBox(height: 20),
                       Center(
                         child: GestureDetector(
-                          onTap: () {
-                            if (_staffLoginformKey.currentState!.validate()) {
-                              // Get values from controllers
-                              String email = _emailController.text.trim();
-                              String password = _passwordController.text.trim();
-
-                              // Call login function with the variables
-                              loginUser(email, password);
-                            }
-                          },
+                          onTap: _forgotPassword,
                           child: const Text(
                             'Forgot Password?',
                             style: TextStyle(

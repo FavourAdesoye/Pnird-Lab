@@ -95,6 +95,7 @@ class ApiService {
   static String getEmailVerificationStatusEndpoint(String firebaseUID) => '$baseUrl/users/email-verification-status/$firebaseUID';
   static String get resendVerificationEndpoint => '$baseUrl/users/resend-verification';
   static String get deleteMyDataEndpoint => '$baseUrl/users/me/data';
+  static String get deleteMyAccountEndpoint => '$baseUrl/users/me/account';
   
   // Posts endpoints
   static String get postsEndpoint => '$baseUrl/posts';
