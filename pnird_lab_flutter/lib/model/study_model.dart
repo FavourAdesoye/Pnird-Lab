@@ -20,13 +20,13 @@ class Study {
   // Factory constructor to create a Study from JSON
   factory Study.fromJson(Map<String, dynamic> json) {
     return Study(
-      id: json['_id'],
-      imageUrl: json['image_url'],
-      description: json['description'] ?? '',
-      titlePost: json['titlepost'],
-      createdAt: DateTime.parse(json['createdAt']).toLocal(),
-      updatedAt: DateTime.parse(json['updatedAt']).toLocal(),
-      formLink: json['formLink'],
+      id: json['_id']?.toString() ?? '',
+      imageUrl: (json['image_url'] ?? json['imageUrl'] ?? '') as String,
+      description: json['description']?.toString() ?? '',
+      titlePost: (json['titlepost'] ?? json['titlePost'] ?? 'Untitled Study') as String,
+      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()).toLocal(),
+      updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()).toLocal(),
+      formLink: json['formLink'] as String?,
     );
   }
 

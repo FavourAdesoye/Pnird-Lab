@@ -48,7 +48,7 @@ router.get("/", async (req, res) => {
     if (searchType === 'all' || searchType === 'studies') {
       results.studies = await StudiesModel.find({
         $or: [
-          { titlePost: safeRegex },
+          { titlepost: safeRegex },
           { description: safeRegex }
         ]
       })
@@ -156,18 +156,18 @@ router.get("/suggestions", async (req, res) => {
       // Study suggestions
       const studySuggestions = await StudiesModel.find({
         $or: [
-          { titlePost: safeRegex },
+          { titlepost: safeRegex },
           { description: safeRegex }
         ]
       })
-      .select('titlePost description _id')
+      .select('titlepost description _id')
       .limit(3)
       .lean();
       
       studySuggestions.forEach(study => {
         suggestions.push({
           type: 'study',
-          text: study.titlePost || study.description?.substring(0, 50) || 'Study',
+          text: study.titlepost || study.description?.substring(0, 50) || 'Study',
           id: study._id.toString()
         });
       });

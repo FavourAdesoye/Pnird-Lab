@@ -398,11 +398,11 @@ class _SearchResultsPageState extends State<SearchResultsPage>
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (study['imageUrl'] != null)
+              if (study['image_url'] != null)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
-                    study['imageUrl'],
+                    study['image_url'],
                     width: 60,
                     height: 60,
                     fit: BoxFit.cover,
@@ -429,7 +429,7 @@ class _SearchResultsPageState extends State<SearchResultsPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      study['titlePost'] ?? 'Untitled Study',
+                      study['titlepost'] ?? study['titlePost'] ?? 'Untitled Study',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
