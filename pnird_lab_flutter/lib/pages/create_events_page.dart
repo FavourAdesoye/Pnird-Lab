@@ -161,7 +161,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
     try {
       final response = await http.post(
         Uri.parse('${ApiService.baseUrl}/events/createevent'),
-        headers: {'Content-Type': 'application/json'},
+        headers: await ApiService.authHeaders(),
         body: jsonEncode({
           'titlepost': _title,
           'description': _description,

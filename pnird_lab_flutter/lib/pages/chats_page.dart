@@ -53,7 +53,7 @@ class _ChatsPageState extends State<ChatsPage> {
       
       final response = await http.get(
         Uri.parse(url),
-        headers: ApiService.headers,
+        headers: await ApiService.authHeaders(),
       );
 
       print('Response status: ${response.statusCode}');

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'api_service.dart';
 
@@ -7,22 +8,46 @@ class SocketService {
   bool get hasSocket => _socket != null;
   bool get isConnected => _socket?.connected == true;
 
-  void connect(String userId) {
+  /// Connect with Firebase ID token. Server ignores client-supplied userId.
+  Future<void> connect(String userId) async {
+    String? token;
+    try {
+      token = await FirebaseAuth.instance.currentUser?.getIdToken();
+    } catch (_) {
+      token = null;
+    }
+
+    // Avoid connecting without auth — server will reject and chats fail silently.
+    if (token == null || token.isEmpty) {
+      print('Socket connect skipped: no Firebase token');
+      return;
+    }
+
+    _socket?.dispose();
     _socket = IO.io(ApiService.socketUrl, <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
+      'auth': {'token': token},
     });
 
     _socket!.connect();
 
     _socket!.onConnect((_) {
       print('Connected to Socket.IO server');
-      _socket!.emit("register", userId);
+      // Compatibility emit; server binds to authenticated Mongo user
+      _socket!.emit('register', userId);
     });
 
-    _socket!.on("receive_message", (data) {
-      print("Message received: ${data['message']}");
-      // You can trigger UI updates here
+    _socket!.onConnectError((err) {
+      print('Socket connect error: $err');
+    });
+
+    _socket!.on('receive_message', (data) {
+      print('Message received: ${data['message']}');
+    });
+
+    _socket!.on('error', (data) {
+      print('Socket error: $data');
     });
 
     _socket!.onDisconnect((_) {
@@ -31,15 +56,16 @@ class SocketService {
   }
 
   void sendMessage(String senderId, String recipientId, String message) {
-    _socket?.emit("send_message", {
-      "senderId": senderId,
-      "recipientId": recipientId,
-      "message": message,
+    // senderId is ignored by the server (uses authenticated user)
+    _socket?.emit('send_message', {
+      'recipientId': recipientId,
+      'message': message,
     });
   }
 
   void disconnect() {
     _socket?.disconnect();
+    _socket?.dispose();
     _socket = null;
   }
 }

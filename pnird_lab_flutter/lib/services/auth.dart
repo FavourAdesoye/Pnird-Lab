@@ -2,8 +2,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'api_service.dart';
+import 'session_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -71,6 +72,15 @@ class Auth {
       // Get Firebase UID
       String firebaseUID = firebaseUser.uid;
 
+      // Staff accounts require STAFF_INVITE_CODE (Flutter .env) matching backend
+      final inviteCode = (() {
+        try {
+          return dotenv.env['STAFF_INVITE_CODE'];
+        } catch (_) {
+          return null;
+        }
+      })();
+
       // Now register with backend
       var response = await http.post(
         Uri.parse(ApiService.registerEndpoint),
@@ -80,6 +90,8 @@ class Auth {
           'email': email,
           'firebaseUID': firebaseUID,
           'role': role,
+          if (role == 'staff' && inviteCode != null && inviteCode.isNotEmpty)
+            'inviteCode': inviteCode,
         }),
       );
 
@@ -103,7 +115,7 @@ class Auth {
 
   static Future<AuthResult> login(String email, String password) async {
     try {
-      debugPrint('🔐 Starting login for: $email');
+      debugPrint('🔐 Starting login');
       
       // Ensure Firebase is initialized
       await _ensureFirebaseInitialized();
@@ -120,7 +132,6 @@ class Auth {
       
       // Retrieve Firebase UID
       String firebaseUID = firebaseUser.uid;
-      debugPrint('🔐 Firebase UID: $firebaseUID');
 
       // Check if email is verified
       if (!firebaseUser.emailVerified) {
@@ -130,25 +141,11 @@ class Auth {
       debugPrint('✅ Email verified');
 
       // Get user role from backend
-      debugPrint('🔗 Checking ApiService...');
       final endpoint = ApiService.getUserRoleEndpoint;
-      debugPrint('🔗 Endpoint: $endpoint');
-      debugPrint('🔗 Request body: ${json.encode({'uid': firebaseUID})}');
-      
-      // Test ApiService access
-      try {
-        final baseUrl = ApiService.baseUrl;
-        debugPrint('✅ ApiService.baseUrl: $baseUrl');
-      } catch (e) {
-        debugPrint('❌ ApiService error: $e');
-        throw Exception('ApiService not working: $e');
-      }
-      
-      debugPrint('🔗 About to make HTTP request...');
       
       final response = await http.post(
         Uri.parse(endpoint),
-        headers: ApiService.headers,
+        headers: await ApiService.authHeaders(),
         body: json.encode({'uid': firebaseUID}),
       ).timeout(
         const Duration(seconds: 10),
@@ -156,10 +153,6 @@ class Auth {
           throw TimeoutException('Request timeout: Could not reach backend');
         },
       );
-      
-      debugPrint('✅ HTTP request completed successfully');
-      debugPrint('📡 Backend responded with status: ${response.statusCode}');
-      debugPrint('📡 Backend response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -167,7 +160,7 @@ class Auth {
         return AuthResult.success(data);
       } else {
         final errorData = response.body.isNotEmpty ? json.decode(response.body) : <String, dynamic>{};
-        debugPrint('❌ Backend error: ${errorData['message']}');
+        debugPrint('❌ Backend login error');
         return AuthResult.error(errorData['message'] ?? 'Login failed');
       }
     } on FirebaseAuthException catch (e) {
@@ -175,7 +168,7 @@ class Auth {
     } on TimeoutException {
       return AuthResult.error('Could not connect to backend server. Please check your internet connection.');
     } catch (e) {
-      debugPrint('❌ Login error: $e');
+      debugPrint('❌ Login error');
       
       // Handle NotInitializedError specifically
       if (e.toString().contains('notinitialized') || e.toString().contains('NotInitialized')) {
@@ -213,36 +206,28 @@ class Auth {
   static Future<void> logout() async {
     try {
       await FirebaseAuth.instance.signOut();
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
+      await SessionStorage.clearSession();
     } catch (e) {
       debugPrint('Error during logout: $e');
     }
   }
 
   static Future<bool> isLoggedIn() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('is_logged_in') ?? false;
+    return SessionStorage.isLoggedIn();
   }
 
   static Future<void> saveLoginState(String userId, String username, String role, String profilePicture, String firebaseUID) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('is_logged_in', true);
-    await prefs.setString('userId', userId);
-    await prefs.setString('username', username);
-    await prefs.setString('role', role);
-    await prefs.setString('profile_picture', profilePicture);
-    await prefs.setString('firebaseId', firebaseUID);
+    await SessionStorage.saveLoginState(
+      userId: userId,
+      username: username,
+      role: role,
+      profilePicture: profilePicture,
+      firebaseUID: firebaseUID,
+    );
   }
 
   static Future<Map<String, String?>> getStoredUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    return {
-      'userId': prefs.getString('userId'),
-      'username': prefs.getString('username'),
-      'role': prefs.getString('role'),
-      'profile_picture': prefs.getString('profile_picture'),
-    };
+    return SessionStorage.getStoredUserData();
   }
 
   // Send email verification
@@ -265,22 +250,14 @@ class Auth {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        print('No current user found');
         return false;
       }
-      
-      print('Checking verification for user: ${user.email}');
-      print('Current verification status: ${user.emailVerified}');
-      
-      // Reload user to get latest verification status
+
       await user.reload();
       final refreshedUser = FirebaseAuth.instance.currentUser;
-      final isVerified = refreshedUser?.emailVerified ?? false;
-      
-      print('After reload - verification status: $isVerified');
-      return isVerified;
+      return refreshedUser?.emailVerified ?? false;
     } catch (e) {
-      print('Error checking email verification: $e');
+      debugPrint('Error checking email verification');
       return false;
     }
   }
@@ -299,7 +276,7 @@ class Auth {
   }
 
   static Future<String?> getUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('userId');
+    final data = await SessionStorage.getStoredUserData();
+    return data['userId'];
   }
 }

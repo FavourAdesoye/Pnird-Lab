@@ -2,6 +2,13 @@ const router = require("express").Router();
 const OpenAI = require("openai");
 const vectorStore = require("../services/vectorStore");
 const Conversation = require("../models/conversation");
+const firebaseAuthMiddleware = require("../middleware/firebaseAuthMiddleware");
+const { requireSelf } = firebaseAuthMiddleware;
+const {
+  chatbotPrivacy,
+  truncateMessages,
+  startConversationRetentionJob,
+} = require("../services/chatbotPrivacy");
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -12,16 +19,51 @@ vectorStore.initialize().catch(err => {
   console.error("Failed to initialize vector store:", err);
 });
 
+startConversationRetentionJob();
+
+// Health check remains public (no PII)
+router.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    vectorStoreInitialized: vectorStore.initialized,
+    embeddingsCount: vectorStore.embeddings.length,
+    saveConversations: chatbotPrivacy.saveConversations(),
+    retentionDays: chatbotPrivacy.retentionDays(),
+    maxMessages: chatbotPrivacy.maxMessages(),
+  });
+});
+
+// Public privacy config for in-app notices (no PII)
+router.get("/privacy-config", (req, res) => {
+  res.json({
+    saveConversations: chatbotPrivacy.saveConversations(),
+    retentionDays: chatbotPrivacy.retentionDays(),
+    maxMessages: chatbotPrivacy.maxMessages(),
+  });
+});
+
+// All other chatbot routes require auth
+router.use(firebaseAuthMiddleware);
+
 // Chat endpoint with RAG
 router.post("/chat", async (req, res) => {
   try {
-    const { message, conversationHistory = [], userId, conversationId } = req.body;
+    const { message, conversationHistory = [], conversationId } = req.body;
+    // Always use authenticated user — never trust client userId
+    const userId = String(req.mongoUser._id);
 
     if (!message || message.trim() === '') {
       return res.status(400).json({ 
         error: "Message is required" 
       });
     }
+
+    // Cap history before sending to OpenAI (minimize third-party data)
+    const maxMessages = chatbotPrivacy.maxMessages();
+    const limitedHistory = truncateMessages(
+      Array.isArray(conversationHistory) ? conversationHistory : [],
+      Math.max(2, maxMessages - 2)
+    );
 
     // Search for relevant context from PDF
     let context = "";
@@ -61,7 +103,7 @@ Answer questions about the lab, research, team members, and neuroscience topics.
         role: "system",
         content: systemPrompt
       },
-      ...conversationHistory.map(msg => ({
+      ...limitedHistory.map(msg => ({
         role: msg.isUser ? "user" : "assistant",
         content: msg.text
       })),
@@ -80,15 +122,12 @@ Answer questions about the lab, research, team members, and neuroscience topics.
 
     const response = completion.choices[0].message.content;
 
-    // Save conversation if userId is provided
+    // Persist only when enabled (CHATBOT_SAVE_CONVERSATIONS)
     let savedConversation = null;
-    if (userId) {
+    if (chatbotPrivacy.saveConversations()) {
       try {
-        console.log(`💾 Saving conversation for userId: ${userId}, conversationId: ${conversationId || 'new'}`);
-        
-        // Build all messages including the new ones
-        const allMessages = [
-          ...conversationHistory.map(msg => ({
+        const allMessages = truncateMessages([
+          ...limitedHistory.map(msg => ({
             text: msg.text || '',
             isUser: msg.isUser === true,
             timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
@@ -103,46 +142,49 @@ Answer questions about the lab, research, team members, and neuroscience topics.
             isUser: false,
             timestamp: new Date(),
           },
-        ];
-        
-        console.log(`💬 Saving ${allMessages.length} messages (${conversationHistory.length} existing + 2 new)`);
+        ], maxMessages);
 
         if (conversationId) {
-          // Update existing conversation
-          savedConversation = await Conversation.findByIdAndUpdate(
-            conversationId,
-            {
-              $set: {
-                messages: allMessages,
-                title: allMessages[0]?.text?.substring(0, 50) || "New Conversation",
+          // Ensure the conversation belongs to this user
+          const existing = await Conversation.findOne({
+            _id: conversationId,
+            userId,
+          });
+          if (existing) {
+            savedConversation = await Conversation.findByIdAndUpdate(
+              conversationId,
+              {
+                $set: {
+                  messages: allMessages,
+                  title: allMessages[0]?.text?.substring(0, 50) || "New Conversation",
+                },
               },
-            },
-            { new: true }
-          );
-          console.log(`✅ Updated conversation: ${savedConversation?._id}`);
+              { new: true }
+            );
+          } else {
+            savedConversation = await Conversation.create({
+              userId,
+              title: message.substring(0, 50) || "New Conversation",
+              messages: allMessages,
+            });
+          }
         } else {
-          // Create new conversation
           savedConversation = await Conversation.create({
-            userId: userId,
+            userId,
             title: message.substring(0, 50) || "New Conversation",
             messages: allMessages,
           });
-          console.log(`✅ Created new conversation: ${savedConversation._id}`);
         }
       } catch (saveError) {
-        console.error("❌ Error saving conversation:", saveError);
-        console.error("Error details:", saveError.message);
-        console.error("Stack:", saveError.stack);
-        // Continue even if save fails
+        console.error("Error saving conversation:", saveError.message);
       }
-    } else {
-      console.log("⚠️  No userId provided, skipping conversation save");
     }
 
     res.json({ 
       answer: response,
       hasContext: hasContext,
       conversationId: savedConversation?._id?.toString(),
+      persisted: Boolean(savedConversation),
     });
   } catch (error) {
     console.error("Chatbot error:", error);
@@ -168,7 +210,7 @@ Answer questions about the lab, research, team members, and neuroscience topics.
 });
 
 // Get all conversations for a user
-router.get("/conversations/:userId", async (req, res) => {
+router.get("/conversations/:userId", requireSelf("params", "userId"), async (req, res) => {
   try {
     const { userId } = req.params;
     
@@ -193,7 +235,7 @@ router.get("/conversations/:userId", async (req, res) => {
 });
 
 // Get a specific conversation
-router.get("/conversations/:userId/:conversationId", async (req, res) => {
+router.get("/conversations/:userId/:conversationId", requireSelf("params", "userId"), async (req, res) => {
   try {
     const { userId, conversationId } = req.params;
     
@@ -226,7 +268,7 @@ router.get("/conversations/:userId/:conversationId", async (req, res) => {
 });
 
 // Delete a conversation
-router.delete("/conversations/:userId/:conversationId", async (req, res) => {
+router.delete("/conversations/:userId/:conversationId", requireSelf("params", "userId"), async (req, res) => {
   try {
     const { userId, conversationId } = req.params;
     
@@ -247,7 +289,7 @@ router.delete("/conversations/:userId/:conversationId", async (req, res) => {
 });
 
 // Update conversation title
-router.patch("/conversations/:userId/:conversationId/title", async (req, res) => {
+router.patch("/conversations/:userId/:conversationId/title", requireSelf("params", "userId"), async (req, res) => {
   try {
     const { userId, conversationId } = req.params;
     const { title } = req.body;
@@ -271,15 +313,6 @@ router.patch("/conversations/:userId/:conversationId/title", async (req, res) =>
     console.error("Error updating conversation title:", error);
     res.status(500).json({ error: "Failed to update conversation title" });
   }
-});
-
-// Health check endpoint
-router.get("/health", (req, res) => {
-  res.json({ 
-    status: "ok",
-    vectorStoreInitialized: vectorStore.initialized,
-    embeddingsCount: vectorStore.embeddings.length
-  });
 });
 
 module.exports = router;

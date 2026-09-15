@@ -71,15 +71,12 @@ router.get("/", async (req, res) => {
       .lean();
     }
 
-    // Search users
+    // Search users by username only (do not expose/search emails)
     if (searchType === 'all' || searchType === 'users') {
       results.users = await User.find({
-        $or: [
-          { username: safeRegex },
-          { email: safeRegex }
-        ]
+        username: safeRegex
       })
-      .select('username email profilePicture role')
+      .select('username profilePicture role')
       .limit(20)
       .lean();
     }
@@ -194,21 +191,18 @@ router.get("/suggestions", async (req, res) => {
         });
       });
 
-      // User suggestions
+      // User suggestions (username only — no email)
       const userSuggestions = await User.find({
-        $or: [
-          { username: safeRegex },
-          { email: safeRegex }
-        ]
+        username: safeRegex
       })
-      .select('username email _id')
+      .select('username _id')
       .limit(3)
       .lean();
       
       userSuggestions.forEach(user => {
         suggestions.push({
           type: 'user',
-          text: user.username || user.email || 'User',
+          text: user.username || 'User',
           id: user._id.toString()
         });
       });

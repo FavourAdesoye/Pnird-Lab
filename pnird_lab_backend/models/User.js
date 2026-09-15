@@ -17,6 +17,7 @@ const UserSchema = new mongoose.Schema({
     password:{
         type: String,
         min: 8,
+        select: false, // never return password hashes by default
     }, 
     profilePicture:{
         type: String,

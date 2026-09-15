@@ -106,11 +106,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
   }
 
-  void _setupSocketListener() {
+  Future<void> _setupSocketListener() async {
     if (userId == null) return;
     
     _socketService = SocketService();
-    _socketService!.connect(userId!);
+    await _socketService!.connect(userId!);
     
     // Listen for personal notifications (likes, comments, messages)
     _socketService!.socket.on("new_notification", (data) {

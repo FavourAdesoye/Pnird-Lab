@@ -172,28 +172,80 @@ const connectedUsers = new Map();
 app.set("io", io);
 app.set("connectedUsers", connectedUsers);
 
-io.on("connection", (socket) => {
-  socket.on("register", (userId) => {
-    if (!userId) {
-      return;
+// Require Firebase ID token on every socket connection
+io.use(async (socket, next) => {
+  try {
+    const raw =
+      socket.handshake.auth?.token ||
+      socket.handshake.headers?.authorization ||
+      "";
+    const token = String(raw).startsWith("Bearer ")
+      ? String(raw).slice(7).trim()
+      : String(raw).trim();
+
+    if (!token) {
+      return next(new Error("Authentication required"));
     }
-    connectedUsers.set(String(userId), socket.id);
-    socket.userId = String(userId);
+
+    const decoded = await admin.auth().verifyIdToken(token);
+    const mongoUser = await User.findOne({ firebaseUID: decoded.uid });
+    if (!mongoUser) {
+      return next(new Error("User account not found"));
+    }
+
+    socket.firebaseUID = decoded.uid;
+    socket.mongoUserId = String(mongoUser._id);
+    socket.mongoUser = mongoUser;
+    return next();
+  } catch (_error) {
+    return next(new Error("Invalid authentication token"));
+  }
+});
+
+io.on("connection", (socket) => {
+  // Auto-register authenticated user (ignore client-supplied IDs)
+  connectedUsers.set(socket.mongoUserId, socket.id);
+  socket.userId = socket.mongoUserId;
+
+  socket.on("register", () => {
+    // Kept for client compatibility; always bind to authenticated user
+    connectedUsers.set(socket.mongoUserId, socket.id);
+    socket.userId = socket.mongoUserId;
   });
 
   socket.on("send_message", async (data = {}) => {
     try {
-      const { senderId, recipientId, message } = data;
-      if (!senderId || !recipientId || !message || typeof message !== "string") {
+      const senderId = socket.mongoUserId;
+      const recipientId = String(data.recipientId || "").trim();
+      const message = typeof data.message === "string" ? data.message.trim() : "";
+
+      if (!recipientId || !message) {
         socket.emit("error", { message: "Invalid message payload." });
         return;
       }
 
-      const newMessage = new Message({ senderId, recipientId, message: message.trim() });
+      if (senderId === recipientId) {
+        socket.emit("error", { message: "Users cannot message themselves." });
+        return;
+      }
+
+      const recipient = await User.findById(recipientId).select("role username");
+      if (!recipient) {
+        socket.emit("error", { message: "Recipient not found." });
+        return;
+      }
+
+      if (socket.mongoUser.role === "community" && recipient.role !== "staff") {
+        socket.emit("error", {
+          message: "Community members can only message staff members.",
+        });
+        return;
+      }
+
+      const newMessage = new Message({ senderId, recipientId, message });
       const saved = await newMessage.save();
 
-      const sender = await User.findById(senderId).select("username");
-      const senderName = sender?.username || "Unknown";
+      const senderName = socket.mongoUser.username || "Unknown";
 
       const notif = new Notification({
         userId: recipientId,
@@ -212,7 +264,7 @@ io.on("connection", (socket) => {
       if (recipientSocketId) {
         io.to(recipientSocketId).emit("receive_message", {
           senderId,
-          message: message.trim(),
+          message,
           timestamp: timestampISO,
         });
 
@@ -233,7 +285,7 @@ io.on("connection", (socket) => {
       socket.emit("message_sent", {
         messageId: saved._id,
         timestamp: timestampISO,
-        message: message.trim(),
+        message,
       });
     } catch (error) {
       console.error("Error sending message:", error.message);
@@ -242,7 +294,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    if (socket.userId) {
+    if (socket.userId && connectedUsers.get(socket.userId) === socket.id) {
       connectedUsers.delete(socket.userId);
     }
   });

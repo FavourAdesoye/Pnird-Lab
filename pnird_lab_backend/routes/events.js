@@ -3,10 +3,11 @@ const EventsModel = require("../models/events");
 const cloudinary = require("../utils/cloudinary");
 const upload = require("../utils/multer");
 const BroadcastNotification = require("../models/broadcast_notifications");
-const User = require("../models/User");
+const firebaseAuthMiddleware = require("../middleware/firebaseAuthMiddleware");
+const { requireStaff } = firebaseAuthMiddleware;
 
-//create a new event with an image upload
-router.post("/createevent", upload.single("image"), async (req, res) => {
+//create a new event with an image upload — staff only
+router.post("/createevent", firebaseAuthMiddleware, requireStaff, upload.single("image"), async (req, res) => {
     try {
       const { description, titlepost, image_url, dateofevent, timeofevent, month, location} = req.body;
   
@@ -66,13 +67,8 @@ router.post("/createevent", upload.single("image"), async (req, res) => {
       // Save to database
       const savedEvent = await newEvent.save();
       
-      // Get creator info for broadcast - try to get from request or find a staff user
-      let creatorId = req.body.userId || req.body.creatorId;
-      if (!creatorId) {
-        // Try to find a staff user to use as sender
-        const staffUser = await User.findOne({ role: "staff" });
-        creatorId = staffUser ? staffUser._id : null;
-      }
+      // Creator is always the authenticated staff user
+      const creatorId = req.mongoUser._id;
       
       // Create ONE broadcast notification instead of N individual notifications
       try {
@@ -134,26 +130,32 @@ router.get('/event/:month', async (req, res) => {
     }
 });
 
-// Update an event
-router.put('/event/:id', async (req, res) => {
+// Update an event — staff only
+router.put('/event/:id', firebaseAuthMiddleware, requireStaff, async (req, res) => {
     const { id } = req.params;
   try {
+    const allowed = {};
+    for (const field of ["description", "titlepost", "image_url", "dateofevent", "timeofevent", "month", "location"]) {
+      if (req.body[field] !== undefined) {
+        allowed[field] = req.body[field];
+      }
+    }
     // If dateofevent is being updated and month is not provided, derive month from date
-    if (req.body.dateofevent && !req.body.month) {
-      const eventDate = new Date(req.body.dateofevent);
+    if (allowed.dateofevent && !allowed.month) {
+      const eventDate = new Date(allowed.dateofevent);
       const monthNames = ["January", "February", "March", "April", "May", "June",
                          "July", "August", "September", "October", "November", "December"];
-      req.body.month = monthNames[eventDate.getMonth()];
+      allowed.month = monthNames[eventDate.getMonth()];
     }
-    const updatedEvent = await EventsModel.findByIdAndUpdate(id, req.body, { new: true });
+    const updatedEvent = await EventsModel.findByIdAndUpdate(id, allowed, { new: true });
     res.json(updatedEvent);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
-// Delete an event
-router.delete('/event/:id', async (req, res) => {
+// Delete an event — staff only
+router.delete('/event/:id', firebaseAuthMiddleware, requireStaff, async (req, res) => {
     const { id } = req.params;
   try {
     await EventsModel.findByIdAndDelete(id);

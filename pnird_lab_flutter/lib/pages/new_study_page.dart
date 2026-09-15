@@ -125,7 +125,7 @@ class _NewStudyPageState extends State<NewStudyPage> {
 
         final response = await http.post(
           Uri.parse('${ApiService.baseUrl}/studies/createstudy'),
-          headers: {'Content-Type': 'application/json'},
+          headers: await ApiService.authHeaders(),
           body: jsonEncode({
             'titlepost': _title,
             'description': _description,

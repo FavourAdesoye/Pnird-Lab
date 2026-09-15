@@ -6,14 +6,13 @@ import 'api_service.dart';
 class NotificationService {
   static Future<List<dynamic>> fetchNotifications(String userId) async {
     try {
-      // Use centralized API service for consistent platform handling
       final response = await http.get(
         Uri.parse("${ApiService.baseUrl}/notifications/$userId"),
-        headers: ApiService.headers,
+        headers: await ApiService.authHeaders(),
       );
 
       if (response.statusCode == 200) {
-        return jsonDecode(response.body); // returns list of notifications
+        return jsonDecode(response.body);
       } else {
         throw Exception("Failed to load notifications: ${response.statusCode}");
       }
@@ -27,7 +26,7 @@ class NotificationService {
     try {
       final response = await http.get(
         Uri.parse("${ApiService.baseUrl}/notifications/$userId/unread/count"),
-        headers: ApiService.headers,
+        headers: await ApiService.authHeaders(),
       );
 
       if (response.statusCode == 200) {
@@ -46,7 +45,7 @@ class NotificationService {
     try {
       await http.patch(
         Uri.parse("${ApiService.baseUrl}/notifications/$notificationId/read"),
-        headers: ApiService.headers,
+        headers: await ApiService.authHeaders(),
       );
     } catch (e) {
       print('Error marking notification as read: $e');
@@ -57,7 +56,7 @@ class NotificationService {
     try {
       await http.patch(
         Uri.parse("${ApiService.baseUrl}/notifications/$userId/read-all"),
-        headers: ApiService.headers,
+        headers: await ApiService.authHeaders(),
       );
     } catch (e) {
       print('Error marking all notifications as read: $e');
@@ -68,7 +67,7 @@ class NotificationService {
     try {
       await http.delete(
         Uri.parse("${ApiService.baseUrl}/notifications/$notificationId"),
-        headers: ApiService.headers,
+        headers: await ApiService.authHeaders(),
       );
     } catch (e) {
       print('Error deleting notification: $e');
@@ -79,7 +78,7 @@ class NotificationService {
     try {
       await http.patch(
         Uri.parse("${ApiService.baseUrl}/notifications/$userId/broadcast/$broadcastId/seen"),
-        headers: ApiService.headers,
+        headers: await ApiService.authHeaders(),
       );
     } catch (e) {
       print('Error marking broadcast as seen: $e');

@@ -3,27 +3,28 @@ const User = require("../models/User");
 function checkRole(role) {
   return async (req, res, next) => {
     try {
-      const firebaseUID = req.user?.uid || req.body.firebaseUID;
+      // Only trust authenticated Firebase token — never client-supplied firebaseUID
+      const firebaseUID = req.user?.uid;
       if (!firebaseUID) {
-        return res.status(401).send("Unauthorized.");
+        return res.status(401).json({ message: "Unauthorized." });
       }
 
-      const user = await User.findOne({ firebaseUID }).select("role").lean();
+      const user = req.mongoUser
+        || (await User.findOne({ firebaseUID }).select("role").lean());
+
       if (!user) {
-        return res.status(404).send("User not found.");
+        return res.status(404).json({ message: "User not found." });
       }
 
       if (user.role === role || (role === "admin" && user.role === "staff")) {
         return next();
       }
 
-      return res.status(403).send("Access denied.");
+      return res.status(403).json({ message: "Access denied." });
     } catch (_error) {
-      return res.status(500).send("Error verifying user role.");
+      return res.status(500).json({ message: "Error verifying user role." });
     }
   };
 }
 
 module.exports = checkRole;
-  
-  

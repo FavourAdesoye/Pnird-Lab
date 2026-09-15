@@ -54,7 +54,7 @@ class _MessagePageState extends State<MessagePage> {
       
       final response = await http.get(
         Uri.parse(url),
-        headers: ApiService.headers,
+        headers: await ApiService.authHeaders(),
       );
 
       print('Message history response status: ${response.statusCode}');
@@ -117,7 +117,7 @@ class _MessagePageState extends State<MessagePage> {
     if (!mounted) return;
     userId = prefs.getString("userId") ?? "";
     print("User ID: $userId");
-    _socketService.connect(userId);
+    await _socketService.connect(userId);
 
     _socketService.socket.on(_receiveMessageEvent, (data) {
       // Only add message if it's from the current recipient

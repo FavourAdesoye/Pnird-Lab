@@ -21,7 +21,7 @@ class StudiesApi {
   static Future<void> createStudy(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/createstudy'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await ApiService.authHeaders(),
       body: json.encode(data),
     );
     if (response.statusCode != 201) {

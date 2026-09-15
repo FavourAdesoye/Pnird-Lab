@@ -48,6 +48,7 @@ class _ChatPageState extends State<Chathome> {
   String? _currentConversationId;
   List<Map<String, dynamic>> _conversations = [];
   bool _isLoadingConversations = false;
+  String? _privacyNotice;
 
   @override
   void initState() {
@@ -56,11 +57,33 @@ class _ChatPageState extends State<Chathome> {
   }
 
   Future<void> _initializeChat() async {
-    await _loadUserId();
+    await Future.wait([
+      _loadUserId(),
+      _loadPrivacyNotice(),
+    ]);
     await _loadConversations();
     // Auto-load the most recent conversation if available
     if (_conversations.isNotEmpty && _userId != null) {
       _loadConversation(_conversations[0]['_id']);
+    }
+  }
+
+  Future<void> _loadPrivacyNotice() async {
+    try {
+      final config = await ChatbotService.getPrivacyConfig();
+      if (!mounted) return;
+      setState(() {
+        _privacyNotice = ChatbotService.privacyNoticeText(config);
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _privacyNotice = ChatbotService.privacyNoticeText(const {
+          'saveConversations': true,
+          'retentionDays': 30,
+          'maxMessages': 40,
+        });
+      });
     }
   }
 
@@ -234,6 +257,30 @@ class _ChatPageState extends State<Chathome> {
       drawer: _buildDrawer(),
       body: Column(
         children: [
+          if (_privacyNotice != null)
+            Material(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _privacyNotice!,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           Expanded(
             child: _messages.isEmpty
                 ? Center(

@@ -3,6 +3,39 @@ import 'package:http/http.dart' as http;
 import 'package:pnirdlab/services/api_service.dart';
 
 class ChatbotService {
+  static Future<Map<String, dynamic>> getPrivacyConfig() async {
+    final baseUrl = ApiService.baseUrl;
+    final response = await http.get(
+      Uri.parse('$baseUrl/chatbot/privacy-config'),
+    );
+
+    if (response.statusCode == 200) {
+      return Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+    }
+    // Sensible defaults if the server is unreachable
+    return {
+      'saveConversations': true,
+      'retentionDays': 30,
+      'maxMessages': 40,
+    };
+  }
+
+  static String privacyNoticeText(Map<String, dynamic> config) {
+    final saves = config['saveConversations'] == true;
+    final days = config['retentionDays'] is int
+        ? config['retentionDays'] as int
+        : int.tryParse('${config['retentionDays']}') ?? 30;
+    final maxMessages = config['maxMessages'] is int
+        ? config['maxMessages'] as int
+        : int.tryParse('${config['maxMessages']}') ?? 40;
+
+    if (!saves) {
+      return 'Chat replies are not saved on our servers. Do not share sensitive research or health information here.';
+    }
+
+    return 'Chat history is kept for $days days. Longer threads keep about the latest $maxMessages messages. Do not share sensitive research or health information here.';
+  }
+
   static Future<Map<String, dynamic>> sendMessage({
     required String message,
     required List<Map<String, dynamic>> conversationHistory,
@@ -12,11 +45,10 @@ class ChatbotService {
     final baseUrl = ApiService.baseUrl;
     final response = await http.post(
       Uri.parse('$baseUrl/chatbot/chat'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await ApiService.authHeaders(),
       body: jsonEncode({
         'message': message,
         'conversationHistory': conversationHistory,
-        if (userId != null) 'userId': userId,
         if (conversationId != null) 'conversationId': conversationId,
       }),
     );
@@ -32,6 +64,7 @@ class ChatbotService {
     final baseUrl = ApiService.baseUrl;
     final response = await http.get(
       Uri.parse('$baseUrl/chatbot/conversations/$userId'),
+      headers: await ApiService.authHeaders(),
     );
 
     if (response.statusCode == 200) {
@@ -46,6 +79,7 @@ class ChatbotService {
     final baseUrl = ApiService.baseUrl;
     final response = await http.get(
       Uri.parse('$baseUrl/chatbot/conversations/$userId/$conversationId'),
+      headers: await ApiService.authHeaders(),
     );
 
     if (response.statusCode == 200) {
@@ -59,6 +93,7 @@ class ChatbotService {
     final baseUrl = ApiService.baseUrl;
     final response = await http.delete(
       Uri.parse('$baseUrl/chatbot/conversations/$userId/$conversationId'),
+      headers: await ApiService.authHeaders(),
     );
 
     if (response.statusCode != 200) {
@@ -74,7 +109,7 @@ class ChatbotService {
     final baseUrl = ApiService.baseUrl;
     final response = await http.patch(
       Uri.parse('$baseUrl/chatbot/conversations/$userId/$conversationId/title'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await ApiService.authHeaders(),
       body: jsonEncode({'title': title}),
     );
 
@@ -83,5 +118,3 @@ class ChatbotService {
     }
   }
 }
-
-

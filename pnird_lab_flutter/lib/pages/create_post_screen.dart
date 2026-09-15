@@ -116,16 +116,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       }
       final response = await http.post(
         Uri.parse('${ApiService.baseUrl}/posts/upload'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: await ApiService.authHeaders(),
         body: jsonEncode({
           'description': _description.text,
           'img': _uploadedImageUrl,
-          'userId': widget.userId,
         }),
       );
-      if(response.statusCode == 200){
+      if(response.statusCode == 200 || response.statusCode == 201){
         print('Post created successfully');
         ScaffoldMessenger.of(context).showSnackBar(
   const SnackBar(content: Text('Post created successfully')),

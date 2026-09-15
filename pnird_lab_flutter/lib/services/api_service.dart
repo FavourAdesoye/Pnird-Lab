@@ -1,5 +1,6 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ApiService {
   static String? _safeEnv(String key) {
@@ -65,6 +66,25 @@ class ApiService {
   static Map<String, String> get headers => {
     'Content-Type': 'application/json',
   };
+
+  /// Headers with Firebase ID token for protected API routes.
+  static Future<Map<String, String>> authHeaders() async {
+    final result = <String, String>{
+      'Content-Type': 'application/json',
+    };
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final token = await user.getIdToken();
+        if (token != null && token.isNotEmpty) {
+          result['Authorization'] = 'Bearer $token';
+        }
+      }
+    } catch (_) {
+      // Fall back to unauthenticated headers
+    }
+    return result;
+  }
   
   // User endpoints
   static String get registerEndpoint => '$baseUrl/users/register';
@@ -74,6 +94,7 @@ class ApiService {
   static String getUserByIdEndpoint(String id) => '$baseUrl/users/id/$id';
   static String getEmailVerificationStatusEndpoint(String firebaseUID) => '$baseUrl/users/email-verification-status/$firebaseUID';
   static String get resendVerificationEndpoint => '$baseUrl/users/resend-verification';
+  static String get deleteMyDataEndpoint => '$baseUrl/users/me/data';
   
   // Posts endpoints
   static String get postsEndpoint => '$baseUrl/posts';

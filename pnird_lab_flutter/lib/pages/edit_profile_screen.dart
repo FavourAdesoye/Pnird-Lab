@@ -47,9 +47,7 @@ Future<void> updateUserProfile(userId, bio, username, profilePicture) async {
 
   final response = await http.put(
     Uri.parse(url),
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: await ApiService.authHeaders(),
     body: jsonEncode(updateData),
   );
 

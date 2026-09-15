@@ -3,30 +3,38 @@ const mongoose = require("mongoose");
 const admin = require("firebase-admin");
 
 const User = require("../models/User");
-const cloudinary = require("../utils/cloudinary");
-const upload = require("../utils/multer");
+const Message = require("../models/messages");
+const Notification = require("../models/notifications");
+const Conversation = require("../models/conversation");
 const checkRole = require("../middleware/roleMiddleware");
 const firebaseAuthMiddleware = require("../middleware/firebaseAuthMiddleware");
 const { createRateLimiter } = require("../middleware/rateLimit");
+const { purgeExpiredConversations } = require("../services/chatbotPrivacy");
 
-const publicUserFields = "username email profilePicture bio role firebaseUID createdAt updatedAt";
+// Public profile fields — no email / firebaseUID
+const publicUserFields = "username profilePicture bio role createdAt updatedAt";
+const selfUserFields = "username email profilePicture bio role firebaseUID createdAt updatedAt";
 const maintenanceKey = process.env.ADMIN_MAINTENANCE_KEY;
+const staffInviteCode = process.env.STAFF_INVITE_CODE;
 
-function sanitizeUserResponse(userDoc) {
+function sanitizeUserResponse(userDoc, { includePrivate = false } = {}) {
   if (!userDoc) {
     return null;
   }
-  return {
+  const base = {
     _id: String(userDoc._id),
     username: userDoc.username,
-    email: userDoc.email,
     profilePicture: userDoc.profilePicture || "",
     bio: userDoc.bio || "",
     role: userDoc.role,
-    firebaseUID: userDoc.firebaseUID,
     createdAt: userDoc.createdAt,
     updatedAt: userDoc.updatedAt,
   };
+  if (includePrivate) {
+    base.email = userDoc.email;
+    base.firebaseUID = userDoc.firebaseUID;
+  }
+  return base;
 }
 
 function isValidObjectId(id) {
@@ -69,13 +77,13 @@ router.use(
   })
 );
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", firebaseAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   if (!isValidObjectId(id)) {
     return res.status(400).json({ message: "Invalid user id" });
   }
 
-  if (req.body.userId !== id && !req.user?.isAdmin) {
+  if (String(req.mongoUser._id) !== id) {
     return res.status(403).json({ message: "You can only update your own account." });
   }
 
@@ -89,60 +97,51 @@ router.put("/:id", async (req, res) => {
 
   try {
     const updatedUser = await User.findByIdAndUpdate(id, { $set: updates }, { new: true })
-      .select(publicUserFields)
+      .select(selfUserFields)
       .lean();
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
-    return res.status(200).json(sanitizeUserResponse(updatedUser));
+    return res.status(200).json(sanitizeUserResponse(updatedUser, { includePrivate: true }));
   } catch (error) {
     console.error("User update error:", error.message);
     return res.status(500).json({ message: "Error updating user." });
   }
 });
 
-router.post("/upload", upload.single("image"), async (req, res) => {
-  if (!req.file?.path) {
-    return res.status(400).json({ message: "Image file is required" });
-  }
-
-  try {
-    const result = await cloudinary.uploader.upload(req.file.path);
-
-    const user = new User({
-      username: req.body.username,
-      email: req.body.email,
-      password: req.body.password,
-      profilePicture: result.secure_url,
-      bio: req.body.bio,
-      cloudinary_id: result.public_id,
-      role: req.body.role === "staff" ? "staff" : "community",
-      firebaseUID: req.body.firebaseUID,
-    });
-
-    const savedUser = await user.save();
-    return res.status(201).json(sanitizeUserResponse(savedUser));
-  } catch (error) {
-    console.error("User upload registration error:", error.message);
-    return res.status(500).json({ message: "Failed to create user from upload" });
-  }
+// Legacy upload registration — disabled (use Firebase + /register)
+router.post("/upload", (_req, res) => {
+  return res.status(410).json({
+    message: "This registration endpoint is disabled. Use Firebase Auth and POST /users/register.",
+  });
 });
 
 router.post("/register", async (req, res) => {
   const username = String(req.body.username || "").trim();
   const email = String(req.body.email || "").trim().toLowerCase();
   const firebaseUID = String(req.body.firebaseUID || "").trim();
-  const role = String(req.body.role || "").trim();
+  const requestedRole = String(req.body.role || "").trim();
+  const inviteCode = String(req.body.inviteCode || req.body.staffInviteCode || "").trim();
 
   try {
-    if (!username || !email || !firebaseUID || !role) {
+    if (!username || !email || !firebaseUID) {
       return res.status(400).json({
-        message: "Missing required fields: username, email, firebaseUID, and role are required",
+        message: "Missing required fields: username, email, and firebaseUID are required",
       });
     }
 
-    if (!["staff", "community"].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role. Must be either "staff" or "community"' });
+    // Default to community. Staff only with matching STAFF_INVITE_CODE.
+    let role = "community";
+    if (
+      requestedRole === "staff" &&
+      staffInviteCode &&
+      inviteCode &&
+      inviteCode === staffInviteCode
+    ) {
+      role = "staff";
+    } else if (requestedRole === "staff" && !staffInviteCode) {
+      // No invite code configured — force community (prevents open staff signup)
+      role = "community";
     }
 
     try {
@@ -183,7 +182,7 @@ router.post("/register", async (req, res) => {
 
     return res.status(201).json({
       message: "User registered successfully",
-      user: sanitizeUserResponse(savedUser),
+      user: sanitizeUserResponse(savedUser, { includePrivate: true }),
     });
   } catch (error) {
     console.error("Registration error:", error.message);
@@ -213,12 +212,42 @@ router.post("/cleanup-orphaned", async (req, res) => {
       }
     }
 
+    const chatbotPurged = await purgeExpiredConversations();
+
     return res.status(200).json({
-      message: `Cleanup completed. Removed ${cleanedCount} orphaned records.`,
+      message: `Cleanup completed. Removed ${cleanedCount} orphaned records. Purged ${chatbotPurged} expired chatbot conversation(s).`,
     });
   } catch (error) {
     console.error("Cleanup error:", error.message);
     return res.status(500).json({ message: "Cleanup failed" });
+  }
+});
+
+// Authenticated user can delete their stored messages, notifications, and chatbot history
+router.delete("/me/data", firebaseAuthMiddleware, async (req, res) => {
+  try {
+    const userId = req.mongoUser._id;
+
+    const [messages, notifications, conversations] = await Promise.all([
+      Message.deleteMany({
+        $or: [{ senderId: userId }, { recipientId: userId }],
+      }),
+      Notification.deleteMany({ userId }),
+      Conversation.deleteMany({ userId }),
+    ]);
+
+    return res.status(200).json({
+      message:
+        "Your messages, notifications, and chatbot history were deleted. Contact support to fully delete your account.",
+      deleted: {
+        messages: messages.deletedCount || 0,
+        notifications: notifications.deletedCount || 0,
+        conversations: conversations.deletedCount || 0,
+      },
+    });
+  } catch (error) {
+    console.error("User data deletion error:", error.message);
+    return res.status(500).json({ message: "Failed to delete user data" });
   }
 });
 
@@ -231,7 +260,7 @@ router.post("/login", async (req, res) => {
   try {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     const firebaseUID = decodedToken.uid;
-    const user = await User.findOne({ firebaseUID }).select(publicUserFields).lean();
+    const user = await User.findOne({ firebaseUID }).select(selfUserFields).lean();
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -239,7 +268,7 @@ router.post("/login", async (req, res) => {
 
     return res.status(200).json({
       message: "Login successful",
-      user: sanitizeUserResponse(user),
+      user: sanitizeUserResponse(user, { includePrivate: true }),
     });
   } catch (error) {
     console.error("Error verifying token:", error.message);
@@ -255,18 +284,19 @@ router.get("/community-data", firebaseAuthMiddleware, checkRole("community"), (_
   res.status(200).json({ message: "Welcome, Community Member!" });
 });
 
-router.post("/getUserRole", async (req, res) => {
+// Requires auth; uid in body must match token
+router.post("/getUserRole", firebaseAuthMiddleware, async (req, res) => {
   const uid = String(req.body.uid || "").trim();
   if (!uid) {
     return res.status(400).json({ message: "uid is required" });
   }
 
-  try {
-    const user = await User.findOne({ firebaseUID: uid }).select("username profilePicture role").lean();
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+  if (uid !== req.user.uid) {
+    return res.status(403).json({ message: "You can only look up your own role." });
+  }
 
+  try {
+    const user = req.mongoUser;
     return res.status(200).json({
       userId: String(user._id),
       username: user.username,
@@ -311,18 +341,24 @@ router.get("/username/:username", async (req, res) => {
   }
 });
 
-router.get("/email-verification-status/:firebaseUID", async (req, res) => {
-  try {
-    const userRecord = await admin.auth().getUser(req.params.firebaseUID);
-    return res.status(200).json({
-      emailVerified: userRecord.emailVerified,
-      email: userRecord.email,
-    });
-  } catch (error) {
-    console.error("Error checking email verification:", error.message);
-    return res.status(500).json({ message: "Failed to check verification status" });
+router.get(
+  "/email-verification-status/:firebaseUID",
+  firebaseAuthMiddleware,
+  async (req, res) => {
+    if (req.params.firebaseUID !== req.user.uid) {
+      return res.status(403).json({ message: "You can only check your own verification status." });
+    }
+    try {
+      const userRecord = await admin.auth().getUser(req.params.firebaseUID);
+      return res.status(200).json({
+        emailVerified: userRecord.emailVerified,
+      });
+    } catch (error) {
+      console.error("Error checking email verification:", error.message);
+      return res.status(500).json({ message: "Failed to check verification status" });
+    }
   }
-});
+);
 
 router.post("/resend-verification", async (req, res) => {
   try {
@@ -339,6 +375,7 @@ router.post("/resend-verification", async (req, res) => {
   }
 });
 
+// Public profile by firebaseUID — no email
 router.get("/:firebaseUID", async (req, res) => {
   const firebaseUID = String(req.params.firebaseUID || "").trim();
   try {
