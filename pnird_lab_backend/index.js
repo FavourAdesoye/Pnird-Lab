@@ -47,6 +47,18 @@ function parseAllowedOrigins() {
 
 const allowedOrigins = parseAllowedOrigins();
 
+function findLocalServiceAccountPath() {
+  const backendDir = __dirname;
+  try {
+    const match = fs
+      .readdirSync(backendDir)
+      .find((name) => /firebase-adminsdk.*\.json$/i.test(name));
+    return match ? path.join(backendDir, match) : null;
+  } catch (_error) {
+    return null;
+  }
+}
+
 function configureFirebaseAdmin() {
   if (admin.apps.length > 0) {
     return;
@@ -55,20 +67,27 @@ function configureFirebaseAdmin() {
   let credential;
   const keyPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
   const keyJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  const discoveredPath = findLocalServiceAccountPath();
 
   try {
     if (keyJson) {
       const parsed = JSON.parse(keyJson);
       credential = admin.credential.cert(parsed);
+      console.log("Firebase Admin initialized from FIREBASE_SERVICE_ACCOUNT_JSON");
     } else if (keyPath && fs.existsSync(path.resolve(keyPath))) {
       const serviceAccount = require(path.resolve(keyPath));
       credential = admin.credential.cert(serviceAccount);
+      console.log(`Firebase Admin initialized from ${keyPath}`);
+    } else if (discoveredPath) {
+      const serviceAccount = require(discoveredPath);
+      credential = admin.credential.cert(serviceAccount);
+      console.log(`Firebase Admin initialized from discovered file ${path.basename(discoveredPath)}`);
     } else {
       credential = admin.credential.applicationDefault();
+      console.log("Firebase Admin initialized from application default credentials");
     }
 
     admin.initializeApp({ credential });
-    console.log("Firebase Admin initialized");
   } catch (error) {
     console.error("Failed to initialize Firebase Admin:", error.message);
   }

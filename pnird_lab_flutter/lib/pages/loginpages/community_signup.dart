@@ -32,13 +32,16 @@ class _CommunitySignUpPageState extends State<CommunitySignUpPage> {
       final result = await Auth.signUp(email, password, fullName, role);
       
       if (result.success) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Registration Successful! Please verify your email to continue.'),
+          const SnackBar(
+            content: Text(
+              'Account created! Check your email, open the verification link, then log in.',
+            ),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 6),
           ),
         );
-        // Navigate to email verification page
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -46,7 +49,6 @@ class _CommunitySignUpPageState extends State<CommunitySignUpPage> {
           ),
         );
       } else {
-        // Show error with suggestions if available
         String errorMessage = result.message;
         if (result.data != null && result.data!['suggestions'] != null) {
           final suggestions = result.data!['suggestions'] as List<dynamic>;
@@ -54,12 +56,13 @@ class _CommunitySignUpPageState extends State<CommunitySignUpPage> {
             errorMessage += '\n\nSuggested usernames:\n${suggestions.join(', ')}';
           }
         }
-        
+
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
             backgroundColor: Colors.red,
-            duration: Duration(seconds: 5),
+            duration: const Duration(seconds: 6),
           ),
         );
       }

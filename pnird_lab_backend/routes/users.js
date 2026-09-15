@@ -130,18 +130,28 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    // Default to community. Staff only with matching STAFF_INVITE_CODE.
+    // Role assignment:
+    // - community: always allowed
+    // - staff: only with a matching STAFF_INVITE_CODE typed at signup (server-side secret)
     let role = "community";
-    if (
-      requestedRole === "staff" &&
-      staffInviteCode &&
-      inviteCode &&
-      inviteCode === staffInviteCode
-    ) {
+    if (requestedRole === "staff") {
+      if (!staffInviteCode) {
+        return res.status(503).json({
+          message:
+            "Staff registration is not configured. Ask a lab admin to set STAFF_INVITE_CODE on the server.",
+        });
+      }
+      if (!inviteCode || inviteCode !== staffInviteCode) {
+        return res.status(403).json({
+          message:
+            "Invalid or missing staff invite code. Ask a lab admin for the current invite code, or sign up as a community member.",
+        });
+      }
       role = "staff";
-    } else if (requestedRole === "staff" && !staffInviteCode) {
-      // No invite code configured — force community (prevents open staff signup)
-      role = "community";
+    } else if (requestedRole && requestedRole !== "community") {
+      return res.status(400).json({
+        message: 'Invalid role. Must be either "staff" or "community"',
+      });
     }
 
     try {
@@ -149,8 +159,18 @@ router.post("/register", async (req, res) => {
       if ((userRecord.email || "").toLowerCase() !== email) {
         return res.status(400).json({ message: "Firebase UID does not match the provided email" });
       }
-    } catch (_firebaseError) {
-      return res.status(400).json({ message: "Invalid Firebase UID" });
+    } catch (firebaseError) {
+      console.error("Firebase getUser failed during register:", firebaseError.message);
+      if (!admin.apps.length) {
+        return res.status(500).json({
+          message:
+            "Firebase Admin is not configured. Set FIREBASE_SERVICE_ACCOUNT_PATH to your service account JSON.",
+        });
+      }
+      return res.status(400).json({
+        message:
+          "Invalid Firebase UID. Confirm the backend Firebase Admin credentials match the same Firebase project as the app.",
+      });
     }
 
     const [existingUsername, existingEmail, existingFirebaseUID] = await Promise.all([

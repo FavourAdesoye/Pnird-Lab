@@ -26,15 +26,26 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
 
     try {
       final result = await Auth.login(email, password);
-      
+
       if (result.success && result.data != null) {
         final data = result.data!;
         final role = data['role'] as String;
-        
-        // Get Firebase UID from current user
         final firebaseUID = FirebaseAuth.instance.currentUser?.uid ?? '';
-        
-        // Save login state
+
+        if (role != 'staff') {
+          await Auth.logout();
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'This account is not staff. Use Community Login, or ask a lab admin for a staff invite code to register as staff.',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
         await Auth.saveLoginState(
           data['userId'] as String,
           data['username'] as String,
@@ -43,37 +54,32 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
           firebaseUID,
         );
 
-        // Redirect based on user role
-        if (role == "staff") {
-          Navigator.pushNamed(context, '/home');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('You are not registered as a staff in our database'),
-              backgroundColor: Colors.red,
-            ),
-          );
-          Navigator.pushNamed(context, '/community_login');
-        }
+        if (!mounted) return;
+        Navigator.pushNamed(context, '/home');
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result.message),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 6),
           ),
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('An unexpected error occurred'),
           backgroundColor: Colors.red,
         ),
       );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

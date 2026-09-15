@@ -19,26 +19,36 @@ class _StaffSignUpPageState extends State<StaffSignUpPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _mobileNumberController = TextEditingController();
+  final _inviteCodeController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
 
   Future<void> registerUser(String email, String password, String fullName,
-      String mobileNumber, String role) async {
+      String mobileNumber, String role, String inviteCode) async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final result = await Auth.signUp(email, password, fullName, role);
+      final result = await Auth.signUp(
+        email,
+        password,
+        fullName,
+        role,
+        inviteCode: inviteCode,
+      );
       
       if (result.success) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Registration Successful! Please verify your email to continue.'),
+          const SnackBar(
+            content: Text(
+              'Account created! Check your email, open the verification link, then log in.',
+            ),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 6),
           ),
         );
-        // Navigate to email verification page
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -46,7 +56,6 @@ class _StaffSignUpPageState extends State<StaffSignUpPage> {
           ),
         );
       } else {
-        // Show error with suggestions if available
         String errorMessage = result.message;
         if (result.data != null && result.data!['suggestions'] != null) {
           final suggestions = result.data!['suggestions'] as List<dynamic>;
@@ -54,12 +63,13 @@ class _StaffSignUpPageState extends State<StaffSignUpPage> {
             errorMessage += '\n\nSuggested usernames:\n${suggestions.join(', ')}';
           }
         }
-        
+
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
             backgroundColor: Colors.red,
-            duration: Duration(seconds: 5),
+            duration: const Duration(seconds: 6),
           ),
         );
       }
@@ -240,6 +250,24 @@ class _StaffSignUpPageState extends State<StaffSignUpPage> {
                           return null;
                         },
                       ),
+                      const SizedBox(height: 10),
+                      // Staff invite code (shared by lab admin — not in the app codebase)
+                      EnhancedTextFormField(
+                        controller: _inviteCodeController,
+                        label: 'Staff invite code',
+                        hint: 'Ask a lab admin for this code',
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Staff invite code is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Get this code from a lab admin. You do not need access to the codebase or database.',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
                       const SizedBox(height: 20),
                       // Sign Up button
                       Center(
@@ -252,7 +280,8 @@ class _StaffSignUpPageState extends State<StaffSignUpPage> {
                                   _passwordController.text,
                                   _fullNameController.text,
                                   _mobileNumberController.text,
-                                  "staff");
+                                  "staff",
+                                  _inviteCodeController.text);
                             }
                           },
                           isLoading: _isLoading,
@@ -292,6 +321,7 @@ class _StaffSignUpPageState extends State<StaffSignUpPage> {
     _emailController.dispose();
     _passwordController.dispose();
     _mobileNumberController.dispose();
+    _inviteCodeController.dispose();
     super.dispose();
   }
 }
