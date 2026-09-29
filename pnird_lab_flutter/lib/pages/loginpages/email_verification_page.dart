@@ -62,7 +62,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
       } else {
         // Email not verified, show message
         ScaffoldMessenger.of(context).showSnackBar(

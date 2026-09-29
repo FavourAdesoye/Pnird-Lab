@@ -5,6 +5,7 @@ import 'package:pnirdlab/services/post_service.dart';
 import 'package:pnirdlab/pages/post_detail_page.dart';
 import 'package:pnirdlab/pages/message_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pnirdlab/widgets/optimized_image.dart';
 
 class PublicProfilePage extends StatefulWidget {
   final String userId;
@@ -86,7 +87,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                   CircleAvatar(
                     radius: 50,
                     backgroundImage: (profilepic != null && profilepic!.isNotEmpty)
-                        ? NetworkImage(profilepic!)
+                        ? cachedCloudinaryImage(profilepic!, width: 240)
                         : const AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
                   ),
                   const SizedBox(height: 10),
@@ -173,12 +174,12 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                                   ),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
-                                    child: Image.network(
-                                      posts[index].img ?? '', // <- access the img field of Post
+                                    child: OptimizedImage(
+                                      imageUrl: posts[index].img ?? '',
+                                      width: double.infinity,
+                                      height: double.infinity,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return const Icon(Icons.broken_image, color: Colors.grey);
-                                      },
+                                      errorWidget: const Icon(Icons.broken_image, color: Colors.grey),
                                     ),
                                   ),
                                 ),

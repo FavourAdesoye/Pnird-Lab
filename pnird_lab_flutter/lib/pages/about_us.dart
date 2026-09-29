@@ -27,12 +27,7 @@ class _AboutUsPageState extends State<AboutUsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushNamed(context, '/home');
-          },
-        ),
+        automaticallyImplyLeading: false,
         title: const Text('About Us'),
       ),
       floatingActionButton: FloatingActionButton(

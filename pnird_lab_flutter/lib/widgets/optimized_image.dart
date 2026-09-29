@@ -1,5 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:pnirdlab/utils/cloudinary_url.dart';
+
+/// Disk-cached avatar/thumbnail provider using a resized Cloudinary URL.
+ImageProvider cachedCloudinaryImage(String url, {int width = 200}) {
+  return CachedNetworkImageProvider(
+    cloudinaryDisplayUrl(url, width: width),
+    maxWidth: width * 2,
+    maxHeight: width * 2,
+  );
+}
 
 class OptimizedImage extends StatelessWidget {
   final String imageUrl;
@@ -27,19 +37,26 @@ class OptimizedImage extends StatelessWidget {
       return errorWidget ?? _buildErrorWidget();
     }
 
+    final requestWidth = (width != null && width!.isFinite)
+        ? width!.round().clamp(64, 1200).toInt()
+        : 800;
+    final displayUrl = cloudinaryDisplayUrl(imageUrl, width: requestWidth);
+
     return ClipRRect(
       borderRadius: borderRadius ?? BorderRadius.zero,
       child: CachedNetworkImage(
-        imageUrl: imageUrl,
+        imageUrl: displayUrl,
         width: width,
         height: height,
         fit: fit,
         placeholder: (context, url) => placeholder ?? _buildPlaceholder(),
         errorWidget: (context, url, error) => errorWidget ?? _buildErrorWidget(),
-        memCacheWidth: width?.toInt(),
-        memCacheHeight: height?.toInt(),
-        maxWidthDiskCache: 800, // Limit disk cache size
-        maxHeightDiskCache: 600,
+        memCacheWidth: requestWidth * 2,
+        memCacheHeight: (height != null && height!.isFinite)
+            ? height!.round().clamp(64, 1200) * 2
+            : requestWidth * 2,
+        maxWidthDiskCache: requestWidth * 2,
+        maxHeightDiskCache: requestWidth * 2,
       ),
     );
   }

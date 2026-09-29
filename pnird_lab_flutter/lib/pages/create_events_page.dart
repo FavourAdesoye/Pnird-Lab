@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pnirdlab/services/api_service.dart';
-import 'package:pnirdlab/pages/events_page.dart';
 import 'package:intl/intl.dart';
+import 'package:pnirdlab/widgets/optimized_image.dart';
 
 
 class CreateEventPage extends StatefulWidget {
@@ -174,17 +174,16 @@ class _CreateEventPageState extends State<CreateEventPage> {
       );
 
       if (response.statusCode == 201) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const EventsPage()), // <-- Navigate to events page
-        );
+        if (mounted) Navigator.pop(context, true);
+        return;
       } else {
         throw Exception('Server error ${response.statusCode}');
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -275,7 +274,12 @@ class _CreateEventPageState extends State<CreateEventPage> {
                       ),
                       if (_uploadedImageUrl != null) ...[
                         const SizedBox(height: 10),
-                        Image.network(_uploadedImageUrl!, height: 150),
+                        OptimizedImage(
+                          imageUrl: _uploadedImageUrl!,
+                          height: 150,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
                       ],
                       if (_errorMessage != null)
                         Padding(

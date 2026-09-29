@@ -14,14 +14,16 @@ class PostDetailPage extends StatefulWidget {
 
 class _PostDetailPageState extends State<PostDetailPage> {
   late ScrollController _scrollController;
+  late List<Post> _posts;
 
   @override
   void initState() {
     super.initState();
+    _posts = List<Post>.from(widget.posts);
     _scrollController = ScrollController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.initialIndex < widget.posts.length) {
+      if (widget.initialIndex < _posts.length) {
         _scrollController.jumpTo(widget.initialIndex * 700.0); // Adjust height
       }
     });
@@ -29,8 +31,15 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_posts.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Posts')),
+        body: const Center(child: Text('No posts')),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: Text('${widget.posts[widget.initialIndex].user.username}\nPosts',
+      appBar: AppBar(title: Text('${_posts[widget.initialIndex.clamp(0, _posts.length - 1)].user.username}\nPosts',
     maxLines: 2,  // Allow the text to wrap into a second line if necessary
     overflow: TextOverflow.ellipsis,
     textAlign: TextAlign.center),
@@ -39,12 +48,15 @@ class _PostDetailPageState extends State<PostDetailPage> {
    
       body: ListView.builder(
         controller: _scrollController,
-        itemCount: widget.posts.length,
+        itemCount: _posts.length,
         itemBuilder: (context, index) {
-  final post = widget.posts[index];
+  final post = _posts[index];
 
   return PostCard(
    post: post,
+   onDeleted: () {
+     setState(() => _posts.removeAt(index));
+   },
   );
 }
 

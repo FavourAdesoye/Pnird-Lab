@@ -21,12 +21,13 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['_id'],
-      username: json['username'],
-      email: json['email'],
-      profilePicture: json['profilePicture'] ?? '',
-      bio: json['bio'] ?? '',
-      firebaseUID: json['firebaseUID'] ?? '',
+      id: json['_id']?.toString() ?? '',
+      username: json['username']?.toString() ?? '',
+      // Public feeds omit email on purpose; only self/profile endpoints include it.
+      email: json['email']?.toString() ?? '',
+      profilePicture: json['profilePicture']?.toString() ?? '',
+      bio: json['bio']?.toString() ?? '',
+      firebaseUID: json['firebaseUID']?.toString() ?? '',
       isAdmin: json['isAdmin'] == null
           ? null
           : json['isAdmin'] as bool, // Ensure proper boolean parsing

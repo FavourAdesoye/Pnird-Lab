@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:add_2_calendar/add_2_calendar.dart';
+import 'package:http/http.dart' as http;
+import 'package:pnirdlab/services/api_service.dart';
+import 'package:pnirdlab/services/session_storage.dart';
+import 'package:pnirdlab/widgets/optimized_image.dart';
 
 class EventDetailPage extends StatefulWidget {
   final dynamic event;
@@ -12,6 +16,79 @@ class EventDetailPage extends StatefulWidget {
 }
 
 class _EventDetailPageState extends State<EventDetailPage> {
+  bool _isStaff = false;
+  bool _deleting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    final staff = await SessionStorage.isStaff();
+    if (!mounted) return;
+    setState(() => _isStaff = staff);
+  }
+
+  Future<void> _deleteEvent() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete event?'),
+        content: const Text('This permanently removes the event. This cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    if (!await SessionStorage.isStaff()) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Only staff can delete events.')),
+      );
+      return;
+    }
+
+    final id = widget.event['_id']?.toString() ?? '';
+    if (id.isEmpty) return;
+
+    setState(() => _deleting = true);
+    try {
+      final response = await http.delete(
+        Uri.parse('${ApiService.baseUrl}/events/event/$id'),
+        headers: await ApiService.authHeaders(),
+      );
+      if (!mounted) return;
+      if (response.statusCode == 200) {
+        Navigator.pop(context, true);
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            response.statusCode == 403
+                ? 'Only staff can delete events.'
+                : 'Could not delete event (${response.statusCode}).',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not delete event. Check your connection.')),
+      );
+    } finally {
+      if (mounted) setState(() => _deleting = false);
+    }
+  }
+
   String formattedDateTime(DateTime date) {
     return DateFormat('MMMM dd, yyyy').format(date);
   }
@@ -149,8 +226,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.network(
-              widget.event['image_url'],
+            OptimizedImage(
+              imageUrl: widget.event['image_url']?.toString() ?? '',
               width: double.infinity,
               height: 250,
               fit: BoxFit.cover,
@@ -210,6 +287,27 @@ class _EventDetailPageState extends State<EventDetailPage> {
                 ),
               ),
             ),
+            if (_isStaff) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _deleting ? null : _deleteEvent,
+                  icon: _deleting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.delete_outline),
+                  label: Text(_deleting ? 'Deleting…' : 'Delete event'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

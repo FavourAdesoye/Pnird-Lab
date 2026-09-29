@@ -9,10 +9,11 @@ class SocketService {
   bool get isConnected => _socket?.connected == true;
 
   /// Connect with Firebase ID token. Server ignores client-supplied userId.
-  Future<void> connect(String userId) async {
+  /// Returns false if there is no token or the socket could not be created.
+  Future<bool> connect(String userId) async {
     String? token;
     try {
-      token = await FirebaseAuth.instance.currentUser?.getIdToken();
+      token = await FirebaseAuth.instance.currentUser?.getIdToken(true);
     } catch (_) {
       token = null;
     }
@@ -20,15 +21,20 @@ class SocketService {
     // Avoid connecting without auth — server will reject and chats fail silently.
     if (token == null || token.isEmpty) {
       print('Socket connect skipped: no Firebase token');
-      return;
+      disconnect();
+      return false;
     }
 
     _socket?.dispose();
-    _socket = IO.io(ApiService.socketUrl, <String, dynamic>{
-      'transports': ['websocket'],
-      'autoConnect': false,
-      'auth': {'token': token},
-    });
+    _socket = IO.io(
+      ApiService.socketUrl,
+      <String, dynamic>{
+        'transports': ['websocket'],
+        'autoConnect': false,
+        'auth': {'token': token},
+        'forceNew': true,
+      },
+    );
 
     _socket!.connect();
 
@@ -53,6 +59,8 @@ class SocketService {
     _socket!.onDisconnect((_) {
       print('Disconnected from server');
     });
+
+    return true;
   }
 
   void sendMessage(String senderId, String recipientId, String message) {

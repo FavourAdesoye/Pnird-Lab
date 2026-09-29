@@ -7,6 +7,7 @@ import '../services/api_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pnirdlab/services/post_service.dart';
 import 'package:pnirdlab/utils/image_processor.dart';
+import 'package:pnirdlab/widgets/optimized_image.dart';
 
 
 
@@ -184,7 +185,7 @@ Future<void> updateUserProfile(userId, bio, username, profilePicture) async {
               child: CircleAvatar(
                 radius: 50,
                 backgroundColor: Colors.grey[300],
-                backgroundImage: _uploadedImageUrl == null ? null : Image.network(_uploadedImageUrl!, fit: BoxFit.cover).image,
+                backgroundImage: _uploadedImageUrl == null ? null : cachedCloudinaryImage(_uploadedImageUrl!, width: 400),
                 child: _uploadedImageUrl == null
                     ? const Icon(Icons.camera_alt, color: Colors.white)
                     : null,

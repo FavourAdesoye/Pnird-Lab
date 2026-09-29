@@ -6,6 +6,7 @@ import 'package:pnirdlab/services/api_service.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:pnirdlab/widgets/optimized_image.dart';
 
 class CommentCard extends StatelessWidget {
   final Comment comment;
@@ -47,7 +48,7 @@ class CommentCard extends StatelessWidget {
                 backgroundImage: (comment.profilePicture != null && 
                                 comment.profilePicture!.isNotEmpty && 
                                 comment.profilePicture!.startsWith('http'))
-                    ? NetworkImage(comment.profilePicture!)
+                    ? cachedCloudinaryImage(comment.profilePicture!, width: 120)
                     : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
                 onBackgroundImageError: (exception, stackTrace) {
                   // Handle image loading error silently
@@ -114,7 +115,7 @@ class CommentCard extends StatelessWidget {
                             backgroundImage: (profilePicture != null && 
                                             profilePicture.isNotEmpty && 
                                             profilePicture.startsWith('http'))
-                                ? NetworkImage(profilePicture)
+                                ? cachedCloudinaryImage(profilePicture, width: 120)
                                 : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
                             onBackgroundImageError: (exception, stackTrace) {
                               // Handle image loading error silently

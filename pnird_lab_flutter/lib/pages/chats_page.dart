@@ -5,9 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pnirdlab/pages/message_page.dart';
 import 'package:pnirdlab/pages/notification_page.dart';
-import 'package:pnirdlab/pages/api_test_page.dart';
 import 'package:pnirdlab/pages/current_user_profile_page.dart';
 import 'package:pnirdlab/services/api_service.dart';
+import 'package:pnirdlab/widgets/optimized_image.dart';
 class ChatsPage extends StatefulWidget {
   const ChatsPage({super.key});
 
@@ -138,7 +138,7 @@ class _ChatsPageState extends State<ChatsPage> {
               child: CircleAvatar(
                 radius: 20,
                 backgroundImage: (currentUserProfilePicture != null && currentUserProfilePicture!.isNotEmpty)
-                    ? NetworkImage(currentUserProfilePicture!)
+                    ? cachedCloudinaryImage(currentUserProfilePicture!, width: 160)
                     : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
                 onBackgroundImageError: (exception, stackTrace) {
                   // Handle image loading error silently
@@ -297,7 +297,7 @@ class _ChatsPageState extends State<ChatsPage> {
                   leading: CircleAvatar(
                     radius: 25,
                     backgroundImage: (user['profilePicture'] != null && user['profilePicture'] != '')
-                        ? NetworkImage(user['profilePicture'])
+                        ? cachedCloudinaryImage(user['profilePicture'].toString(), width: 160)
                         : const AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
                     onBackgroundImageError: (exception, stackTrace) {
                       // Handle image loading error silently
@@ -343,6 +343,10 @@ class _ChatsPageState extends State<ChatsPage> {
   }
 
   Widget _buildNotificationsTab() {
-    return NotificationsPage();
+    return NotificationsPage(
+      onShowMessages: () {
+        setState(() => _selectedTabIndex = 0);
+      },
+    );
   }
 }

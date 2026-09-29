@@ -12,17 +12,12 @@ class OptimizedHomePage extends StatefulWidget {
 
 class _OptimizedHomePageState extends State<OptimizedHomePage> {
   late Future<List<Post>> futurePosts;
-  bool _isLoading = false;
-  List<Post> _posts = [];
-  int _currentPage = 1;
-  final int _postsPerPage = 10;
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     futurePosts = getPosts();
-    _scrollController.addListener(_onScroll);
   }
 
   @override
@@ -31,50 +26,66 @@ class _OptimizedHomePageState extends State<OptimizedHomePage> {
     super.dispose();
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent * 0.8) {
-      _loadMorePosts();
-    }
-  }
-
-  Future<void> _loadMorePosts() async {
-    if (_isLoading) return;
-    
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      // Simulate pagination - in real app, you'd pass page number to API
-      final newPosts = await getPosts();
-      setState(() {
-        _posts.addAll(newPosts);
-        _currentPage++;
-      });
-    } catch (e) {
-      print('Error loading more posts: $e');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
   Future<void> _refreshPosts() async {
     setState(() {
-      _posts.clear();
-      _currentPage = 1;
+      futurePosts = getPosts();
     });
-    
-    try {
-      final posts = await getPosts();
-      setState(() {
-        _posts = posts;
-      });
-    } catch (e) {
-      print('Error refreshing posts: $e');
-    }
+    await futurePosts;
+  }
+
+  Widget _emptyState(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurface.withOpacity(0.7);
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+        Icon(Icons.forum_outlined, size: 64, color: color),
+        const SizedBox(height: 16),
+        Text(
+          'No posts yet',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'When lab staff share updates, they will show up here.\nPull down to refresh.',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: color),
+        ),
+      ],
+    );
+  }
+
+  Widget _errorState(BuildContext context, Object error) {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+        const Icon(Icons.error_outline, size: 64, color: Colors.red),
+        const SizedBox(height: 16),
+        Text(
+          'Could not load the feed',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            '$error',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Center(
+          child: ElevatedButton(
+            onPressed: _refreshPosts,
+            child: const Text('Retry'),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -85,68 +96,38 @@ class _OptimizedHomePageState extends State<OptimizedHomePage> {
         child: FutureBuilder<List<Post>>(
           future: futurePosts,
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting && _posts.isEmpty) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            } else if (snapshot.hasError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text('Error: ${snapshot.error}'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          futurePosts = getPosts();
-                        });
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              );
-            } else if (snapshot.hasData) {
-              if (_posts.isEmpty) {
-                _posts = snapshot.data!;
-              }
-              
-              return CustomScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        if (index < _posts.length) {
-                          return OptimizedPostCard(post: _posts[index]);
-                        } else if (_isLoading) {
-                          return const Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          );
-                        }
-                        return null;
-                      },
-                      childCount: _posts.length + (_isLoading ? 1 : 0),
-                    ),
-                  ),
-                ],
-              );
-            } else {
-              return const Center(
-                child: Text('No posts available'),
-              );
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
             }
+            if (snapshot.hasError) {
+              return _errorState(context, snapshot.error!);
+            }
+
+            final posts = snapshot.data ?? [];
+            if (posts.isEmpty) {
+              return _emptyState(context);
+            }
+
+            return CustomScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              slivers: [
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => OptimizedPostCard(
+                      post: posts[index],
+                      onDeleted: _refreshPosts,
+                    ),
+                    childCount: posts.length,
+                  ),
+                ),
+              ],
+            );
           },
         ),
       ),
     );
   }
 }
-

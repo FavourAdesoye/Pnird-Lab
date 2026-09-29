@@ -6,15 +6,13 @@ import '../services/notification_service.dart';
 import '../services/socket_service.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:pnirdlab/pages/chats_page.dart';
-import 'package:pnirdlab/pages/studies.dart';
-import 'package:pnirdlab/pages/events_page.dart';
 import 'package:pnirdlab/pages/message_page.dart';
 import 'package:pnirdlab/pages/post_detail_page.dart';
 import 'package:pnirdlab/pages/studies_details.dart';
 import 'package:pnirdlab/pages/events_detail_page.dart';
 import 'package:pnirdlab/model/post_model.dart';
 import 'package:pnirdlab/model/study_model.dart';
+import 'package:pnirdlab/navigation/main_tabs.dart';
 
 String formattedDateTime(DateTime dateTime) {
   return DateFormat('yyyy-MM-dd hh:mm a').format(dateTime);
@@ -38,7 +36,9 @@ String getRelativeTime(DateTime dateTime) {
 }
 
 class NotificationsPage extends StatefulWidget {
-  const NotificationsPage({super.key});
+  final VoidCallback? onShowMessages;
+
+  const NotificationsPage({super.key, this.onShowMessages});
 
   @override
   _NotificationsPageState createState() => _NotificationsPageState();
@@ -55,6 +55,19 @@ class _NotificationsPageState extends State<NotificationsPage> {
   void initState() {
     super.initState();
     _initializeNotifications();
+  }
+
+  void _openMainTab(int index) {
+    MainTabs.select(index);
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  void _showMessagesTab() {
+    if (widget.onShowMessages != null) {
+      widget.onShowMessages!();
+      return;
+    }
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   Future<void> _initializeNotifications() async {
@@ -110,7 +123,22 @@ class _NotificationsPageState extends State<NotificationsPage> {
     if (userId == null) return;
     
     _socketService = SocketService();
-    await _socketService!.connect(userId!);
+    final connected = await _socketService!.connect(userId!);
+
+    if (!connected || _socketService?.hasSocket != true) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Live notifications unavailable. Sign out and sign back in to reconnect.',
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
+      return;
+    }
     
     // Listen for personal notifications (likes, comments, messages)
     _socketService!.socket.on("new_notification", (data) {
@@ -269,11 +297,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
               ),
             );
           } else {
-            // Fallback to chats page
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const ChatsPage()),
-            );
+            _showMessagesTab();
           }
           break;
           
@@ -284,8 +308,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           if (referenceId != null) {
             await _navigateToPost(referenceId);
           } else {
-            // Fallback to home feed
-            Navigator.pushNamed(context, '/home');
+            _openMainTab(MainTabs.home);
           }
           break;
           
@@ -294,11 +317,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           if (referenceId != null) {
             await _navigateToStudy(referenceId);
           } else {
-            // Fallback to studies page
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const StudiesPage()),
-            );
+            _openMainTab(MainTabs.studies);
           }
           break;
           
@@ -307,17 +326,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
           if (referenceId != null) {
             await _navigateToEvent(referenceId);
           } else {
-            // Fallback to events page
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const EventsPage()),
-            );
+            _openMainTab(MainTabs.events);
           }
           break;
           
         default:
-          // Default to home
-          Navigator.pushNamed(context, '/home');
+          _openMainTab(MainTabs.home);
       }
     } catch (e) {
       // Show error and fallback to general page
@@ -332,16 +346,16 @@ class _NotificationsPageState extends State<NotificationsPage> {
       // Fallback navigation based on type
       switch (type) {
         case 'message':
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const ChatsPage()));
+          _showMessagesTab();
           break;
         case 'study':
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const StudiesPage()));
+          _openMainTab(MainTabs.studies);
           break;
         case 'event':
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const EventsPage()));
+          _openMainTab(MainTabs.events);
           break;
         default:
-          Navigator.pushNamed(context, '/home');
+          _openMainTab(MainTabs.home);
       }
     }
   }
@@ -369,12 +383,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
           ),
         );
       } else {
-        // Fallback to home if post not found
-        Navigator.pushNamed(context, '/home');
+        _openMainTab(MainTabs.home);
       }
     } catch (e) {
       print('Error fetching post: $e');
-      Navigator.pushNamed(context, '/home');
+      _openMainTab(MainTabs.home);
     }
   }
 
@@ -398,18 +411,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
           ),
         );
       } else {
-        // Fallback to studies page if study not found
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const StudiesPage()),
-        );
+        _openMainTab(MainTabs.studies);
       }
     } catch (e) {
       print('Error fetching study: $e');
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const StudiesPage()),
-      );
+      _openMainTab(MainTabs.studies);
     }
   }
 
@@ -442,25 +448,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
             ),
           );
         } else {
-          // Event not found, fallback to events page
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const EventsPage()),
-          );
+          _openMainTab(MainTabs.events);
         }
       } else {
-        // Fallback to events page if fetch fails
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const EventsPage()),
-        );
+        _openMainTab(MainTabs.events);
       }
     } catch (e) {
       print('Error fetching event: $e');
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const EventsPage()),
-      );
+      _openMainTab(MainTabs.events);
     }
   }
 

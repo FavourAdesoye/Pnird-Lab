@@ -6,6 +6,7 @@ import 'package:pnirdlab/model/comment_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:pnirdlab/widgets/optimized_image.dart';
 
 class CommentsScreen extends StatefulWidget {
   final String entityId;
@@ -157,7 +158,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
                   CircleAvatar(
                     radius: 20,
                     backgroundImage: (currentUserProfilePicture != null && currentUserProfilePicture!.isNotEmpty)
-                        ? NetworkImage(currentUserProfilePicture!)
+                        ? cachedCloudinaryImage(currentUserProfilePicture!, width: 120)
                         : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
                     onBackgroundImageError: (exception, stackTrace) {
                       // Handle image loading error silently
@@ -200,7 +201,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
                 CircleAvatar(
                   radius: 20,
                   backgroundImage: (currentUserProfilePicture != null && currentUserProfilePicture!.isNotEmpty)
-                      ? NetworkImage(currentUserProfilePicture!)
+                      ? cachedCloudinaryImage(currentUserProfilePicture!, width: 120)
                       : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
                   onBackgroundImageError: (exception, stackTrace) {
                     // Handle image loading error silently

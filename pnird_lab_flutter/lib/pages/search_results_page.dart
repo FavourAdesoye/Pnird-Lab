@@ -7,6 +7,7 @@ import '../pages/studies_details.dart';
 import '../model/study_model.dart';
 import '../pages/events_detail_page.dart';
 import '../pages/current_user_profile_page.dart';
+import 'package:pnirdlab/widgets/optimized_image.dart';
 
 class SearchResultsPage extends StatefulWidget {
   final String query;
@@ -323,13 +324,12 @@ class _SearchResultsPageState extends State<SearchResultsPage>
               if (post['img'] != null)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    post['img'],
+                  child: OptimizedImage(
+                    imageUrl: post['img']?.toString() ?? '',
                     width: 60,
                     height: 60,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.image, size: 60),
+                    errorWidget: const Icon(Icons.image, size: 60),
                   ),
                 )
               else
@@ -401,13 +401,12 @@ class _SearchResultsPageState extends State<SearchResultsPage>
               if (study['image_url'] != null)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    study['image_url'],
+                  child: OptimizedImage(
+                    imageUrl: study['image_url']?.toString() ?? '',
                     width: 60,
                     height: 60,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.library_books, size: 60),
+                    errorWidget: const Icon(Icons.library_books, size: 60),
                   ),
                 )
               else
@@ -477,13 +476,12 @@ class _SearchResultsPageState extends State<SearchResultsPage>
               if (event['image_url'] != null)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    event['image_url'],
+                  child: OptimizedImage(
+                    imageUrl: event['image_url']?.toString() ?? '',
                     width: 60,
                     height: 60,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.event, size: 60),
+                    errorWidget: const Icon(Icons.event, size: 60),
                   ),
                 )
               else
@@ -572,7 +570,7 @@ class _SearchResultsPageState extends State<SearchResultsPage>
               CircleAvatar(
                 radius: 30,
                 backgroundImage: user['profilePicture'] != null
-                    ? NetworkImage(user['profilePicture'])
+                    ? cachedCloudinaryImage(user['profilePicture'].toString(), width: 160)
                     : null,
                 child: user['profilePicture'] == null
                     ? Icon(

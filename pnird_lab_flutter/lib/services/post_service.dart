@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../model/post_model.dart';
 import 'api_service.dart';
+import 'session_storage.dart';
 
 Future<List<Post>> getPosts() async {
   List<Post> posts = [];
@@ -68,4 +69,15 @@ class PostService2 {
       throw Exception('Failed to load user posts');
     }
   }
+}
+
+Future<int> deletePost(String postId) async {
+  if (!await SessionStorage.isStaff()) {
+    return 403;
+  }
+  final response = await http.delete(
+    Uri.parse('${ApiService.baseUrl}/posts/$postId'),
+    headers: await ApiService.authHeaders(),
+  );
+  return response.statusCode;
 }

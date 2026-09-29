@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/auth.dart';
 import '../../widgets/enhanced_text_form_field.dart';
 import '../../widgets/auth_button.dart';
+import '../../widgets/auth_page_shell.dart';
 
 class StaffLoginPage extends StatefulWidget {
   const StaffLoginPage({super.key});
@@ -55,7 +56,7 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
         );
 
         if (!mounted) return;
-        Navigator.pushNamed(context, '/home');
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -133,164 +134,140 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.grey[900],
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context); // Navigates back to the previous screen
-          },
-        ),
-      ),
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _staffLoginformKey,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[900],
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.5),
-                        spreadRadius: 5,
-                        blurRadius: 7,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: Column(
-                          children: [
-                            Image.asset(
-                              'assets/logos/logophoto_Medium.png',
-                              height: 100,
-                            ),
-                            const SizedBox(height: 20),
-                            const Text(
-                              'Hello Staff!',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            const Text(
-                              'Welcome back to our app',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                      const Text(
-                        'Login',
-                        style: TextStyle(
-                          color: Colors.yellow,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      EnhancedTextFormField(
-                        controller: _emailController,
-                        label: 'Email',
-                        hint: 'example@gmail.com',
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your email';
-                          }
-                          if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                            return 'Please enter a valid email address';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      EnhancedTextFormField(
-                        controller: _passwordController,
-                        label: 'Password',
-                        hint: 'Must have at least 8 characters',
-                        obscureText: _obscurePassword,
-                        showToggle: true,
-                        onToggleVisibility: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your password';
-                          }
-                          if (value.length < 8) {
-                            return 'Password must have at least 8 characters';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      Center(
-                        child: GestureDetector(
-                          onTap: _forgotPassword,
-                          child: const Text(
-                            'Forgot Password?',
+    final titleColor = authPrimaryText(context);
+    final accent = authAccent(context);
+
+    return AuthPageShell(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _staffLoginformKey,
+            child: Center(
+              child: AuthCard(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Column(
+                        children: [
+                          Image.asset(
+                            'assets/logos/logophoto_Medium.png',
+                            height: 100,
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Hello Staff!',
                             style: TextStyle(
-                              color: Colors.blue,
-                              fontSize: 14,
-                              decoration: TextDecoration.underline,
+                              color: titleColor,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
                             ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Welcome back to our app',
+                            style: TextStyle(
+                              color: titleColor,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    Text(
+                      'Login',
+                      style: TextStyle(
+                        color: accent,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    EnhancedTextFormField(
+                      controller: _emailController,
+                      label: 'Email',
+                      hint: 'example@gmail.com',
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                          return 'Please enter a valid email address';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    EnhancedTextFormField(
+                      controller: _passwordController,
+                      label: 'Password',
+                      hint: 'Must have at least 8 characters',
+                      obscureText: _obscurePassword,
+                      showToggle: true,
+                      onToggleVisibility: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        if (value.length < 8) {
+                          return 'Password must have at least 8 characters';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Center(
+                      child: GestureDetector(
+                        onTap: _forgotPassword,
+                        child: const Text(
+                          'Forgot Password?',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 14,
+                            decoration: TextDecoration.underline,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      Center(
-                        child: AuthButton(
-                          text: 'Login',
-                          onPressed: () {
-                            if (_staffLoginformKey.currentState!.validate()) {
-                              String email = _emailController.text;
-                              String password = _passwordController.text;
-                              loginUser(email, password);
-                            }
-                          },
-                          isLoading: _isLoading,
-                        ),
+                    ),
+                    const SizedBox(height: 20),
+                    Center(
+                      child: AuthButton(
+                        text: 'Login',
+                        onPressed: () {
+                          if (_staffLoginformKey.currentState!.validate()) {
+                            String email = _emailController.text;
+                            String password = _passwordController.text;
+                            loginUser(email, password);
+                          }
+                        },
+                        isLoading: _isLoading,
                       ),
-                      const SizedBox(height: 20),
-                      Center(
-                        child: GestureDetector(
-                          onTap: () {
-                            // Navigate to the sign-up page
-                            Navigator.pushNamed(context, '/staff_signup');
-                          },
-                          child: const Text(
-                            "Don't have an account? Sign up",
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontSize: 14,
-                              decoration: TextDecoration.underline,
-                            ),
+                    ),
+                    const SizedBox(height: 20),
+                    Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/staff_signup');
+                        },
+                        child: const Text(
+                          "Don't have an account? Sign up",
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 14,
+                            decoration: TextDecoration.underline,
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),

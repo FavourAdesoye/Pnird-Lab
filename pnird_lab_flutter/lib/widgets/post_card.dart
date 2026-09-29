@@ -6,9 +6,12 @@ import 'package:pnirdlab/widgets/heart_animation_widget.dart';
 import '../model/post_model.dart';
 import 'package:intl/intl.dart';
 import '../services/like_service.dart';
+import '../services/post_service.dart';
 import 'package:pnirdlab/pages/current_user_profile_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pnirdlab/services/session_storage.dart';
 import 'package:pnirdlab/pages/public_profile_page.dart';
+import 'package:pnirdlab/widgets/optimized_image.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -16,7 +19,8 @@ import 'dart:io';
 
 class PostCard extends StatefulWidget {
   final Post post;
-  const PostCard({super.key, required this.post});
+  final VoidCallback? onDeleted;
+  const PostCard({super.key, required this.post, this.onDeleted});
   @override
   _PostCardState createState() => _PostCardState();
 }
@@ -29,6 +33,8 @@ class _PostCardState extends State<PostCard> {
   // const PostCard({Key? key}) : super(key: key);
   bool isLiked = false;
   bool isHeartAnimating = false;
+  bool _isStaff = false;
+  bool _deleting = false;
   String? loggedInUserId; // Store the logged-in user ID
 
   @override
@@ -48,8 +54,56 @@ void initState() {
   }
 
   Future<void> loadUserId() async {
-    loggedInUserId = await getLoggedInUserId();
-    setState(() {}); // Rebuild widget after fetching ID
+    final prefs = await SharedPreferences.getInstance();
+    loggedInUserId = prefs.getString('userId');
+    final staff = await SessionStorage.isStaff();
+    if (!mounted) return;
+    setState(() {
+      _isStaff = staff;
+    });
+  }
+
+  Future<void> _deletePost() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete post?'),
+        content: const Text('This permanently removes the post. This cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _deleting = true);
+    try {
+      final status = await deletePost(widget.post.id);
+      if (!mounted) return;
+      if (status == 200) {
+        widget.onDeleted?.call();
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            status == 403 ? 'Only staff can delete posts.' : 'Could not delete post.',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not delete post. Check your connection.')),
+      );
+    } finally {
+      if (mounted) setState(() => _deleting = false);
+    }
   }
 
   Future<void> sharePost(BuildContext context) async {
@@ -144,7 +198,7 @@ void initState() {
                     CircleAvatar(
                       radius: 20,
                       backgroundImage: widget.post.user.profilePicture.isNotEmpty
-                          ? NetworkImage(widget.post.user.profilePicture)
+                          ? cachedCloudinaryImage(widget.post.user.profilePicture, width: 160)
                           : AssetImage('assets/images/defaultprofilepic.png')
                               as ImageProvider,
                     ),
@@ -162,7 +216,19 @@ void initState() {
                           )
                         ],
                       ),
-                    ))
+                    )),
+                    if (_isStaff)
+                      IconButton(
+                        tooltip: 'Delete post',
+                        onPressed: _deleting ? null : _deletePost,
+                        icon: _deleting
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.delete_outline, color: Colors.red),
+                      ),
                   ],
                 ),
               )),
@@ -170,8 +236,10 @@ void initState() {
           GestureDetector(
             child: Stack(alignment: Alignment.center, children: [
               Expanded(
-                child: Image.network(
-                  widget.post.img ?? '', //Hande potential null
+                child: OptimizedImage(
+                  imageUrl: widget.post.img ?? '',
+                  width: double.infinity,
+                  height: double.infinity,
                   fit: BoxFit.cover,
                 ),
               ),

@@ -11,6 +11,7 @@ import 'package:pnirdlab/pages/message_page.dart';
 import 'package:pnirdlab/services/auth.dart';
 import 'package:pnirdlab/services/api_service.dart';
 import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
+import 'package:pnirdlab/widgets/optimized_image.dart';
 class ProfilePage extends StatefulWidget {
   final String myuserId;
   ProfilePage({required this.myuserId});
@@ -194,7 +195,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     radius: 50,
                     backgroundImage:
                         profilepic != null && profilepic!.isNotEmpty
-                            ? NetworkImage(profilepic!)
+                            ? cachedCloudinaryImage(profilepic!, width: 240)
                             : AssetImage('assets/images/defaultprofilepic.png')
                                 as ImageProvider,
                   ),
@@ -360,13 +361,11 @@ class _ProfilePageState extends State<ProfilePage> {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: posts[index].img != null && posts[index].img!.isNotEmpty
-                                  ? Image.network(
-                                      posts[index].img!,
+                                  ? OptimizedImage(
+                                      imageUrl: posts[index].img!,
+                                      width: double.infinity,
+                                      height: double.infinity,
                                       fit: BoxFit.cover,
-                                      loadingBuilder: (context, child, loadingProgress) {
-                                        if (loadingProgress == null) return child;
-                                        return const Center(child: CircularProgressIndicator());
-                                      },
                                     )
                                   : Container(
                                       color: Colors.grey[200],

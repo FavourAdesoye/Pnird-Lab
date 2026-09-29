@@ -6,6 +6,7 @@ import 'package:pnirdlab/services/socket_service.dart';
 import 'package:intl/intl.dart';
 import 'package:pnirdlab/services/user_service.dart';
 import 'package:pnirdlab/services/api_service.dart';
+import 'package:pnirdlab/widgets/optimized_image.dart';
 
 class MessagePage extends StatefulWidget {
   final String recipientId;
@@ -37,6 +38,7 @@ class _MessagePageState extends State<MessagePage> {
 
 
   String userId = "";
+  bool _liveMessagingUnavailable = false;
 
   @override
   void initState() {
@@ -116,8 +118,25 @@ class _MessagePageState extends State<MessagePage> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     userId = prefs.getString("userId") ?? "";
-    print("User ID: $userId");
-    await _socketService.connect(userId);
+    final connected = await _socketService.connect(userId);
+
+    if (!mounted) return;
+    if (!connected || !_socketService.hasSocket) {
+      setState(() => _liveMessagingUnavailable = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Live chat is unavailable. Sign out and sign back in, then try again.',
+          ),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 5),
+        ),
+      );
+      await loadMessageHistory();
+      return;
+    }
+
+    setState(() => _liveMessagingUnavailable = false);
 
     _socketService.socket.on(_receiveMessageEvent, (data) {
       // Only add message if it's from the current recipient
@@ -151,20 +170,8 @@ class _MessagePageState extends State<MessagePage> {
         }
       }
     });
-  //   _socketService.socket.on("new_notification", (data) {
-  // print("New notification received: $data");
-
-  // // Optional: You can show a snackbar or toast
-  // ScaffoldMessenger.of(context).showSnackBar(
-  //   SnackBar(content: Text(data['message'] ?? 'You have a new notification')),
-  // );
-
-  // You can also refresh your notification list if you're saving notifications in a list
-  // setState(() { notifications.add(Notification.fromJson(data)); });
-// });
 
     await loadMessageHistory(); 
-    
   }
   
   Future<void> fetchRecipientUser() async {
@@ -203,6 +210,16 @@ Future<void> fetchSenderUser() async {
     if (!widget.isAdmin && widget.recipientId == userId) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("You can't message yourself")),
+      );
+      return;
+    }
+
+    if (!_socketService.isConnected) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Not connected. Sign out and sign back in to send messages.'),
+          backgroundColor: Colors.orange,
+        ),
       );
       return;
     }
@@ -251,7 +268,7 @@ Future<void> fetchSenderUser() async {
             CircleAvatar(
               radius: 20,
               backgroundImage: (recipientProfilePic != null && recipientProfilePic!.isNotEmpty)
-                ? NetworkImage(recipientProfilePic!)
+                ? cachedCloudinaryImage(recipientProfilePic!, width: 160)
                 : const AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
             ),
             const SizedBox(width: 10),
@@ -271,6 +288,26 @@ Future<void> fetchSenderUser() async {
       ),
       body: Column(
         children: [
+          if (_liveMessagingUnavailable)
+            Container(
+              width: double.infinity,
+              color: Colors.orange.shade800,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Live messaging offline. Sign out and back in to reconnect. History may still load.',
+                      style: TextStyle(color: Colors.white, fontSize: 13),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _initUser,
+                    child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                  ),
+                ],
+              ),
+            ),
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
@@ -336,7 +373,7 @@ Future<void> fetchSenderUser() async {
             radius: 16,
             backgroundImage: recipientImage
                 != null && recipientImage.isNotEmpty
-                ? NetworkImage(recipientImage)
+                ? cachedCloudinaryImage(recipientImage, width: 160)
                 : const AssetImage('assets/images/defaultprofilepic.png')
                     as ImageProvider,
           ),
@@ -386,7 +423,7 @@ Future<void> fetchSenderUser() async {
             radius: 16,
             backgroundImage: senderImage
                 != null && senderImage.isNotEmpty
-                ? NetworkImage(senderImage)
+                ? cachedCloudinaryImage(senderImage, width: 160)
                 : const AssetImage('assets/images/defaultprofilepic.png')
                     as ImageProvider,
           ),

@@ -56,12 +56,7 @@ class _StudiesPageState extends State<StudiesPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Studies'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushNamed(context, '/home');
-          },
-        ),
+        automaticallyImplyLeading: false,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -82,14 +77,15 @@ class _StudiesPageState extends State<StudiesPage> {
                         return StudiesCard(
                           imageUrl: study.imageUrl,
                           titlePost: study.titlePost,
-                          onTap: () {
-                            Navigator.push(
+                          onTap: () async {
+                            final deleted = await Navigator.push<bool>(
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
                                     StudyDetailsPage(study: study),
                               ),
                             );
+                            if (deleted == true) _fetchStudies();
                           },
                         );
                       },

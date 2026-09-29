@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pnirdlab/services/api_service.dart';
 import 'package:pnirdlab/pages/events_detail_page.dart';
 import 'package:pnirdlab/pages/create_events_page.dart';
+import 'package:pnirdlab/widgets/optimized_image.dart';
 class EventsPage extends StatefulWidget {
   const EventsPage({super.key});
 
@@ -39,6 +40,7 @@ class _EventsPageState extends State<EventsPage> {
 
   bool isLoading = true;
   bool _isStaff = false; // Track if user is staff/admin
+  String? _loadError;
 
   @override
   void initState() {
@@ -59,6 +61,7 @@ class _EventsPageState extends State<EventsPage> {
   Future<List<dynamic>> fetchEvents(String url) async {
     setState(() {
       isLoading = true;
+      _loadError = null;
     });
 
     try {
@@ -73,7 +76,13 @@ class _EventsPageState extends State<EventsPage> {
         });
         return events;
       }
+      setState(() {
+        _loadError = 'Could not load events (${response.statusCode}).';
+      });
     } catch (e) {
+      setState(() {
+        _loadError = 'Could not load events. Check your connection and try again.';
+      });
       print("Error: $e");
     } finally {
       setState(() {
@@ -125,6 +134,10 @@ class _EventsPageState extends State<EventsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final onSurface = theme.colorScheme.onSurface;
+    final muted = onSurface.withOpacity(0.65);
+    final chipBorder = theme.brightness == Brightness.dark ? Colors.white54 : Colors.black26;
     List upcomingEvents = getUpcomingEvents();
     return Scaffold(
         appBar: AppBar(
@@ -134,12 +147,7 @@ class _EventsPageState extends State<EventsPage> {
           ),
           centerTitle: true,
           backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.pushNamed(context, '/home');
-            },
-          ),
+          automaticallyImplyLeading: false,
         ),
         body: SingleChildScrollView(
           scrollDirection: Axis.vertical,
@@ -168,7 +176,7 @@ class _EventsPageState extends State<EventsPage> {
                               ? Colors.purple
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white),
+                          border: Border.all(color: chipBorder),
                         ),
                         child: Center(
                           child: Text(
@@ -176,7 +184,7 @@ class _EventsPageState extends State<EventsPage> {
                             style: TextStyle(
                               color: selectedMonthIndex == index
                                   ? Colors.white
-                                  : Colors.grey,
+                                  : muted,
                               fontSize: 16,
                             ),
                           ),
@@ -190,13 +198,34 @@ class _EventsPageState extends State<EventsPage> {
               // Event List
               isLoading
                   ? const Center(child: CircularProgressIndicator())
+                  : _loadError != null
+                      ? Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            children: [
+                              Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+                              const SizedBox(height: 12),
+                              Text(
+                                _loadError!,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: onSurface),
+                              ),
+                              const SizedBox(height: 12),
+                              ElevatedButton(
+                                onPressed: fetchAllEvents,
+                                child: const Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        )
                   : events.isEmpty
                       ? Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: const Center(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Center(
                               child: Text(
-                                  "There are no events this month at the moment. ",
-                                  style: TextStyle(color: Colors.white))),
+                                  "There are no events this month at the moment.",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: muted))),
                         )
                       : ListView.builder(
                           shrinkWrap: true,
@@ -206,21 +235,22 @@ class _EventsPageState extends State<EventsPage> {
                           itemBuilder: (context, index) {
                             final event = events[index];
                             return GestureDetector(
-                              onTap: () {
-                                // Navigate to the event detail page when a card is tapped
-                                Navigator.push(
+                              onTap: () async {
+                                final deleted = await Navigator.push<bool>(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
                                         EventDetailPage(event: event),
                                   ),
                                 );
+                                if (deleted == true) fetchAllEvents();
                               },
                               child: Container(
                                 margin: const EdgeInsets.all(8.0),
                                 decoration: BoxDecoration(
-                                  color: const Color.fromARGB(255, 0, 0, 0),
+                                  color: theme.colorScheme.surface,
                                   borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: chipBorder),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -229,8 +259,8 @@ class _EventsPageState extends State<EventsPage> {
                                     ClipRRect(
                                       borderRadius: const BorderRadius.vertical(
                                           top: Radius.circular(10)),
-                                      child: Image.network(
-                                        event["image_url"],
+                                      child: OptimizedImage(
+                                        imageUrl: event["image_url"]?.toString() ?? '',
                                         width: double.infinity,
                                         height: 200,
                                         fit: BoxFit.cover,
@@ -246,28 +276,28 @@ class _EventsPageState extends State<EventsPage> {
                                         children: [
                                           Text(
                                             event["titlepost"] ?? 'No Title',
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 18,
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.white,
+                                              color: onSurface,
                                             ),
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
                                             event["description"] ??
                                                 'No Description',
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 14,
-                                              color: Colors.white,
+                                              color: muted,
                                             ),
                                           ),
                                           const SizedBox(height: 8),
                                           Text(
                                             formattedDateTime(DateTime.parse(
                                                 event["dateofevent"]).toLocal()),
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 12,
-                                              color: Colors.grey,
+                                              color: muted,
                                             ),
                                           ),
                                         ],
@@ -280,13 +310,13 @@ class _EventsPageState extends State<EventsPage> {
                           },
                         ),
               isLoading
-                  ? Center(child: CircularProgressIndicator())
+                  ? const SizedBox.shrink()
                   : selectedMonthIndex == 0
-                      ? SizedBox.shrink()
+                      ? const SizedBox.shrink()
                       : upcomingEvents.isEmpty && selectedMonthIndex != 0
                           ? Center(
                               child: Text("No upcoming events.",
-                                  style: TextStyle(color: Colors.white)),
+                                  style: TextStyle(color: muted)),
                             )
                           : Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -298,7 +328,7 @@ class _EventsPageState extends State<EventsPage> {
                                     style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.white),
+                                        color: onSurface),
                                   ),
                                   ListView.builder(
                                     shrinkWrap: true,
@@ -307,41 +337,36 @@ class _EventsPageState extends State<EventsPage> {
                                     itemBuilder: (context, index) {
                                       final event = upcomingEvents[index];
                                       return GestureDetector(
-                                        onTap: () {
-                                          // Navigate to the event detail page when a card is tapped
-                                          Navigator.push(
+                                        onTap: () async {
+                                          final deleted = await Navigator.push<bool>(
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
                                                   EventDetailPage(event: event),
                                             ),
                                           );
+                                          if (deleted == true) fetchAllEvents();
                                         },
                                         child: ListTile(
-                                          leading: Image.network(
-                                            event[
-                                                'image_url'], // Access 'image_url' from the event object
+                                          leading: OptimizedImage(
+                                            imageUrl: event['image_url']?.toString() ?? '',
                                             width: 50,
                                             height: 50,
-                                            fit: BoxFit
-                                                .cover, // Ensure the image fits properly
-                                            errorBuilder: (context, error,
-                                                    stackTrace) =>
-                                                Icon(Icons
-                                                    .image), // Handle image loading errors
+                                            fit: BoxFit.cover,
+                                            errorWidget: const Icon(Icons.image),
                                           ),
                                           title: Text(
-                                            event['titlepost'],
-                                            style: TextStyle(
+                                            event['titlepost']?.toString() ?? 'Untitled event',
+                                            style: const TextStyle(
                                                 fontWeight: FontWeight.bold),
                                           ),
                                           subtitle: Text(
                                             formattedDateTime(DateTime.parse(
                                                 event["dateofevent"]).toLocal()),
                                             style:
-                                                TextStyle(color: Colors.grey),
+                                                TextStyle(color: muted),
                                           ),
-                                          trailing: Icon(Icons.arrow_forward),
+                                          trailing: const Icon(Icons.arrow_forward),
                                         ),
                                       );
                                     },
@@ -356,10 +381,11 @@ class _EventsPageState extends State<EventsPage> {
             ? FloatingActionButton(
                 heroTag: 'events_fab',
                 onPressed: () async {
-                  Navigator.push(
+                  final created = await Navigator.push<bool>(
                     context,
-                    MaterialPageRoute(builder: (context) => CreateEventPage()),
+                    MaterialPageRoute(builder: (context) => const CreateEventPage()),
                   );
+                  if (created == true) fetchAllEvents();
                 },
                 tooltip: 'Create New Event',
                 child: const Icon(Icons.add),

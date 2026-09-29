@@ -15,6 +15,7 @@ import 'package:pnirdlab/providers/theme_provider.dart';
 import 'package:pnirdlab/pages/search_results_page.dart';
 import 'package:pnirdlab/pages/settings/settings.dart';
 import 'package:pnirdlab/services/search_service.dart';
+import 'package:pnirdlab/navigation/main_tabs.dart';
 
 class MainScreenPage extends StatefulWidget {
   const MainScreenPage({super.key});
@@ -87,12 +88,19 @@ class _MainScreenPageState extends State<MainScreenPage> {
   @override
   void initState() {
     super.initState();
+    MainTabs.register(_selectTab);
     _searchController.addListener(_onSearchChanged);
     _searchFocusNode.addListener(_onSearchFocusChanged);
   }
 
+  void _selectTab(int index) {
+    if (!mounted) return;
+    setState(() => currentIndex = index);
+  }
+
   @override
   void dispose() {
+    MainTabs.unregister(_selectTab);
     _debounceTimer?.cancel();
     _searchController.removeListener(_onSearchChanged);
     _searchFocusNode.removeListener(_onSearchFocusChanged);
@@ -539,7 +547,7 @@ class _MainScreenPageState extends State<MainScreenPage> {
             label: 'Events',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.edit),
+            icon: Icon(Icons.info_outline),
             label: 'About Us',
           ),
           BottomNavigationBarItem(

@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const Post = require("../models/Post");
+const Comment = require("../models/comment");
 const cloudinary = require("../utils/cloudinary");
 const upload = require("../utils/multer");
 const User = require("../models/User");
@@ -178,6 +179,35 @@ router.get("/:id", async (req, res) => {
     res.status(200).json(post);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch post" });
+  }
+});
+
+// Delete a post — staff only
+router.delete("/:id", firebaseAuthMiddleware, requireStaff, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    if (post.cloudinary_id) {
+      try {
+        await cloudinary.uploader.destroy(post.cloudinary_id);
+      } catch (_) {
+        // Best-effort media cleanup
+      }
+    }
+
+    await Comment.deleteMany({
+      $or: [{ _id: { $in: post.comments || [] } }, { entityId: post._id, entityType: "post" }],
+    });
+    await Notification.deleteMany({ referenceId: post._id });
+    await Post.findByIdAndDelete(post._id);
+
+    return res.status(200).json({ message: "Post deleted" });
+  } catch (err) {
+    console.error("Error deleting post:", err.message);
+    return res.status(500).json({ message: "Failed to delete post" });
   }
 });
 

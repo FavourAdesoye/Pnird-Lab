@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pnirdlab/widgets/auth_page_shell.dart';
 
 class AccountTypeButton extends StatelessWidget {
   final String label;
@@ -9,10 +10,11 @@ class AccountTypeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.grey[800],
+        backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
@@ -23,8 +25,8 @@ class AccountTypeButton extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.yellow,
+            style: TextStyle(
+              color: authAccent(context),
               fontSize: 18,
             ),
           ),
@@ -62,7 +64,7 @@ class _ChooseAccountTypePageState extends State<ChooseAccountTypePage> {
   Future<void> _pickAccountType({required bool forLogin}) async {
     final choice = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: Colors.grey[900],
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -71,11 +73,11 @@ class _ChooseAccountTypePageState extends State<ChooseAccountTypePage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              title: const Text('Community', style: TextStyle(color: Colors.white)),
+              title: Text('Community', style: TextStyle(color: authPrimaryText(ctx))),
               onTap: () => Navigator.pop(ctx, 'Community'),
             ),
             ListTile(
-              title: const Text('Staff', style: TextStyle(color: Colors.white)),
+              title: Text('Staff', style: TextStyle(color: authPrimaryText(ctx))),
               onTap: () => Navigator.pop(ctx, 'Staff'),
             ),
           ],
@@ -93,91 +95,79 @@ class _ChooseAccountTypePageState extends State<ChooseAccountTypePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
-                    spreadRadius: 5,
-                    blurRadius: 7,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Column(
-                      children: [
-                        Image.asset(
-                          'assets/logos/logophoto_Medium.png',
-                          height: 100,
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          'Hello!',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          'Welcome back to our app',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  const Text(
-                    'Choose account type',
-                    style: TextStyle(
-                      color: Colors.yellow,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  AccountTypeButton(
-                    label: 'Community',
-                    onPressed: () => _goToLogin('Community'),
-                  ),
-                  const SizedBox(height: 16),
-                  AccountTypeButton(
-                    label: 'Staff',
-                    onPressed: () => _goToLogin('Staff'),
-                  ),
-                  const SizedBox(height: 24),
-                  Center(
-                    child: TextButton(
-                      onPressed: () => _pickAccountType(forLogin: false),
-                      child: const Text(
-                        "Don't have an account? Sign up",
+    final titleColor = authPrimaryText(context);
+    final accent = authAccent(context);
+
+    return AuthPageShell(
+      showBack: false,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Center(
+          child: AuthCard(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'assets/logos/logophoto_Medium.png',
+                        height: 100,
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Hello!',
                         style: TextStyle(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline,
+                          color: titleColor,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
                         ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Welcome back to our app',
+                        style: TextStyle(
+                          color: titleColor,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 40),
+                Text(
+                  'Choose account type',
+                  style: TextStyle(
+                    color: accent,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                AccountTypeButton(
+                  label: 'Community',
+                  onPressed: () => _goToLogin('Community'),
+                ),
+                const SizedBox(height: 16),
+                AccountTypeButton(
+                  label: 'Staff',
+                  onPressed: () => _goToLogin('Staff'),
+                ),
+                const SizedBox(height: 24),
+                Center(
+                  child: TextButton(
+                    onPressed: () => _pickAccountType(forLogin: false),
+                    child: const Text(
+                      "Don't have an account? Sign up",
+                      style: TextStyle(
+                        color: Colors.blue,
+                        decoration: TextDecoration.underline,
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

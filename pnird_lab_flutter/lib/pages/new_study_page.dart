@@ -9,6 +9,7 @@ import '../model/study_model.dart';
 import '../services/api_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/file_utils.dart';
+import 'package:pnirdlab/widgets/optimized_image.dart';
 
 class NewStudyPage extends StatefulWidget {
   const NewStudyPage({super.key});
@@ -193,7 +194,12 @@ class _NewStudyPageState extends State<NewStudyPage> {
                       children: [
                         const Text('Uploaded Image:'),
                         const SizedBox(height: 10),
-                        Image.network(_uploadedImageUrl!, height: 150),
+                        OptimizedImage(
+                          imageUrl: _uploadedImageUrl!,
+                          height: 150,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
                       ],
                     ),
                   ),

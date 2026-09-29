@@ -75,6 +75,11 @@ class SessionStorage {
     };
   }
 
+  static Future<bool> isStaff() async {
+    final data = await getStoredUserData();
+    return data['role'] == 'staff';
+  }
+
   /// Clears session keys only (keeps theme and other non-auth prefs).
   static Future<void> clearSession() async {
     await Future.wait([

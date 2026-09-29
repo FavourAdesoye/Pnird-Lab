@@ -5,13 +5,16 @@ import 'package:pnirdlab/pages/comments_screen.dart';
 import 'package:pnirdlab/widgets/heart_animation_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:pnirdlab/services/like_service.dart';
+import 'package:pnirdlab/services/post_service.dart';
 import 'package:pnirdlab/pages/current_user_profile_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pnirdlab/services/session_storage.dart';
 import 'package:pnirdlab/pages/public_profile_page.dart';
 
 class OptimizedPostCard extends StatefulWidget {
   final Post post;
-  const OptimizedPostCard({super.key, required this.post});
+  final VoidCallback? onDeleted;
+  const OptimizedPostCard({super.key, required this.post, this.onDeleted});
 
   @override
   _OptimizedPostCardState createState() => _OptimizedPostCardState();
@@ -24,6 +27,8 @@ String formattedDateTime(DateTime dateTime) {
 class _OptimizedPostCardState extends State<OptimizedPostCard> {
   bool isLiked = false;
   bool isHeartAnimating = false;
+  bool _isStaff = false;
+  bool _deleting = false;
   String? loggedInUserId;
 
   @override
@@ -35,10 +40,12 @@ class _OptimizedPostCardState extends State<OptimizedPostCard> {
   Future<void> _loadUserId() async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString('userId');
+    final staff = await SessionStorage.isStaff();
     if (mounted) {
       setState(() {
         loggedInUserId = userId;
         isLiked = widget.post.likes?.contains(userId) ?? false;
+        _isStaff = staff;
       });
     }
   }
@@ -66,8 +73,8 @@ class _OptimizedPostCardState extends State<OptimizedPostCard> {
                   CircleAvatar(
                     radius: 20,
                     backgroundImage: widget.post.user.profilePicture.isNotEmpty
-                        ? NetworkImage(widget.post.user.profilePicture)
-                        : AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
+                        ? cachedCloudinaryImage(widget.post.user.profilePicture, width: 160)
+                        : const AssetImage('assets/images/defaultprofilepic.png') as ImageProvider,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -91,6 +98,18 @@ class _OptimizedPostCardState extends State<OptimizedPostCard> {
                       ],
                     ),
                   ),
+                  if (_isStaff)
+                    IconButton(
+                      tooltip: 'Delete post',
+                      onPressed: _deleting ? null : _deletePost,
+                      icon: _deleting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.delete_outline, color: Colors.red),
+                    ),
                 ],
               ),
             ),
@@ -215,6 +234,49 @@ class _OptimizedPostCardState extends State<OptimizedPostCard> {
           });
         }
       });
+    }
+  }
+
+  Future<void> _deletePost() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete post?'),
+        content: const Text('This permanently removes the post. This cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _deleting = true);
+    try {
+      final status = await deletePost(widget.post.id);
+      if (!mounted) return;
+      if (status == 200) {
+        widget.onDeleted?.call();
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            status == 403 ? 'Only staff can delete posts.' : 'Could not delete post.',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not delete post. Check your connection.')),
+      );
+    } finally {
+      if (mounted) setState(() => _deleting = false);
     }
   }
 

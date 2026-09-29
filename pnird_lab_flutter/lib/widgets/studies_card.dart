@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pnirdlab/widgets/optimized_image.dart';
 
 class StudiesCard extends StatelessWidget {
   final String imageUrl;
@@ -30,9 +31,10 @@ class StudiesCard extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(8.0),
                 ),
-                child: Image.network(
-                  imageUrl,
+                child: OptimizedImage(
+                  imageUrl: imageUrl,
                   width: double.infinity,
+                  height: double.infinity,
                   fit: BoxFit.cover,
                 ),
               ),
