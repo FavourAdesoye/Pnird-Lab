@@ -28,6 +28,10 @@
 	<true/>
 	<key>NSCalendarsUsageDescription</key>
 	<string>This app needs access to your calendar to add events.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>This app needs access to your calendar to add lab events.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>This app needs permission to add lab events to your calendar.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to your photo library to select images for posts and profile.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

@@ -148,6 +148,9 @@ router.put('/event/:id', firebaseAuthMiddleware, requireStaff, async (req, res) 
       allowed.month = monthNames[eventDate.getMonth()];
     }
     const updatedEvent = await EventsModel.findByIdAndUpdate(id, allowed, { new: true });
+    if (!updatedEvent) {
+      return res.status(404).json({ message: "Event not found" });
+    }
     res.json(updatedEvent);
   } catch (error) {
     res.status(400).json({ message: error.message });

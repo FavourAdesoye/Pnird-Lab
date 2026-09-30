@@ -13,8 +13,10 @@ import 'package:pnirdlab/services/auth.dart';
 import 'package:pnirdlab/pages/loginpages/choose_account_type.dart';
 import 'package:pnirdlab/providers/theme_provider.dart';
 import 'package:pnirdlab/pages/search_results_page.dart';
+import 'package:pnirdlab/pages/post_detail_page.dart';
 import 'package:pnirdlab/pages/settings/settings.dart';
 import 'package:pnirdlab/services/search_service.dart';
+import 'package:pnirdlab/services/post_service.dart';
 import 'package:pnirdlab/navigation/main_tabs.dart';
 
 class MainScreenPage extends StatefulWidget {
@@ -264,10 +266,39 @@ class _MainScreenPageState extends State<MainScreenPage> {
     }
 
     return InkWell(
-      onTap: () {
-        _searchController.text = text;
+      onTap: () async {
         _removeOverlay();
         _searchFocusNode.unfocus();
+        final id = suggestion['id']?.toString() ?? '';
+        if (type == 'post' && id.isNotEmpty) {
+          try {
+            final post = await fetchPostById(id);
+            if (!mounted) return;
+            if (post == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Could not open that post.')),
+              );
+              return;
+            }
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PostDetailPage(
+                  posts: [post],
+                  initialIndex: 0,
+                ),
+              ),
+            );
+          } catch (_) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Could not open that post.')),
+            );
+          }
+          return;
+        }
+
+        _searchController.text = text;
         Navigator.push(
           context,
           MaterialPageRoute(

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:pnirdlab/services/api_service.dart';
 import 'package:pnirdlab/services/session_storage.dart';
 import 'package:pnirdlab/widgets/optimized_image.dart';
+import 'edit_event_page.dart';
 
 class EventDetailPage extends StatefulWidget {
   final dynamic event;
@@ -18,10 +19,13 @@ class EventDetailPage extends StatefulWidget {
 class _EventDetailPageState extends State<EventDetailPage> {
   bool _isStaff = false;
   bool _deleting = false;
+  bool _changed = false;
+  late Map<String, dynamic> _event;
 
   @override
   void initState() {
     super.initState();
+    _event = Map<String, dynamic>.from(widget.event as Map);
     _loadRole();
   }
 
@@ -56,7 +60,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
       return;
     }
 
-    final id = widget.event['_id']?.toString() ?? '';
+    final id = _event['_id']?.toString() ?? '';
     if (id.isEmpty) return;
 
     setState(() => _deleting = true);
@@ -89,13 +93,33 @@ class _EventDetailPageState extends State<EventDetailPage> {
     }
   }
 
+  Future<void> _editEvent() async {
+    if (!await SessionStorage.isStaff()) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Only staff can edit events.')),
+      );
+      return;
+    }
+    if (!mounted) return;
+    final updated = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(builder: (context) => EditEventPage(event: _event)),
+    );
+    if (updated == null || !mounted) return;
+    setState(() {
+      _event = updated;
+      _changed = true;
+    });
+  }
+
   String formattedDateTime(DateTime date) {
     return DateFormat('MMMM dd, yyyy').format(date);
   }
 
   String _getEventTime() {
     // Check both possible field names (for backward compatibility)
-    final time = widget.event['timeofevent'] ?? widget.event['timeofEvent'];
+    final time = _event['timeofevent'] ?? _event['timeofEvent'];
     
     if (time != null && time.toString().trim().isNotEmpty) {
       final timeStr = time.toString().trim();
@@ -113,10 +137,10 @@ class _EventDetailPageState extends State<EventDetailPage> {
   DateTime? _parseEventDateTime() {
     try {
       // Parse the date
-      final eventDate = DateTime.parse(widget.event['dateofevent']).toLocal();
+      final eventDate = DateTime.parse(_event['dateofevent']).toLocal();
       
       // Parse the time if available (check both field names for backward compatibility)
-      final timeString = widget.event['timeofevent'] ?? widget.event['timeofEvent'];
+      final timeString = _event['timeofevent'] ?? _event['timeofEvent'];
       if (timeString != null && timeString.isNotEmpty && timeString != 'TBD') {
         // Parse time in format "4:00 PM" or "4:00PM"
         final timeFormat = DateFormat('h:mm a');
@@ -172,9 +196,9 @@ class _EventDetailPageState extends State<EventDetailPage> {
     final endDate = startDate.add(const Duration(hours: 1));
 
     final event = Event(
-      title: widget.event['titlepost'] ?? 'Event',
-      description: widget.event['description'] ?? '',
-      location: widget.event['location'] ?? '',
+      title: _event['titlepost'] ?? 'Event',
+      description: _event['description'] ?? '',
+      location: _event['location'] ?? '',
       startDate: startDate,
       endDate: endDate,
       iosParams: const IOSParams(
@@ -211,8 +235,15 @@ class _EventDetailPageState extends State<EventDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context, _changed),
+        ),
         title: Text(
-          widget.event['titlepost'].toString().capitalize(),
+          () {
+            final raw = _event['titlepost']?.toString().trim() ?? '';
+            return raw.isEmpty ? 'Event' : raw.capitalize();
+          }(),
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -227,14 +258,14 @@ class _EventDetailPageState extends State<EventDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             OptimizedImage(
-              imageUrl: widget.event['image_url']?.toString() ?? '',
+              imageUrl: _event['image_url']?.toString() ?? '',
               width: double.infinity,
               height: 250,
               fit: BoxFit.cover,
             ),
             const SizedBox(height: 16),
             Text(
-              widget.event['description'] ?? 'No description available.',
+              _event['description'] ?? 'No description available.',
               style: TextStyle(
                 fontSize: 17,
                 color: Theme.of(context).textTheme.bodyLarge?.color,
@@ -242,7 +273,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              "Event Date: ${formattedDateTime(DateTime.parse(widget.event["dateofevent"]).toLocal())}",
+              "Event Date: ${formattedDateTime(DateTime.parse(_event["dateofevent"]).toLocal())}",
               style: TextStyle(
                 fontSize: 16,
                 color: Theme.of(context).textTheme.bodyLarge?.color,
@@ -258,10 +289,10 @@ class _EventDetailPageState extends State<EventDetailPage> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            if (widget.event['location'] != null && widget.event['location'].toString().isNotEmpty) ...[
+            if (_event['location'] != null && _event['location'].toString().isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
-                "Location: ${widget.event['location']}",
+                "Location: ${_event['location']}",
                 style: TextStyle(
                   fontSize: 16,
                   color: Theme.of(context).textTheme.bodyLarge?.color,
@@ -288,6 +319,18 @@ class _EventDetailPageState extends State<EventDetailPage> {
               ),
             ),
             if (_isStaff) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _deleting ? null : _editEvent,
+                  icon: const Icon(Icons.edit_outlined),
+                  label: const Text('Edit event'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,

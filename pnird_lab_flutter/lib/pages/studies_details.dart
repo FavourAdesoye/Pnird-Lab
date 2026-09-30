@@ -5,6 +5,7 @@ import 'form_viewer_page.dart';
 import 'package:pnirdlab/services/api_service.dart';
 import 'package:pnirdlab/services/session_storage.dart';
 import 'package:pnirdlab/widgets/optimized_image.dart';
+import 'edit_study_page.dart';
 
 class StudyDetailsPage extends StatefulWidget {
   final Study study;
@@ -19,12 +20,15 @@ class StudyDetailsPage extends StatefulWidget {
 class _StudyDetailsPageState extends State<StudyDetailsPage> {
   bool _isStaff = false;
   bool _deleting = false;
+  bool _changed = false;
+  late Study _study;
 
-  Study get study => widget.study;
+  Study get study => _study;
 
   @override
   void initState() {
     super.initState();
+    _study = widget.study;
     _loadRole();
   }
 
@@ -89,16 +93,34 @@ class _StudyDetailsPageState extends State<StudyDetailsPage> {
     }
   }
 
+  Future<void> _editStudy() async {
+    if (!await SessionStorage.isStaff()) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Only staff can edit studies.')),
+      );
+      return;
+    }
+    if (!mounted) return;
+    final updated = await Navigator.push<Study>(
+      context,
+      MaterialPageRoute(builder: (context) => EditStudyPage(study: _study)),
+    );
+    if (updated == null || !mounted) return;
+    setState(() {
+      _study = updated;
+      _changed = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(study.titlePost),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context); // Navigates back to the previous screen
-          },
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context, _changed),
         ),
       ),
       body: SingleChildScrollView(
@@ -185,7 +207,15 @@ class _StudyDetailsPageState extends State<StudyDetailsPage> {
                   ),
                 ),
               const SizedBox(height: 16),
-              if (_isStaff)
+              if (_isStaff) ...[
+                Center(
+                  child: OutlinedButton.icon(
+                    onPressed: _deleting ? null : _editStudy,
+                    icon: const Icon(Icons.edit_outlined),
+                    label: const Text('Edit study'),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Center(
                   child: OutlinedButton.icon(
                     onPressed: _deleting ? null : _deleteStudy,
@@ -200,6 +230,7 @@ class _StudyDetailsPageState extends State<StudyDetailsPage> {
                     style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
                   ),
                 ),
+              ],
             ],
           ),
         ),

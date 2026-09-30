@@ -24,29 +24,32 @@ class Post {
 
   factory Post.fromJson(Map<String, dynamic> json) {
     final userData = json['userId'];
-
-    return Post(
-      id: json['_id'],
-      user: userData is String
-        ? User(
-            id: userData,
+    final user = userData is Map
+        ? User.fromJson(Map<String, dynamic>.from(userData))
+        : User(
+            id: userData?.toString() ?? '',
             firebaseUID: '',
-            username: '',
+            username: 'Unknown',
             email: '',
             profilePicture: '',
-            bio: ''
-          )
-        : User.fromJson(userData),
-      description: json['description'] ?? '', // Handle null case
-      img: json['img'] ?? '', // Handle null case
-      likes: json['likes'] != null
-          ? List<String>.from(json['likes'])
-          : [], // Handle null case
-      comments: json['comments'] != null
-          ? List<dynamic>.from(json['comments'])
-          : [], // Handle null case
-      createdAt: DateTime.parse(json['createdAt']).toLocal(),
-      updatedAt: DateTime.parse(json['updatedAt']).toLocal(),
+            bio: '',
+          );
+    final created = DateTime.tryParse(json['createdAt']?.toString() ?? '');
+    final updated = DateTime.tryParse(json['updatedAt']?.toString() ?? '');
+
+    return Post(
+      id: json['_id']?.toString() ?? '',
+      user: user,
+      description: json['description']?.toString() ?? '',
+      img: json['img']?.toString() ?? '',
+      likes: json['likes'] is List
+          ? (json['likes'] as List).map((like) => like.toString()).toList()
+          : [],
+      comments: json['comments'] is List
+          ? List<dynamic>.from(json['comments'] as List)
+          : [],
+      createdAt: (created ?? DateTime.now()).toLocal(),
+      updatedAt: (updated ?? created ?? DateTime.now()).toLocal(),
     );
   }
 }

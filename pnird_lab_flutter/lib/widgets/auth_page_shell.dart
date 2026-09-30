@@ -75,3 +75,72 @@ Color authAccent(BuildContext context) {
       ? Colors.yellow
       : const Color(0xFFB8860B);
 }
+
+Future<String?> showResetPasswordDialog(
+  BuildContext context, {
+  String initialEmail = '',
+}) {
+  return showDialog<String>(
+    context: context,
+    builder: (ctx) => _ResetPasswordDialog(initialEmail: initialEmail),
+  );
+}
+
+class _ResetPasswordDialog extends StatefulWidget {
+  final String initialEmail;
+
+  const _ResetPasswordDialog({required this.initialEmail});
+
+  @override
+  State<_ResetPasswordDialog> createState() => _ResetPasswordDialogState();
+}
+
+class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
+  late final TextEditingController _emailController;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController(text: widget.initialEmail);
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = authPrimaryText(context);
+
+    return AlertDialog(
+      backgroundColor: isDark ? Colors.grey[900] : theme.colorScheme.surface,
+      title: Text('Reset password', style: TextStyle(color: textColor)),
+      content: TextField(
+        controller: _emailController,
+        keyboardType: TextInputType.emailAddress,
+        autofocus: true,
+        style: TextStyle(color: textColor),
+        decoration: InputDecoration(
+          labelText: 'Email',
+          labelStyle: TextStyle(color: textColor.withOpacity(0.7)),
+          hintText: 'Enter the email for your account',
+          hintStyle: TextStyle(color: textColor.withOpacity(0.5)),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, _emailController.text.trim()),
+          child: const Text('Send link'),
+        ),
+      ],
+    );
+  }
+}

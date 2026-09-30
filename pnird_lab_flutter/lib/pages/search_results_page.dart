@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/search_service.dart';
 import '../services/app_exception.dart';
-import '../services/post_service.dart';
+import '../model/post_model.dart';
 import '../pages/post_detail_page.dart';
 import '../pages/studies_details.dart';
 import '../model/study_model.dart';
@@ -280,42 +280,47 @@ class _SearchResultsPageState extends State<SearchResultsPage>
     );
   }
 
+  void _openPost(dynamic raw) {
+    try {
+      if (raw is! Map) {
+        throw const FormatException('Post data was missing');
+      }
+      final map = Map<String, dynamic>.from(raw);
+      final user = map['userId'];
+      if (user is! Map) {
+        map['userId'] = {
+          '_id': user?.toString() ?? '',
+          'username': 'Unknown',
+          'profilePicture': '',
+        };
+      }
+      if (map['likes'] is List) {
+        map['likes'] = (map['likes'] as List).map((like) => like.toString()).toList();
+      }
+      final parsed = Post.fromJson(map);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PostDetailPage(
+            posts: [parsed],
+            initialIndex: 0,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open that post.')),
+      );
+    }
+  }
+
   Widget _buildPostCard(dynamic post) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       child: InkWell(
-        onTap: () async {
-          // Fetch all posts and find the matching one
-          try {
-            final allPosts = await getPosts();
-            final postIndex = allPosts.indexWhere((p) => p.id == post['_id']);
-            if (postIndex != -1) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PostDetailPage(
-                    posts: allPosts,
-                    initialIndex: postIndex,
-                  ),
-                ),
-              );
-            } else {
-              // If post not found in all posts, show a message
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Post not found')),
-                );
-              }
-            }
-          } catch (e) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error loading post: $e')),
-              );
-            }
-          }
-        },
+        onTap: () => _openPost(post),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(

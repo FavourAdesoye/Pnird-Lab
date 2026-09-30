@@ -176,6 +176,9 @@ router.get("/:id", async (req, res) => {
       "userId",
       "username profilePicture"
     );
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
     res.status(200).json(post);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch post" });

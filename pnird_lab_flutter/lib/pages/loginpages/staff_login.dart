@@ -85,32 +85,9 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
   }
 
   Future<void> _forgotPassword() async {
-    final emailController = TextEditingController(text: _emailController.text.trim());
-    final email = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text('Reset password', style: TextStyle(color: Colors.white)),
-        content: TextField(
-          controller: emailController,
-          keyboardType: TextInputType.emailAddress,
-          autofocus: true,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            labelText: 'Email',
-            labelStyle: TextStyle(color: Colors.white70),
-            hintText: 'Enter the email for your account',
-            hintStyle: TextStyle(color: Colors.white54),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, emailController.text.trim()),
-            child: const Text('Send link'),
-          ),
-        ],
-      ),
+    final email = await showResetPasswordDialog(
+      context,
+      initialEmail: _emailController.text.trim(),
     );
 
     if (email == null) return;

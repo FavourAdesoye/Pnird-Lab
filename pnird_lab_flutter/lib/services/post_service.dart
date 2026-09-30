@@ -71,6 +71,16 @@ class PostService2 {
   }
 }
 
+Future<Post?> fetchPostById(String postId) async {
+  final response = await http.get(Uri.parse('${ApiService.baseUrl}/posts/$postId'));
+  if (response.statusCode != 200 || response.body.isEmpty) {
+    return null;
+  }
+  final data = jsonDecode(response.body);
+  if (data is! Map) return null;
+  return Post.fromJson(Map<String, dynamic>.from(data));
+}
+
 Future<int> deletePost(String postId) async {
   if (!await SessionStorage.isStaff()) {
     return 403;

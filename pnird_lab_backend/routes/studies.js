@@ -109,11 +109,16 @@ router.get("/:id", async (req, res) => {
 // Update a study — staff only
 router.put("/:id", firebaseAuthMiddleware, requireStaff, async (req, res) => {
   try {
-    const { date_time, image_url, description, titlepost, formLink } = req.body;
+    const allowed = {};
+    for (const field of ["image_url", "description", "titlepost", "formLink"]) {
+      if (req.body[field] !== undefined) {
+        allowed[field] = req.body[field];
+      }
+    }
 
     const updatedStudy = await StudiesModel.findByIdAndUpdate(
       req.params.id,
-      { date_time, image_url, description, titlepost, formLink },
+      allowed,
       { new: true }
     );
 
